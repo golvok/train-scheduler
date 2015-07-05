@@ -52,6 +52,7 @@ all: $(EXES)
 
 # add more dependencies here:
 $(EXE_DIR)train-sch: \
+	$(OBJ_DIR)algo/scheduler.o \
 	$(OBJ_DIR)parsing/input_parser.o \
 	$(OBJ_DIR)util/graph.o \
 	$(OBJ_DIR)util/utils.o \

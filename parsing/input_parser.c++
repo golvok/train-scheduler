@@ -1,5 +1,6 @@
 #include "input_parser.h++"
 
+#include <iostream>
 #include <string>
 #include <vector>
 

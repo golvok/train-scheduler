@@ -1,5 +1,6 @@
 #include <util/utils.h++>
 #include <parsing/input_parser.h++>
+#include <algo/scheduler.h++>
 
 #include <string>
 #include <vector>
@@ -15,15 +16,21 @@ int main(int argc_int, char const** arcv) {
 	}
 	(void)args;
 
-	Graph::TrackGraph g;
-	std::vector<Train> trains;
-	bool good;
+	while (true) {
+		Graph::TrackGraph g;
+		std::vector<Train> trains;
+		bool good;
 
-	std::tie(g,trains,good) = parsing::input::parse_graph(std::cin, std::cerr);
+		std::tie(g,trains,good) = parsing::input::parse_graph(std::cin, std::cerr);
 
-	(void)g;
-	(void)trains;
-	(void)good;
+		if (good == false) {
+			break;
+		}
+
+		auto results = algo::schedule(g, trains);
+		(void)results;
+
+	}
 
 	return 0;
 }

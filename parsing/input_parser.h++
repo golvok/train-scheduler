@@ -4,7 +4,7 @@
 #include <util/graph.h++>
 #include <util/utils.h++>
 
-#include <iostream>
+#include <iosfwd>
 
 namespace parsing {
 namespace input {
