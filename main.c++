@@ -17,17 +17,17 @@ int main(int argc_int, char const** arcv) {
 	(void)args;
 
 	while (true) {
-		Graph::TrackGraph g;
+		TrackNetwork tn;
 		std::vector<Train> trains;
 		bool good;
 
-		std::tie(g,trains,good) = parsing::input::parse_graph(std::cin, std::cerr);
+		std::tie(tn,trains,good) = parsing::input::parse_graph(std::cin, std::cerr);
 
 		if (good == false) {
 			break;
 		}
 
-		auto results = algo::schedule(g, trains);
+		auto results = algo::schedule(tn, trains);
 		(void)results;
 
 	}

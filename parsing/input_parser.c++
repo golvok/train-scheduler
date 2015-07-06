@@ -33,37 +33,38 @@ namespace fake_data {
 	};
 }
 
-std::tuple<Graph::TrackGraph,std::vector<Train>, bool> parse_graph(std::istream& is, std::ostream& err) {
+std::tuple<TrackNetwork,std::vector<Train>, bool> parse_graph(std::istream& is, std::ostream& err) {
 	static size_t call_num = 0;
 	(void)is;
 	(void)err;
 
-	Graph::TrackGraph g;
+	TrackNetwork tn;
 	std::vector<Train> trains;
 
 	if (call_num > fake_data::graphs.size()) {
-		return std::make_tuple(g,trains,false);
+		return std::make_tuple(tn,trains,false);
 	}
 
 	for (auto& elem : fake_data::graphs[call_num-1]) {
-		g.addConnection(
-			g.getOrCreateNode(std::get<0>(elem)),
-			g.getOrCreateNode(std::get<1>(elem)),
-			std::get<2>(elem)
+		boost::add_edge(
+			tn.getOrCreateVertex(std::get<0>(elem)),
+			tn.getOrCreateVertex(std::get<1>(elem)),
+			std::get<2>(elem),
+			tn.g()
 		);
 	}
 
 	for (auto& train : fake_data::trains[call_num-1]) {
 		trains.emplace_back(
 			std::get<0>(train),
-			g.getOrCreateNode(std::get<1>(train)),
-			g.getOrCreateNode(std::get<2>(train)),
+			tn.getOrCreateVertex(std::get<1>(train)),
+			tn.getOrCreateVertex(std::get<2>(train)),
 			std::get<3>(train)			
 		);
 	}
 
 	call_num += 1;
-	return std::make_tuple(std::move(g),std::move(trains), true);
+	return std::make_tuple(std::move(tn),std::move(trains), true);
 }
 
 } // end namepace input

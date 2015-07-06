@@ -1,20 +1,20 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include "graph.h++"
+#include "track_network.h++"
 #include <string>
 
 class Train {
 	std::string name;
-	Graph::TrackGraph::ID entry_id;
-	Graph::TrackGraph::ID exit_id;
+	TrackNetwork::ID entry_id;
+	TrackNetwork::ID exit_id;
 	uint start_time;
 
 public:
 	Train(
 		const std::string name,
-		Graph::TrackGraph::ID entry_id,
-		Graph::TrackGraph::ID exit_id,
+		TrackNetwork::ID entry_id,
+		TrackNetwork::ID exit_id,
 		uint start_time
 	)
 		: name(name)
@@ -24,8 +24,8 @@ public:
 	{}
 
 	const std::string& getName() const { return name; }
-	Graph::TrackGraph::ID getEntryId() const { return entry_id; }
-	Graph::TrackGraph::ID getExitId() const { return exit_id; }
+	TrackNetwork::ID getEntryId() const { return entry_id; }
+	TrackNetwork::ID getExitId() const { return exit_id; }
 	uint getStartTime() const { return start_time; }
 
 };

@@ -2,7 +2,7 @@
 
 namespace algo {
 
-int schedule(Graph::TrackGraph& network, std::vector<Train>& trains) {
+int schedule(TrackNetwork& network, std::vector<Train>& trains) {
 	(void)network;
 	(void)trains;
 	return 0;
