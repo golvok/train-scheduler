@@ -16,7 +16,10 @@ int main(int argc_int, char const** arcv) {
 	}
 	(void)args;
 
+	uint tn_counter = 0;
+
 	while (true) {
+		tn_counter += 1;
 		TrackNetwork tn;
 		std::vector<Train> trains;
 		bool good;
@@ -26,6 +29,8 @@ int main(int argc_int, char const** arcv) {
 		if (good == false) {
 			break;
 		}
+
+		std::cout << "Track Network #" << tn_counter << ":\n";
 
 		auto results = algo::schedule(tn, trains);
 		(void)results;

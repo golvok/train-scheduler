@@ -33,6 +33,8 @@ public:
 	BackingGraphType& g() { return backing_graph; }
 
 	ID getOrCreateVertex(const std::string& name);
+	ID getVertex(const std::string& name);
+	const std::string& getNameOfVertex(ID id);
 };
 
 #endif /* GRAPH_H */
