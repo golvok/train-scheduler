@@ -75,7 +75,7 @@ endif
 .SECONDEXPANSION:
 $(OBJ_DIR)%.o: %.c++ | $(OBJ_DIR)$$(dir %) $(DEPS_DIR)$$(dir %)
 	$(CXX) -c  $< -o  $@ $(CXXFLAGS)
-	$(CXX) -MM $< -MF $(DEPS_DIR)$<.d.tmp $(CXXFLAGS)
+	@$(CXX) -MM $< -MF $(DEPS_DIR)$<.d.tmp $(CXXFLAGS)
 	@sed -e 's|.*:|$@:|' < $(DEPS_DIR)$<.d.tmp > $(DEPS_DIR)$<.d
 	@sed -e 's/.*://' -e 's/\\$$//' < $(DEPS_DIR)$<.d.tmp | fmt -1 | \
 	 sed -e 's/^ *//' -e 's/$$/:/' >> $(DEPS_DIR)$<.d

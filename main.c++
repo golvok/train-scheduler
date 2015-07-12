@@ -21,10 +21,10 @@ int main(int argc_int, char const** arcv) {
 	while (true) {
 		tn_counter += 1;
 		TrackNetwork tn;
-		std::vector<Train> trains;
+		std::vector<Passenger> passengers;
 		bool good;
 
-		std::tie(tn,trains,good) = parsing::input::parse_graph(std::cin, std::cerr);
+		std::tie(tn,passengers,good) = parsing::input::parse_graph(std::cin, std::cerr);
 
 		if (good == false) {
 			break;
@@ -32,7 +32,7 @@ int main(int argc_int, char const** arcv) {
 
 		std::cout << "Track Network #" << tn_counter << ":\n";
 
-		auto results = algo::schedule(tn, trains);
+		auto results = algo::schedule(tn, passengers);
 		(void)results;
 
 	}

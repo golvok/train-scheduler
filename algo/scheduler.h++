@@ -6,7 +6,7 @@
 
 namespace algo {
 
-int schedule(TrackNetwork& network, std::vector<Train>& trains);
+int schedule(TrackNetwork& network, std::vector<Passenger>& passengers);
 	
 } // end namespace algo
 

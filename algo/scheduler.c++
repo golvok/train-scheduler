@@ -6,11 +6,11 @@
 
 namespace algo {
 
-int schedule(TrackNetwork& network, std::vector<Train>& trains) {
+int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 	auto& g = network.g();
 
-	for (auto train : trains) {
-		TrackNetwork::ID start = train.getEntryId();
+	for (auto person : passengers) {
+		TrackNetwork::ID start = person.getEntryId();
 		std::vector<TrackNetwork::ID> predecessors(num_vertices(g));
 		std::vector<int> distances(num_vertices(g));
 
@@ -30,12 +30,15 @@ int schedule(TrackNetwork& network, std::vector<Train>& trains) {
 			)
 		);
 
-		std::cout << "distances and parents: for " << train.getName() << '\n';
-		auto verts = vertices(g);
-		for (auto vi = verts.first; vi != verts.second; ++vi) {
-		  std::cout << "distance(" << network.getNameOfVertex(*vi) << ") = " << distances[*vi] << ", ";
-		  std::cout << "parent(" << network.getNameOfVertex(*vi) << ") = " << network.getNameOfVertex(predecessors[*vi]) << std::
-		    endl;
+		std::cout << "distances and parents: for " << person.getName() << '\n';
+		for (auto vi : make_iterable(vertices(g))) {
+			std::cout
+				<< "distance(" << network.getNameOfVertex(vi) << ") = "
+					<< distances[vi] << ", "
+				<< "parent(" << network.getNameOfVertex(vi) << ") = "
+					<< network.getNameOfVertex(predecessors[vi])
+				<< std::endl
+		    ;
 		}
 		std::cout << "\n\n";
 	}
