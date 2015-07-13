@@ -4,10 +4,13 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <iostream>
 
-namespace algo {
+namespace {
 
-int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
+std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
+	TrackNetwork& network, std::vector<Passenger>& passengers
+) {
 	auto& g = network.g();
+	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
 
 	for (auto passenger : passengers) {
 		TrackNetwork::ID start = passenger.getEntryId();
@@ -47,6 +50,16 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		passenger2route.emplace(passenger,std::move(route));
 
 	}
+	return passenger2route;
+}
+
+} // end anonymous namespace
+
+namespace algo {
+
+int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
+
+	auto passenger2route = get_shortest_routes(network, passengers);
 
 	return 0;
 }
