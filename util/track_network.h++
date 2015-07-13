@@ -7,7 +7,7 @@
 class TrackNetwork {
 	using Weight = boost::property<boost::edge_weight_t, uint>;
 	using BackingGraphType = boost::adjacency_list<
-		boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, Weight
+		boost::vecS, boost::vecS, boost::directedS, boost::no_property, Weight
 	>;
 
 public:

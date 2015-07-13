@@ -40,8 +40,14 @@ std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortes
 			vi != passenger.getEntryId();
 			vi = predecessors[vi]
 		) {
-			std::cout << network.getNameOfVertex(vi) << " <- ";
-			route.push_back(vi);
+			if (route.empty() == false && route.back() == vi) {
+				std::cout << "no route to destination! start = ";
+				route.clear();
+				break;
+			} else {
+				std::cout << network.getNameOfVertex(vi) << " <- ";
+				route.push_back(vi);
+			}
 		}
 		std::cout << network.getNameOfVertex(passenger.getEntryId()) << '\n';
 		route.push_back(passenger.getEntryId());
