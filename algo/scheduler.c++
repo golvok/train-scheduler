@@ -9,8 +9,8 @@ namespace algo {
 int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 	auto& g = network.g();
 
-	for (auto person : passengers) {
-		TrackNetwork::ID start = person.getEntryId();
+	for (auto passenger : passengers) {
+		TrackNetwork::ID start = passenger.getEntryId();
 		std::vector<TrackNetwork::ID> predecessors(num_vertices(g));
 		std::vector<int> distances(num_vertices(g));
 
@@ -30,17 +30,22 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 			)
 		);
 
-		std::cout << "distances and parents: for " << person.getName() << '\n';
-		for (auto vi : make_iterable(vertices(g))) {
-			std::cout
-				<< "distance(" << network.getNameOfVertex(vi) << ") = "
-					<< distances[vi] << ", "
-				<< "parent(" << network.getNameOfVertex(vi) << ") = "
-					<< network.getNameOfVertex(predecessors[vi])
-				<< std::endl
-		    ;
+		std::cout << "shortest path for " << passenger.getName() << ":\n";
+		std::vector<TrackNetwork::ID> route;
+		for (
+			auto vi = passenger.getExitId();
+			vi != passenger.getEntryId();
+			vi = predecessors[vi]
+		) {
+			std::cout << network.getNameOfVertex(vi) << " <- ";
+			route.push_back(vi);
 		}
-		std::cout << "\n\n";
+		std::cout << network.getNameOfVertex(passenger.getEntryId()) << '\n';
+		route.push_back(passenger.getEntryId());
+
+		std::reverse(route);
+		passenger2route.emplace(passenger,std::move(route));
+
 	}
 
 	return 0;

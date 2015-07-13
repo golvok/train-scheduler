@@ -3,6 +3,7 @@
 
 #include "track_network.h++"
 #include <string>
+#include <algorithm>
 
 class Passenger {
 	std::string name;
@@ -28,7 +29,26 @@ public:
 	TrackNetwork::ID getExitId() const { return exit_id; }
 	uint getStartTime() const { return start_time; }
 
+	bool operator==(const Passenger& rhs) const {
+		return name == rhs.name;
+	}
 };
+
+namespace std {
+	template<>
+	struct hash<Passenger> {
+		size_t operator()(const Passenger& p) const {
+			return std::hash<std::string>()(p.getName());
+		}
+	};
+}
+
+namespace std {
+	template<typename T>
+	void reverse(T& t) {
+		reverse(std::begin(t),std::end(t));
+	}
+}
 
 template<typename PAIR_TYPE>
 class iterator_pair_adapter {
