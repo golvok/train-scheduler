@@ -30,7 +30,7 @@ int main(int argc_int, char const** arcv) {
 			break;
 		}
 
-		std::cout << "\nInput Data #" << tn_counter << ":\n";
+		std::cout << "\n============ Input Data #" << tn_counter << " ============\n";
 
 		auto results = algo::schedule(tn, passengers);
 		(void)results;

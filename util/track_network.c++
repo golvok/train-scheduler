@@ -24,7 +24,7 @@ TrackNetwork::ID TrackNetwork::getVertex(const std::string& name) {
 }
 
 namespace {
-	std::string empty{};
+	const std::string empty{};
 }
 
 const std::string& TrackNetwork::getNameOfVertex(TrackNetwork::ID id) {

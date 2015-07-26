@@ -43,7 +43,7 @@ namespace std {
 	};
 }
 
-namespace std {
+namespace util {
 	template<typename T>
 	void reverse(T& t) {
 		reverse(std::begin(t),std::end(t));
@@ -141,7 +141,7 @@ public:
  * Allows for iteration using the for-range syntax, but also gives you an id
  * to use. Useful for using the index as the key for a map, or into another vector.
  *
- * Example :
+ * Example:
  * std::vector<int> some_ints { 1, 5, 7, 8, 1, };
  * for (auto iter : index_assoc_iterate(some_ints)) {
  *     std::cout << "There's a " *iter.it() << " at " << iter.i << '\n';
