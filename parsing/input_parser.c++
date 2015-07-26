@@ -10,6 +10,7 @@ namespace input {
 namespace fake_data {
 	std::vector<std::vector<std::tuple<std::string, std::string, uint>>> graphs {
 		{
+			std::make_tuple("A"," ",0), // first one is spawn location
 			std::make_tuple("A","B",1),
 			std::make_tuple("B","C",1),
 			std::make_tuple("C","D",1),
@@ -18,6 +19,7 @@ namespace fake_data {
 			std::make_tuple("F","Z",1),
 		},
 		{
+			std::make_tuple("A"," ",0),
 			std::make_tuple("A","B",1),
 			std::make_tuple("B","C",1),
 			std::make_tuple("C","D",1),
@@ -34,7 +36,7 @@ namespace fake_data {
 
 	std::vector<std::vector<std::tuple<std::string, std::string, std::string, uint>>> passengers {
 		{
-			std::make_tuple("  "," "," ", 0),
+			std::make_tuple("  "," "," ", 0), // first one is graph id used
 			std::make_tuple("pA","A","B", 1),
 			std::make_tuple("pB","B","C", 2),
 			std::make_tuple("pC","C","D", 3),
@@ -55,7 +57,7 @@ namespace fake_data {
 			std::make_tuple("  "," "," ", 1),
 			std::make_tuple("p1","A","Z", 1),
 			std::make_tuple("p2","A","Z", 3),
-			std::make_tuple("p2","B","K", 3),
+			std::make_tuple("p3","B","K", 3),
 		},
 	};
 }
@@ -78,13 +80,19 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_graph(std::istream& 
 		if (first) {
 			first = false;
 			// get graph id from first "passenger"
+			bool first_edge = true;
 			for (auto& elem : fake_data::graphs[std::get<3>(passenger)]) {
-				boost::add_edge(
-					tn.getOrCreateVertex(std::get<0>(elem)),
-					tn.getOrCreateVertex(std::get<1>(elem)),
-					std::get<2>(elem),
-					tn.g()
-				);
+				if (first_edge) {
+					tn.setTrainSpawnLocation(tn.getOrCreateVertex(std::get<0>(elem)));
+					first_edge = false;
+				} else {
+					boost::add_edge(
+						tn.getOrCreateVertex(std::get<0>(elem)),
+						tn.getOrCreateVertex(std::get<1>(elem)),
+						std::get<2>(elem),
+						tn.g()
+					);
+				}
 			}
 		} else {
 			passengers.emplace_back(
