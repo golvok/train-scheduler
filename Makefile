@@ -1,9 +1,12 @@
 .SUFFIXES:
-.PHONY: all clean
+.PHONY: all clean build_info
 
 # remove ALL implicit rules
 .SUFFIXES:
-MAKEFLAGS+=" -r"
+MAKEFLAGS+=" -r "
+
+# add parallelism equal to number of cores
+MAKEFLAGS+=" -j$(grep -c "vendor_id" /proc/cpuinfo) "
 
 BUILD_MODE ?= release
 
@@ -18,7 +21,7 @@ DEPS_DIR=DEPS/
 WARNING_FLAGS += -Wall -Wextra -pedantic -Weffc++ -Werror
 
 # put other flags for both the compiler & linker here
-EXTRA_FLAGS = -std=c++11 
+EXTRA_FLAGS = -std=c++14
 
 # add flags for debugging
 ifeq ($(BUILD_MODE),debug)
@@ -48,7 +51,11 @@ DIRS=$(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR) \
 # define executables
 EXES=$(EXE_DIR)train-sch
 
-all: $(EXES)
+all: $(EXES) | build_info
+
+build_info:
+	@echo "Building with makeflags ${MAKEFLAGS}"
+	@echo "In build mode ${BUILD_MODE}"
 
 # add more dependencies here:
 $(EXE_DIR)train-sch: \
@@ -73,8 +80,8 @@ endif
 # second one adds stub rules for each depended on file (make might
 # complain with generated d
 .SECONDEXPANSION:
-$(OBJ_DIR)%.o: %.c++ | $(OBJ_DIR)$$(dir %) $(DEPS_DIR)$$(dir %)
-	$(CXX) -c  $< -o  $@ $(CXXFLAGS)
+$(OBJ_DIR)%.o: %.c++ | build_info $(OBJ_DIR)$$(dir %) $(DEPS_DIR)$$(dir %)
+	$(CXX) -c  $(shell readlink --canonicalize $<) -o  $@ $(CXXFLAGS)
 	@$(CXX) -MM $< -MF $(DEPS_DIR)$<.d.tmp $(CXXFLAGS)
 	@sed -e 's|.*:|$@:|' < $(DEPS_DIR)$<.d.tmp > $(DEPS_DIR)$<.d
 	@sed -e 's/.*://' -e 's/\\$$//' < $(DEPS_DIR)$<.d.tmp | fmt -1 | \
@@ -82,7 +89,7 @@ $(OBJ_DIR)%.o: %.c++ | $(OBJ_DIR)$$(dir %) $(DEPS_DIR)$$(dir %)
 	@rm -f $(DEPS_DIR)$<.d.tmp
 
 # compile *.o's into an executable
-$(EXE_DIR)%: | $(EXE_DIR)
+$(EXE_DIR)%: | build_info $(EXE_DIR)
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 $(DIRS):
