@@ -9,6 +9,7 @@
 using uint = unsigned int;
 
 int main(int argc_int, char const** arcv) {
+	dout.setMaxIndentation(7);
 	uint arg_count = argc_int;
 	std::vector<std::string> args;
 	for (uint i = 0; i < arg_count; ++i) {
@@ -30,7 +31,9 @@ int main(int argc_int, char const** arcv) {
 			break;
 		}
 
-		std::cout << "\n============ Input Data #" << tn_counter << " ============\n";
+		dout.str() << '\n';
+		auto d_indent = dout.indentWithTitleF([&](auto& s){s << "Input Data #" << tn_counter;});
+		dout.str() << '\n';
 
 		auto results = algo::schedule(tn, passengers);
 		(void)results;

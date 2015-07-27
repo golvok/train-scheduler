@@ -32,21 +32,22 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 	);
 
 	std::vector<TrackNetwork::ID> route;
+	dout.printIndent();
 	for (
 		auto vi = end;
 		vi != start;
 		vi = predecessors[vi]
 	) {
 		if (route.empty() == false && route.back() == vi) {
-			std::cout << "no route to destination! start = ";
+			dout.str() << "no route to destination! start = ";
 			route.clear();
 			break;
 		} else {
-			std::cout << network.getNameOfVertex(vi) << " <- ";
+			dout.str() << network.getNameOfVertex(vi) << " <- ";
 			route.push_back(vi);
 		}
 	}
-	std::cout << network.getNameOfVertex(start) << '\n';
+	dout.str() << network.getNameOfVertex(start) << '\n';
 	route.push_back(start);
 	util::reverse(route);
 
@@ -59,7 +60,7 @@ std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortes
 	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
 
 	for (auto passenger : passengers) {
-		std::cout << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
+		dout << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
 
 		auto route = get_shortest_route(passenger.getEntryId(),passenger.getExitId(),network);
 
@@ -75,12 +76,14 @@ namespace algo {
 
 int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 
-	std::cout << "== finding routes ==\n";
+	auto fnd_routes_indent = dout.indentWithTitle("finding routes");
 
 	auto passenger2route = get_shortest_routes(network, passengers);
 	TrackNetwork::ID spawn_loc = network.getTrainSpawnLocation();
 
-	std::cout << "== scheduling ==\n";
+	fnd_routes_indent.endIndent();
+
+	auto sch_indent = dout.indentWithTitle("scheduling");
 
 	auto sorted_passegners = passengers;
 	std::sort(
@@ -106,8 +109,8 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		}
 
 		train_passengers.push_back({}); // "add" a new train
-		std::cout << "= populating train " << train_passengers.size() << " =\n";
-		std::cout << "routing to " << p1.getName() << ":\n";
+		auto pop_indent = dout.indentWithTitleF([&](auto& s){ s << "populating train " << train_passengers.size(); });
+		dout << "routing to " << p1.getName() << ":\n";
 		auto route_to_passenger = get_shortest_route(spawn_loc, (p1).getEntryId(), network);
 
 		// now, iterate nodes in the paths, and find other passengers to pick up
@@ -117,7 +120,7 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 
 		// time must be positive?
 		uint time = std::max(0, (int)p1.getStartTime() - (int)route_to_passenger.size());
-		std::cout << "train will enter at time " << time << '\n';
+		dout << "train will enter at time " << time << '\n';
 
 		// iterate over nodes in the path to this passenger, and this passenger's path
 		for (auto node = route_to_passenger.begin();
@@ -142,16 +145,16 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 				}
 			}
 		}
-		std::cout << "passengers are: {";
+		dout << "passengers are: {";
 		bool first = true;
 		for (const auto& p : train_passengers.back()) {
 			if (!first) {
-				std::cout << ',';
+				dout.str() << ',';
 			}
 			first = false;
-			std::cout << p.getName();
+			dout.str() << p.getName();
 		}
-		std::cout << "}\n";
+		dout.str() << "}\n";
 	}
 
 	return 0;
