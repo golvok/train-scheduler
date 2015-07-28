@@ -56,6 +56,7 @@ namespace util {
 			f();
 		}
 	}
+
 }
 
 template<typename PAIR_TYPE>
@@ -84,65 +85,67 @@ make_iterable(PAIR_TYPE&& src) {
  * Begin definition of Index Associative Iterator. See end for usage
  *************/
 
-template<typename ITERATOR, typename INDEX>
+template<typename IA_ITERATOR>
 class index_associative_iteratior_value {
-	ITERATOR iter;
-	INDEX index;
+	const IA_ITERATOR* src;
 public:
-	ITERATOR it() { return iter; }
-	INDEX i() { return index; }
-	index_associative_iteratior_value(const ITERATOR& iter, const INDEX& index)
-		: iter(iter), index(index) {}
-	index_associative_iteratior_value(const index_associative_iteratior_value& src)
-		: iter(src.iter), index(src.index) {}
+	typedef typename IA_ITERATOR::value_type value_type;
 
-	index_associative_iteratior_value& operator=(const index_associative_iteratior_value&) = default;
+	typename IA_ITERATOR::iterator_type it() const { return src->it(); }
+	typename IA_ITERATOR::size_type i() const { return src->i(); }
+
+	index_associative_iteratior_value(const IA_ITERATOR& src) : src(&src) {}
+	index_associative_iteratior_value(const index_associative_iteratior_value& src) = default;
+
+	index_associative_iteratior_value& operator=(const index_associative_iteratior_value&) = delete;
+
+	operator value_type() { return *(it()); }
+	value_type& operator*() { return *(it()); }
 };
 
-template<typename ITERATOR>
+template<typename ITERATOR, typename INDEX>
 class index_associative_iteratior {
-	ITERATOR iter;
-	size_t index;
 public:
-	index_associative_iteratior(const ITERATOR& it) : iter(it), index(0) {}
-	// decl copycon & op assign ?
+	typedef ITERATOR iterator_type;
+	typedef INDEX size_type;
+	typedef index_associative_iteratior_value<index_associative_iteratior> value_type;
+private:
+	iterator_type iter;
+	size_type index;
+public:
+	index_associative_iteratior(const iterator_type& it) : iter(it), index(0) {}
+
+	index_associative_iteratior(const index_associative_iteratior&) = default;
+	index_associative_iteratior& operator=(const index_associative_iteratior&) = delete;
 
 	index_associative_iteratior& operator++() {
 		++iter;
 		++index;
 		return *this;
 	}
-	bool operator==(const index_associative_iteratior& rhs) const {
-		return iter == rhs.iter;
-	}
-	bool operator!=(const index_associative_iteratior& rhs) const {
-		return !(*this == rhs);
-	}
 
-	index_associative_iteratior_value<ITERATOR,size_t> operator*() const {
-		return index_associative_iteratior_value<ITERATOR,size_t>(iter,index);
-	}
+	bool operator==(const index_associative_iteratior& rhs) const { return iter == rhs.iter; }
+	bool operator!=(const index_associative_iteratior& rhs) const { return iter != rhs.iter; }
+	value_type operator*() const { return value_type(*this); }
+
+	iterator_type it() const { return iter; }
+	size_type i() const { return index; }
 };
 
 template<typename CONAINER>
 class index_associative_iteratior_adapter {
-	CONAINER& c;
+	CONAINER* c;
 public:
-	index_associative_iteratior_adapter(CONAINER& c) : c(c) {}
-	index_associative_iteratior_adapter(
-		const index_associative_iteratior_adapter& src) : c(src.c) {}
-	index_associative_iteratior_adapter(
-		index_associative_iteratior_adapter&& src) : c(src.c) {}
+	typedef typename CONAINER::size_type size_type;
+	typedef index_associative_iteratior<typename CONAINER::iterator, size_type> iterator_type;
+
+	index_associative_iteratior_adapter(CONAINER& c) : c(&c) {}
+	index_associative_iteratior_adapter(const index_associative_iteratior_adapter& src) = default;
 
 	index_associative_iteratior_adapter& operator=(const index_associative_iteratior_adapter&) = delete;
-	index_associative_iteratior_adapter& operator=(index_associative_iteratior_adapter&&) = delete;
 
-	index_associative_iteratior<typename CONAINER::iterator> begin() {
-		return index_associative_iteratior<typename CONAINER::iterator>(std::begin(c));
-	}
-	index_associative_iteratior<typename CONAINER::iterator> end() {
-		return index_associative_iteratior<typename CONAINER::iterator>(std::end(c));
-	}
+	iterator_type begin() { return iterator_type(std::begin(*c)); }
+	iterator_type end() { return iterator_type(std::end(*c)); }
 };
 
 /**
