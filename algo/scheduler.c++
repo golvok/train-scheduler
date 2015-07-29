@@ -32,22 +32,21 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 	);
 
 	std::vector<TrackNetwork::ID> route;
-	dout.printIndent();
 	for (
 		auto vi = end;
 		vi != start;
 		vi = predecessors[vi]
 	) {
 		if (route.empty() == false && route.back() == vi) {
-			dout.str() << "no route to destination! start = ";
+			dout << "no route to destination! start = ";
 			route.clear();
 			break;
 		} else {
-			dout.str() << network.getNameOfVertex(vi) << " <- ";
+			dout << network.getNameOfVertex(vi) << " <- ";
 			route.push_back(vi);
 		}
 	}
-	dout.str() << network.getNameOfVertex(start) << '\n';
+	dout << network.getNameOfVertex(start) << '\n';
 	route.push_back(start);
 	util::reverse(route);
 
@@ -149,12 +148,12 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		bool first = true;
 		for (const auto& p : train_passengers.back()) {
 			if (!first) {
-				dout.str() << ',';
+				dout << ',';
 			}
 			first = false;
-			dout.str() << p.getName();
+			dout << p.getName();
 		}
-		dout.str() << "}\n";
+		dout << "}\n";
 	}
 
 	return 0;

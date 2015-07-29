@@ -31,9 +31,9 @@ int main(int argc_int, char const** arcv) {
 			break;
 		}
 
-		dout.str() << '\n';
+		dout << '\n';
 		auto d_indent = dout.indentWithTitleF([&](auto& s){s << "Input Data #" << tn_counter;});
-		dout.str() << '\n';
+		dout << '\n';
 
 		auto results = algo::schedule(tn, passengers);
 		(void)results;

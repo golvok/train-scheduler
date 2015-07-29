@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <sstream>
 
 class Passenger {
 	std::string name;
@@ -180,41 +182,80 @@ index_associative_iteratior_adapter<CONAINER> index_assoc_iterate(CONAINER& c) {
 
 class IndentingDebugPrinter;
 
+class indent_filter	: public boost::iostreams::output_filter {
+private:
+	friend class IndentingDebugPrinter;
+
+	IndentingDebugPrinter& src;
+	bool just_saw_newline;
+
+	explicit indent_filter(IndentingDebugPrinter& src)
+		: src(src)
+		, just_saw_newline(true)
+	{ }
+
+public:
+	template<typename SINK> bool put(SINK& dest, int c);
+
+	// this should reset the state
+	template<typename SINK> void close(SINK&) { just_saw_newline = true; }
+};
+
 class IndentLevel {
 	friend class IndentingDebugPrinter;
 	IndentingDebugPrinter& src;
 	bool ended;
-	IndentLevel(IndentingDebugPrinter& src) : src(src), ended(false) {}
+	IndentLevel(IndentingDebugPrinter& src) : src(src), ended(false) { }
 public:
 	void endIndent();
 	~IndentLevel();
 };
 
-class IndentingDebugPrinter {
+class IndentingDebugPrinter : boost::iostreams::filtering_ostream {
 	friend class IndentLevel;
-	std::ostream* out;
 	int max_indent_level;
 	int indent_level;
+
+	std::stringstream ss;
 public:
 	IndentingDebugPrinter(std::ostream& os, int max_indent_level)
-		: out(&os)
-		, max_indent_level(max_indent_level)
+		: max_indent_level(max_indent_level)
 		, indent_level(0)
-	{}
+		, ss()
+	{
+		push(indent_filter(*this));
+		push(os);
+	}
 
 	IndentingDebugPrinter(const IndentingDebugPrinter&) = delete;
 	IndentingDebugPrinter& operator=(const IndentingDebugPrinter&) = delete;
 
 	template<typename T>
 	void print(const T& t) {
-		printIndent();
-		(*out) << t;
+		ss << t;
+		while (true) {
+			auto c = ss.get();
+			if (ss.eof()) { break; }
+			this->put(c);
+		}
+		this->flush(); // force priting now, so that indent is for sure correct.
+		ss.clear(); // clear eof bit
 	}
 
-	void printIndent() {
-		util::repeat(std::min(indent_level,max_indent_level),[&](){
-			(*out) << ' ' << ' ';
-		});
+	uint getIndentLevel() {
+		return indent_level;
+	}
+
+	uint getNumSpacesToIndent() {
+		return indent_level * 2;
+	}
+
+	uint getTitleLevel() {
+		if (indent_level >= max_indent_level) {
+			return 1;
+		} else {
+			return max_indent_level-indent_level;
+		}
 	}
 
 	IndentLevel indentWithTitle(const std::string& title) {
@@ -223,34 +264,33 @@ public:
 
 	template<typename FUNC>
 	IndentLevel indentWithTitleF(const FUNC& f) {
-		uint num_equals = std::max(1,max_indent_level-indent_level);
-		printIndent();
-		util::repeat(num_equals,[&](){
-			(*out) << '=';
+		util::repeat(getTitleLevel(),[&](){
+			(*this) << '=';
 		});
-		(*out) << ' ';
-		f(this->str());
-		(*out) << ' ';
-		util::repeat(num_equals,[&](){
-			(*out) << '=';
+		(*this) << ' ';
+		f(*this);
+		(*this) << ' ';
+		util::repeat(getTitleLevel(),[&](){
+			(*this) << '=';
 		});
-		(*out) << '\n';
+		(*this) << '\n';
 		indent_level++;
 		return IndentLevel(*this);
 	}
 
-	std::ostream& str() { return *out; }
 	void setMaxIndentation(int level) { max_indent_level = level; }
 private:
 	void endIndent() {
-		indent_level = std::max(indent_level-1,0);
+		if (indent_level > 0) {
+			indent_level = indent_level - 1;
+		}
 	}
 };
 
 template<typename T>
-std::ostream& operator<<(IndentingDebugPrinter& lhs, const T& rhs) {
+IndentingDebugPrinter& operator<<(IndentingDebugPrinter& lhs, const T& rhs) {
 	lhs.print(rhs);
-	return lhs.str();
+	return lhs;
 }
 
 extern IndentingDebugPrinter dout;
