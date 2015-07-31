@@ -32,7 +32,7 @@ int main(int argc_int, char const** arcv) {
 		}
 
 		dout << '\n';
-		auto d_indent = dout.indentWithTitleF([&](auto& s){s << "Input Data #" << tn_counter;});
+		auto d_indent = dout.indentWithTitle([&](auto& s){s << "Input Data #" << tn_counter;});
 		dout << '\n';
 
 		auto results = algo::schedule(tn, passengers);

@@ -258,12 +258,10 @@ public:
 		}
 	}
 
-	IndentLevel indentWithTitle(const std::string& title) {
-		return indentWithTitleF([&](auto& s){ s << title; });
-	}
-
 	template<typename FUNC>
-	IndentLevel indentWithTitleF(const FUNC& f) {
+	auto indentWithTitle(const FUNC& f) -> decltype(f(*this),IndentLevel(*this)) {
+		// the weird return value is so the compiler SFINAE's away this
+		// override if FUNC is not a lambda style type
 		util::repeat(getTitleLevel(),[&](){
 			(*this) << '=';
 		});
@@ -276,6 +274,14 @@ public:
 		(*this) << '\n';
 		indent_level++;
 		return IndentLevel(*this);
+	}
+
+	IndentLevel indentWithTitle(const std::string& title) {
+		return indentWithTitle([&](auto& s){ s << title; });
+	}
+
+	IndentLevel indentWithTitle(const char*& title) {
+		return indentWithTitle([&](auto& s){ s << title; });
 	}
 
 	void setMaxIndentation(int level) { max_indent_level = level; }

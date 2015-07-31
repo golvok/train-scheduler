@@ -108,7 +108,7 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		}
 
 		train_passengers.push_back({}); // "add" a new train
-		auto pop_indent = dout.indentWithTitleF([&](auto& s){ s << "populating train " << train_passengers.size(); });
+		auto pop_indent = dout.indentWithTitle([&](auto& s){ s << "populating train " << train_passengers.size(); });
 		dout << "routing to " << p1.getName() << ":\n";
 		auto route_to_passenger = get_shortest_route(spawn_loc, (p1).getEntryId(), network);
 
