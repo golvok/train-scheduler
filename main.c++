@@ -9,13 +9,13 @@
 
 int program_main();
 
-int main(int argc_int, char const** arcv) {
+int main(int argc_int, char const** argv) {
 	dout.setMaxIndentation(7);
 
 	uint arg_count = argc_int;
 	std::vector<std::string> args;
 	for (uint i = 0; i < arg_count; ++i) {
-		args.emplace_back(arcv[i]);
+		args.emplace_back(argv[i]);
 	}
 
 	if (std::find(args.begin(),args.end(),"--graphics") != args.end()) {
