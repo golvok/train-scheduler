@@ -29,10 +29,13 @@ ifeq ($(BUILD_MODE),debug)
 endif
 
 LIBRARY_LINK_FLAGS += \
+	$(shell pkg-config --libs gtkmm-3.0) \
 	-lpthread
 
 INCLUDE_FLAGS += \
 	-I .
+
+GRAPHICS_INCL_FLAGS += $(shell pkg-config --cflags gtkmm-3.0)
 
 CXXFLAGS += $(EXTRA_FLAGS) $(WARNING_FLAGS) $(INCLUDE_FLAGS)
 LDFLAGS  += $(EXTRA_FLAGS) $(WARNING_FLAGS) $(LIBRARY_LINK_FLAGS)
@@ -41,7 +44,7 @@ LDFLAGS  += $(EXTRA_FLAGS) $(WARNING_FLAGS) $(LIBRARY_LINK_FLAGS)
 .PRECIOUS: $(OBJ_DIR)%.o
 
 # define source directories
-SOURCE_DIRS = algo/ util/ parsing/ ./
+SOURCE_DIRS = algo/ graphics/ parsing/ util/ ./
 
 # compute all directories that might need creation
 DIRS=$(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR) \
@@ -60,10 +63,16 @@ build_info:
 # add more dependencies here:
 $(EXE_DIR)train-sch: \
 	$(OBJ_DIR)algo/scheduler.o \
+	$(OBJ_DIR)graphics/graphics.o \
+	$(OBJ_DIR)graphics/trains_area.o \
 	$(OBJ_DIR)parsing/input_parser.o \
 	$(OBJ_DIR)util/track_network.o \
 	$(OBJ_DIR)util/utils.o \
 	$(OBJ_DIR)main.o
+
+# define extra flags for particular object files
+# adds graphics include flags to everything in graphics dir
+$(OBJ_DIR)graphics/%.o: INCLUDE_FLAGS+=$(GRAPHICS_INCL_FLAGS)
 
 # include all the dependency files, if any exist
 EXISTING_DEP_FILES = \

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <sstream>
+#include <cstdint>
 
 class Passenger {
 	std::string name;
@@ -58,7 +59,6 @@ namespace util {
 			f();
 		}
 	}
-
 }
 
 template<typename PAIR_TYPE>

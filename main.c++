@@ -1,22 +1,31 @@
 #include <util/utils.h++>
 #include <parsing/input_parser.h++>
 #include <algo/scheduler.h++>
+#include <graphics/graphics.h++>
 
 #include <string>
 #include <vector>
 #include <iostream>
 
-using uint = unsigned int;
+int program_main();
 
 int main(int argc_int, char const** arcv) {
 	dout.setMaxIndentation(7);
+
 	uint arg_count = argc_int;
 	std::vector<std::string> args;
 	for (uint i = 0; i < arg_count; ++i) {
 		args.emplace_back(arcv[i]);
 	}
-	(void)args;
 
+	if (std::find(args.begin(),args.end(),"--graphics") != args.end()) {
+		graphics::get().initialize();
+	}
+
+	return program_main();
+}
+
+int program_main() {
 	uint tn_counter = 0;
 
 	while (true) {
@@ -26,6 +35,7 @@ int main(int argc_int, char const** arcv) {
 		bool good;
 
 		std::tie(tn,passengers,good) = parsing::input::parse_graph(std::cin, std::cerr);
+		graphics::get().getTrainsAreaData().setTN(tn);
 
 		if (good == false) {
 			break;
@@ -38,6 +48,7 @@ int main(int argc_int, char const** arcv) {
 		auto results = algo::schedule(tn, passengers);
 		(void)results;
 
+		graphics::get().waitForPress();
 	}
 
 	return 0;
