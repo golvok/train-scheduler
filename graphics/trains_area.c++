@@ -24,7 +24,42 @@ TrainsArea::TrainsArea(TrainsAreaData& data)
  * Draws the track & trains
  */
 bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
-	(void)cc;
+	if (time == INVALID_TIME) { return true; }
+
+	const uint padding = 10;
+
+	const int width  = get_allocation().get_width()  - padding*2;
+	const int height = get_allocation().get_height() - padding*2;
+
+	std::vector<TrackNetwork::ID> vertices;
+
+	for (auto vi : make_iterable(boost::vertices(data.getTN().g()))) {
+		vertices.push_back(vi);
+	}
+
+	std::sort(vertices.begin(), vertices.end(), [&](auto& lhs, auto& rhs) {
+		return data.getTN().getNameOfVertex(lhs) < data.getTN().getNameOfVertex(rhs);
+	});
+
+	float vertex_spacing = (float)width/vertices.size();
+
+	const int y = 0 + padding + height/2; // center
+	float x = padding;
+
+	cc->move_to(x,y);
+
+	for (auto& id : vertices) {
+		cc->line_to(x,y);
+		cc->arc(x,y, 2, 0, 2 * M_PI);
+
+		cc->move_to(x,y-10);
+		cc->show_text(data.getTN().getNameOfVertex(id));
+		cc->move_to(x,y);
+
+		x += vertex_spacing;
+	}
+
+	cc->stroke();
 
 	return true;
 }
