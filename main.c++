@@ -34,7 +34,7 @@ int program_main() {
 		std::vector<Passenger> passengers;
 		bool good;
 
-		std::tie(tn,passengers,good) = parsing::input::parse_graph(std::cin, std::cerr);
+		std::tie(tn,passengers,good) = parsing::input::parse_data(std::cin);
 		graphics::get().getTrainsAreaData().setTN(tn);
 
 		if (good == false) {

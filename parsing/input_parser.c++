@@ -62,11 +62,10 @@ namespace fake_data {
 	};
 }
 
-std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_graph(std::istream& is, std::ostream& err) {
+std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& is) {
 	static size_t call_num = 0;
 	call_num += 1;
 	(void)is;
-	(void)err;
 
 	TrackNetwork tn;
 	std::vector<Passenger> passengers;

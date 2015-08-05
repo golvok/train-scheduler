@@ -9,7 +9,7 @@
 namespace parsing {
 namespace input {
 
-std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_graph(std::istream& is, std::ostream& err);
+std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& is);
 
 } // end namespace parsing
 } // end namespace input
