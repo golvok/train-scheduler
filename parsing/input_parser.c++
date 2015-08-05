@@ -8,6 +8,32 @@ namespace parsing {
 namespace input {
 
 namespace fake_data {
+	std::vector<std::unordered_map<std::string,std::pair<float,float>>> vertex_locations {
+		{
+			{"A",{  0,  0}},
+			{"A",{  5,  0}},
+			{"B",{ 10,  0}},
+			{"C",{ 15,  0}},
+			{"D",{ 20,  0}},
+			{"E",{ 25,  0}},
+			{"F",{ 30,  0}},
+		},
+		{
+			{"A",{  0,  0}},
+			{"A",{  5,  0}},
+			{"B",{ 10,  0}},
+			{"C",{ 15,  0}},
+			{"D",{ 20,  0}},
+			{"E",{ 25,  0}},
+			{"F",{ 30,  0}},
+			{"G",{ 35,  0}},
+			{"H",{ 40,  0}},
+			{"I",{ 45,  0}},
+			{"J",{ 50,  0}},
+			{"K",{ 55,  0}},
+		},
+	};
+
 	std::vector<std::vector<std::tuple<std::string, std::string, uint>>> graphs {
 		{
 			std::make_tuple("A"," ",0), // first one is spawn location
@@ -78,16 +104,24 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 	for (auto& passenger : fake_data::passengers[call_num-1]) {
 		if (first) {
 			first = false;
-			// get graph id from first "passenger"
+			// get graph id from first "passenger"'s arrival time
+			size_t graph_id = std::get<3>(passenger);
+
+			// create vertices
+			for (auto& elem : fake_data::vertex_locations[graph_id]) {
+				tn.createVertex(elem.first, elem.second);
+			}
+
+			// add edges
 			bool first_edge = true;
-			for (auto& elem : fake_data::graphs[std::get<3>(passenger)]) {
+			for (auto& elem : fake_data::graphs[graph_id]) {
 				if (first_edge) {
-					tn.setTrainSpawnLocation(tn.getOrCreateVertex(std::get<0>(elem)));
+					tn.setTrainSpawnLocation(tn.getVertex(std::get<0>(elem)));
 					first_edge = false;
 				} else {
 					boost::add_edge(
-						tn.getOrCreateVertex(std::get<0>(elem)),
-						tn.getOrCreateVertex(std::get<1>(elem)),
+						tn.getVertex(std::get<0>(elem)),
+						tn.getVertex(std::get<1>(elem)),
 						std::get<2>(elem),
 						tn.g()
 					);
@@ -96,8 +130,8 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 		} else {
 			passengers.emplace_back(
 				std::get<0>(passenger),
-				tn.getOrCreateVertex(std::get<1>(passenger)),
-				tn.getOrCreateVertex(std::get<2>(passenger)),
+				tn.getVertex(std::get<1>(passenger)),
+				tn.getVertex(std::get<2>(passenger)),
 				std::get<3>(passenger)
 			);
 		}

@@ -14,17 +14,18 @@ public:
 	typedef boost::graph_traits<BackingGraphType>::vertex_descriptor ID;
 	typedef boost::graph_traits<BackingGraphType>::edge_descriptor EdgeID;
 
+	static const ID INVALID_ID = -1;
 private:
 	BackingGraphType backing_graph;
 	std::unordered_map<std::string,ID> name2id;
-	std::unordered_map<ID,std::string> id2name;
+	std::unordered_map<ID,std::pair<std::string,std::pair<float,float>>> id2data;
 	ID train_spawn_location;
 
 public:
 	TrackNetwork()
 		: backing_graph()
 		, name2id()
-		, id2name()
+		, id2data()
 		, train_spawn_location()
 	{}
 
@@ -34,9 +35,10 @@ public:
 
 	BackingGraphType& g() { return backing_graph; }
 
-	ID getOrCreateVertex(const std::string& name);
+	ID createVertex(const std::string& name, std::pair<float,float> pos);
 	ID getVertex(const std::string& name);
 	const std::string& getNameOfVertex(ID id);
+	std::pair<float,float> getVertexPosition(ID id);
 
 	ID getTrainSpawnLocation() { return train_spawn_location; }
 	void setTrainSpawnLocation(ID id) { train_spawn_location = id; }
