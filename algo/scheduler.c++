@@ -42,11 +42,11 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 			route.clear();
 			break;
 		} else {
-			dout << network.getNameOfVertex(vi) << " <- ";
+			dout << network.getVertexName(vi) << " <- ";
 			route.push_back(vi);
 		}
 	}
-	dout << network.getNameOfVertex(start) << '\n';
+	dout << network.getVertexName(start) << '\n';
 	route.push_back(start);
 	util::reverse(route);
 

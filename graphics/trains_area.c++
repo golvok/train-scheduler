@@ -38,7 +38,7 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	}
 
 	std::sort(vertices.begin(), vertices.end(), [&](auto& lhs, auto& rhs) {
-		return data.getTN().getNameOfVertex(lhs) < data.getTN().getNameOfVertex(rhs);
+		return data.getTN().getVertexName(lhs) < data.getTN().getVertexName(rhs);
 	});
 
 	float vertex_spacing = (float)width/vertices.size();
@@ -53,7 +53,7 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 		cc->arc(x,y, 2, 0, 2 * M_PI);
 
 		cc->move_to(x,y-10);
-		cc->show_text(data.getTN().getNameOfVertex(id));
+		cc->show_text(data.getTN().getVertexName(id));
 		cc->move_to(x,y);
 
 		x += vertex_spacing;

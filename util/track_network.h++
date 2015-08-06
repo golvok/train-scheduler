@@ -37,7 +37,7 @@ public:
 
 	ID createVertex(const std::string& name, std::pair<float,float> pos);
 	ID getVertex(const std::string& name);
-	const std::string& getNameOfVertex(ID id);
+	const std::string& getVertexName(ID id);
 	std::pair<float,float> getVertexPosition(ID id);
 
 	ID getTrainSpawnLocation() { return train_spawn_location; }

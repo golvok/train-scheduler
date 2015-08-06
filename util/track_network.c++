@@ -27,7 +27,7 @@ namespace {
 	const std::string empty{};
 }
 
-const std::string& TrackNetwork::getNameOfVertex(TrackNetwork::ID id) {
+const std::string& TrackNetwork::getVertexName(TrackNetwork::ID id) {
 	auto find_results = id2data.find(id);
 	if (find_results == id2data.end()) {
 		return empty;
