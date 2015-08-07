@@ -1,6 +1,9 @@
 #include "track_network.h++"
+#include <util/utils.h++>
 
-TrackNetwork::ID TrackNetwork::createVertex(const std::string& name, std::pair<float,float> xy) {
+#include <cassert>
+
+TrackNetwork::ID TrackNetwork::createVertex(const std::string& name, geom::Point<float> xy) {
 	decltype(name2id)::iterator pos;
 	bool inserted;
 	std::tie(pos,inserted) = name2id.insert( std::make_pair(name, ID()) );
@@ -36,10 +39,10 @@ const std::string& TrackNetwork::getVertexName(TrackNetwork::ID id) {
 	}
 }
 
-std::pair<float,float> TrackNetwork::getVertexPosition(TrackNetwork::ID id) {
+geom::Point<float> TrackNetwork::getVertexPosition(TrackNetwork::ID id) {
 	auto find_results = id2data.find(id);
 	if (find_results == id2data.end()) {
-		return {0,0};
+		return geom::Point<float>();
 	} else {
 		return find_results->second.second;
 	}

@@ -109,7 +109,7 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 
 			// create vertices
 			for (auto& elem : fake_data::vertex_locations[graph_id]) {
-				tn.createVertex(elem.first, elem.second);
+				tn.createVertex(elem.first, {elem.second.first,elem.second.second} );
 			}
 
 			// add edges

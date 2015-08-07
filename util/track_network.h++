@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <boost/graph/adjacency_list.hpp>
 
+#include <graphics/geometry.h++>
+
 class TrackNetwork {
 	using Weight = boost::property<boost::edge_weight_t, uint>;
 	using BackingGraphType = boost::adjacency_list<
@@ -18,7 +20,7 @@ public:
 private:
 	BackingGraphType backing_graph;
 	std::unordered_map<std::string,ID> name2id;
-	std::unordered_map<ID,std::pair<std::string,std::pair<float,float>>> id2data;
+	std::unordered_map<ID,std::pair<std::string,geom::Point<float>>> id2data;
 	ID train_spawn_location;
 
 public:
@@ -35,10 +37,10 @@ public:
 
 	BackingGraphType& g() { return backing_graph; }
 
-	ID createVertex(const std::string& name, std::pair<float,float> pos);
+	ID createVertex(const std::string& name, geom::Point<float> pos);
 	ID getVertex(const std::string& name);
 	const std::string& getVertexName(ID id);
-	std::pair<float,float> getVertexPosition(ID id);
+	geom::Point<float> getVertexPosition(ID id);
 
 	ID getTrainSpawnLocation() { return train_spawn_location; }
 	void setTrainSpawnLocation(ID id) { train_spawn_location = id; }
