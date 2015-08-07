@@ -72,6 +72,8 @@ public:
 			Gtk::Box draw_and_buttons_hbox(Gtk::Orientation::ORIENTATION_HORIZONTAL);
 			buttons_vbox.reset(new Gtk::Box(Gtk::Orientation::ORIENTATION_VERTICAL));
 
+			buttons_vbox->override_background_color(Gdk::RGBA("#AAA"));
+
 			draw_and_buttons_hbox.pack_start(*ta,true,true);
 			draw_and_buttons_hbox.pack_end(*buttons_vbox,false,false);
 
