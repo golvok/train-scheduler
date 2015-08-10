@@ -85,67 +85,76 @@ struct Point {
 
 };
 
+/**
+ * constructor helper - will chose a type parameter for Point
+ * that will be at least as precise as x and y
+ */
+template<typename PRECISION1, typename PRECISION2>
+auto make_point(PRECISION1 x, PRECISION2 y) -> Point<decltype(x+y)> {
+	return {x,y};
+}
+
 const int POSITIVE_DOT_PRODUCT = 0;
 const int NEGATIVE_DOT_PRODUCT = 1;
 
 template<typename PRECISION, typename PRECISION2>
-PRECISION deltaX(Point<PRECISION> p1, Point<PRECISION2> p2) {
+auto deltaX(Point<PRECISION> p1, Point<PRECISION2> p2) {
 	return p2.x - p1.x;
 }
 template<typename PRECISION, typename PRECISION2>
-PRECISION deltaY(Point<PRECISION> p1, Point<PRECISION2> p2) {
+auto deltaY(Point<PRECISION> p1, Point<PRECISION2> p2) {
 	return p2.y - p1.y;
 }
 template<typename PRECISION, typename PRECISION2>
 Point<PRECISION> delta(Point<PRECISION> p1, Point<PRECISION2> p2) {
-	return Point<PRECISION>(deltaX(p1, p2), deltaY(p1, p2));
+	return {deltaX(p1, p2), deltaY(p1, p2)};
 }
 template<typename PRECISION, typename PRECISION2>
-Point<PRECISION> multiply(Point<PRECISION> p, PRECISION2 constant) {
-	return Point<PRECISION>(p.x * constant, p.y * constant);
+auto multiply(Point<PRECISION> p, PRECISION2 constant) {
+	return make_point(p.x * constant, p.y * constant);
 }
 template<typename PRECISION, typename PRECISION2>
-Point<PRECISION> divide(Point<PRECISION> p, PRECISION2 constant) {
-	return Point<PRECISION>(p.x / constant, p.y / constant);
+auto divide(Point<PRECISION> p, PRECISION2 constant) {
+	return make_point(p.x / constant, p.y / constant);
 }
 template<typename PRECISION, typename PRECISION2>
-Point<PRECISION> add(Point<PRECISION> p1, Point<PRECISION2> p2) {
-	return Point<PRECISION>(p1.x + p2.x, p1.y + p2.y);
+auto add(Point<PRECISION> p1, Point<PRECISION2> p2) {
+	return make_point(p1.x + p2.x, p1.y + p2.y);
 }
 template<typename PRECISION, typename PRECISION2>
-PRECISION distance(Point<PRECISION> p1, Point<PRECISION2> p2) {
+auto distance(Point<PRECISION> p1, Point<PRECISION2> p2) {
 	return sqrt(pow(deltaX(p1, p2), 2) + pow(deltaY(p1, p2), 2));
 }
 template<typename PRECISION>
-PRECISION magnitude(Point<PRECISION> p) {
-	return sqrt(magnitudeSquared(p));
-}
-template<typename PRECISION>
-PRECISION magnitudeSquared(Point<PRECISION> p) {
+auto magnitudeSquared(Point<PRECISION> p) {
 	return pow(p.x, 2) + pow(p.y, 2);
 }
 template<typename PRECISION>
-Point<PRECISION> unit(Point<PRECISION> p) {
+auto magnitude(Point<PRECISION> p) {
+	return sqrt(magnitudeSquared(p));
+}
+template<typename PRECISION>
+auto unit(Point<PRECISION> p) {
 	return divide(p, (PRECISION) magnitude(p));
 }
 template<typename PRECISION, typename PRECISION2>
-PRECISION dotProduct(Point<PRECISION> p1, Point<PRECISION2> p2) {
+auto dotProduct(Point<PRECISION> p1, Point<PRECISION2> p2) {
 	return p1.x * p2.x + p1.y * p2.y;
 }
 template<typename PRECISION>
 Point<PRECISION> getPerpindular(Point<PRECISION> p) {
-	return Point<PRECISION>(p.y,-p.x);
+	return {p.y,-p.x};
 }
 template<typename PRECISION, typename PRECISION2>
-Point<PRECISION> project(Point<PRECISION> source, Point<PRECISION2> wall) {
+auto project(Point<PRECISION> source, Point<PRECISION2> wall) {
 	return multiply(wall, dotProduct(wall, source) / magnitudeSquared(wall));
 }
-template<typename PRECISION, typename PRECISION2>
-Point<PRECISION>* farthestPoint(Point<PRECISION> p, std::vector<Point<PRECISION2>> tests) {
+template<typename PRECISION, typename POINT_TYPE>
+POINT_TYPE& farthestPoint(Point<PRECISION> p, const std::vector<POINT_TYPE>& tests) {
 	int farthestIndex = 0;
-	PRECISION farthestDistance = distancef(p, tests[0]);
+	auto farthestDistance = distancef(p, tests[0]);
 	for (int i = 1; i < tests.size(); ++i) {
-		PRECISION distance = distancef(p, tests[i]);
+		auto distance = distancef(p, tests[i]);
 		if (farthestDistance < distance) {
 			farthestIndex = i;
 			farthestDistance = distance;
@@ -153,37 +162,37 @@ Point<PRECISION>* farthestPoint(Point<PRECISION> p, std::vector<Point<PRECISION2
 	}
 	return tests[farthestIndex];
 }
-template<typename PRECISION, typename PRECISION2, typename PRECISION3>
-Point<PRECISION>* farthestFromLineWithSides(Point<PRECISION> p, Point<PRECISION2> q, std::vector<Point<PRECISION3>> tests) {
-	Point<PRECISION> line = delta(p, q);
-	Point<PRECISION> farthests[2];
-	PRECISION farthestDistance[2];
+template<typename PRECISION, typename PRECISION2, typename POINT_TYPE>
+std::array<POINT_TYPE*,2> farthestFromLineWithSides(Point<PRECISION> p, Point<PRECISION2> q, std::vector<POINT_TYPE>& tests) {
+	auto line = delta(p, q);
+	std::array<POINT_TYPE,2> farthests;
+	std::array<decltype(magnitude(perpindictularDeltaVectorToLine(line, delta(p, tests[0])))),2> farthestDistance;
 	for (int i = 0; i < tests.size(); ++i) {
-		Point<PRECISION> relativeToP = delta(p, tests[i]);
-		PRECISION distance = magnitude(perpindictularDeltaVectorToLine(line, relativeToP));
+		auto relativeToP = delta(p, tests[i]);
+		auto distance = magnitude(perpindictularDeltaVectorToLine(line, relativeToP));
 		int dotProductSign = dotProduct(line, relativeToP) < 0 ? NEGATIVE_DOT_PRODUCT : POSITIVE_DOT_PRODUCT;
 		if (farthestDistance[dotProductSign] < distance) {
-			farthests[dotProductSign] = tests[i];
+			farthests[dotProductSign] = &tests[i];
 			farthestDistance[dotProductSign] = distance;
 		}
 	}
 	return farthests;
 }
 template<typename PRECISION, typename PRECISION2, typename PRECISION3>
-PRECISION distanceToLine(Point<PRECISION> onLine_1, Point<PRECISION2> onLine_2, Point<PRECISION3> p) {
+auto distanceToLine(Point<PRECISION> onLine_1, Point<PRECISION2> onLine_2, Point<PRECISION3> p) {
 	return magnitude(perpindictularDeltaVectorToLine(onLine_1, onLine_2, p));
 }
 template<typename PRECISION, typename PRECISION2>
-Point<PRECISION> perpindictularDeltaVectorToLine(Point<PRECISION> onLine_1, Point<PRECISION2> onLine_2, Point<PRECISION> p) {
+auto perpindictularDeltaVectorToLine(Point<PRECISION> onLine_1, Point<PRECISION2> onLine_2, Point<PRECISION> p) {
 	return perpindictularDeltaVectorToLine(delta(onLine_1, onLine_2), delta(p, onLine_1));
 }
 template<typename PRECISION, typename PRECISION2>
-Point<PRECISION> perpindictularDeltaVectorToLine(Point<PRECISION> direction, Point<PRECISION2> p) {
+auto perpindictularDeltaVectorToLine(Point<PRECISION> direction, Point<PRECISION2> p) {
 	return delta(p, project(p, direction));
 }
 
 template<typename PRECISION>
-Point<PRECISION> operator*(PRECISION lhs, const Point<PRECISION>& rhs) {
+auto operator*(PRECISION lhs, const Point<PRECISION>& rhs) {
 	return rhs*lhs;
 }
 
