@@ -2,10 +2,10 @@
 
 #include "windowing_includes.h++"
 #include "trains_area.h++"
+#include <util/thread_utils.h++>
 
 #include <cassert>
 #include <thread>
-#include <condition_variable>
 
 namespace graphics {
 
@@ -31,12 +31,13 @@ class Graphics::Impl {
 	std::vector<std::unique_ptr<Gtk::Button>> buttons;
 	std::unique_ptr<Gtk::Box> buttons_vbox;
 
-	std::condition_variable waitForPress_cv;
-	std::mutex waitForPress_lk;
+	std::shared_ptr<util::SafeWaitForNotify> wait_for_press;
 
 	bool is_initialized;
 
 	TrainsAreaData tad;
+
+	std::thread app_thread;
 public:
 	Impl()
 		: app()
@@ -44,20 +45,27 @@ public:
 		, ta()
 		, buttons()
 		, buttons_vbox()
-		, waitForPress_cv()
-		, waitForPress_lk()
+		, wait_for_press(new util::SafeWaitForNotify())
 		, is_initialized(false)
 		, tad()
+		, app_thread()
 	{ }
 
 	Impl(const Impl&) = delete;
 	Impl& operator=(const Impl&) = delete;
 
+	~Impl() {
+		window->close(); // should cause app->run to return
+		if (app_thread.joinable()) {
+			app_thread.join();
+		}
+	}
+
 	bool initialize() {
 		assert(is_initialized == false);
 		is_initialized = true;
 
-		std::thread([&](){
+		app_thread = std::thread([&] {
 			int i = 0;
 			// char* cs[2] = {nullptr};
 			char** cc = nullptr;
@@ -78,28 +86,30 @@ public:
 			draw_and_buttons_hbox.pack_end(*buttons_vbox,false,false);
 
 			window->add(draw_and_buttons_hbox);
-			
+
 			ta->show();
 			draw_and_buttons_hbox.show();
 			buttons_vbox->show();
 
-			addButton("continue",[&]{
-				waitForPress_cv.notify_all();
+			// can't capture member variables directly...
+			auto& tmp_wait_for_press = wait_for_press;
+			addButton("continue", [tmp_wait_for_press] {
+				tmp_wait_for_press->notify_all();
 			});
 
 			app->run(*window);
 
 			is_initialized = false;
-			waitForPress_cv.notify_all();
-		}).detach();
+			wait_for_press->notify_all();
+		});
 
 		return true;
 	}
 
 	void waitForPress() {
 		if (is_initialized == false) { return; }
-		std::unique_lock<std::mutex> ul(waitForPress_lk);
-		waitForPress_cv.wait(ul);
+		wait_for_press->wait();
+		// careful - threads may be here after this is destructed
 	}
 
 	TrainsAreaData& getTrainsAreaData() {
