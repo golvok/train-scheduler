@@ -18,7 +18,7 @@ void draw_arrow(const CairoRefPtr& cc, Point<double> tail, Point<double> tip) {
 		tip.y - arrowLength * std::sin(angle_of_line + phi)
 	);
 
-	double phi2 = -35 * M_PI / 180;
+	const double phi2 = -35 * M_PI / 180;
 	Point<double> p2(
 		tip.x - arrowLength * std::cos(angle_of_line + phi2),
 		tip.y - arrowLength * std::sin(angle_of_line + phi2)

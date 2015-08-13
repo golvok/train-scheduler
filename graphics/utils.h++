@@ -25,7 +25,7 @@ void draw_arrow(const CairoRefPtr& cc, geom::Point<double> start, geom::Point<do
 
 void draw_box(const CairoRefPtr& cc, const geom::BoundBox<double>& box);
 
-template<typename CONTAINER = std::initializer_list<geom::Point<double>>>
+template<typename T = geom::Point<double>, typename CONTAINER = std::initializer_list<T>>
 void draw_all(const CairoRefPtr& cc, const CONTAINER& c) {
 	if (std::begin(c) == std::end(c)) { return; }
 	cc->move_to(std::begin(c)->x, std::begin(c)->y);
