@@ -1,7 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include "track_network.h++"
+#include <util/track_network.h++>
+
 #include <string>
 #include <algorithm>
 #include <iostream>

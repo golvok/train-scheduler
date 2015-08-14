@@ -2,7 +2,7 @@
 #include "trains_area.h++"
 
 #include <util/utils.h++>
-#include "utils.h++"
+#include <graphics/utils.h++>
 
 #include <cmath>
 

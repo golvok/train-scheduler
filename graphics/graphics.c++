@@ -1,7 +1,7 @@
 #include "graphics.h++"
 
-#include "windowing_includes.h++"
-#include "trains_area.h++"
+#include <graphics/windowing_includes.h++>
+#include <graphics/trains_area.h++>
 #include <util/thread_utils.h++>
 
 #include <cassert>

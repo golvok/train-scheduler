@@ -3,7 +3,7 @@
 #define GRAPHICS__TRAINS_AREA_H
 
 #include "graphics.h++"
-#include "windowing_includes.h++"
+#include <graphics/windowing_includes.h++>
 
 #include <cstdint>
 

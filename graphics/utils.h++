@@ -2,9 +2,9 @@
 #ifndef GRAPHICS__UTILS_H
 #define GRAPHICS__UTILS_H
 
-#include "windowing_includes.h++"
-#include "graphics.h++"
-#include "geometry.h++"
+#include <graphics/windowing_includes.h++>
+#include <graphics/graphics.h++>
+#include <graphics/geometry.h++>
 
 namespace graphics {
 
