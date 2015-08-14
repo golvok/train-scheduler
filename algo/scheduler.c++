@@ -1,5 +1,7 @@
 #include "scheduler.h++"
 
+#include <util/logging.h++>
+
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <iostream>

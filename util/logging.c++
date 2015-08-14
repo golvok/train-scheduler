@@ -1,5 +1,5 @@
-#include "utils.h++"
 
+#include "logging.h++"
 
 template<typename SINK>
 bool indent_filter::put(SINK& dest, int c) {

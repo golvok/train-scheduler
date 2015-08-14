@@ -67,9 +67,9 @@ $(EXE_DIR)train-sch: \
 	$(OBJ_DIR)graphics/trains_area.o \
 	$(OBJ_DIR)graphics/utils.o \
 	$(OBJ_DIR)parsing/input_parser.o \
+	$(OBJ_DIR)util/logging.o \
 	$(OBJ_DIR)util/track_network.o \
 	$(OBJ_DIR)util/thread_utils.o \
-	$(OBJ_DIR)util/utils.o \
 	$(OBJ_DIR)main.o
 
 # define extra flags for particular object files
@@ -89,7 +89,7 @@ endif
 # second CC line generates the initial dependency file
 # first sed line adds $(OBJ_DIR) prefixes to the dependency file,
 # second one adds stub rules for each depended on file (make might
-# complain with generated d
+# complain with generated files
 .SECONDEXPANSION:
 $(OBJ_DIR)%.o: %.c++ | build_info $(OBJ_DIR)$$(dir %) $(DEPS_DIR)$$(dir %)
 	$(CXX) -c  $(shell readlink --canonicalize $<) -o  $@ $(CXXFLAGS)

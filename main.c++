@@ -1,7 +1,9 @@
-#include <util/utils.h++>
-#include <parsing/input_parser.h++>
+
 #include <algo/scheduler.h++>
 #include <graphics/graphics.h++>
+#include <parsing/input_parser.h++>
+#include <util/logging.h++>
+#include <util/utils.h++>
 
 #include <string>
 #include <vector>
