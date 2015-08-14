@@ -1,6 +1,7 @@
 #ifndef INPUT_PARSER_H
 #define INPUT_PARSER_H
 
+#include <util/passenger.h++>
 #include <util/track_network.h++>
 #include <util/utils.h++>
 

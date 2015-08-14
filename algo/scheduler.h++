@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include <util/passenger.h++>
 #include <util/track_network.h++>
 #include <util/utils.h++>
 
