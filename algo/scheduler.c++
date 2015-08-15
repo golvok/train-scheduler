@@ -1,5 +1,6 @@
 #include "scheduler.h++"
 
+#include <util/iteration_utils.h++>
 #include <util/logging.h++>
 
 #include <boost/graph/graph_traits.hpp>
