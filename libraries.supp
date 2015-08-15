@@ -1,0 +1,40 @@
+{
+   libglib
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   obj:*libglib-2.0.so*
+   ...
+}
+{
+   libglibmm
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   obj:*libglibmm-2.4.so*
+   ...
+}
+{
+   libfontconfig
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   obj:*libfontconfig.so*
+   ...
+}
+{
+   libgtkmm
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   obj:*libgtkmm-3.0.so*
+   ...
+}
+{
+   libgtkmm
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   obj:*libgtk-3.so*
+   ...
+}
