@@ -95,14 +95,14 @@ public:
 	size_type i() const { return index; }
 };
 
-template<typename CONAINER>
+template<typename CONTAINER>
 class index_associative_iteratior_adapter {
-	CONAINER& c;
+	CONTAINER& c;
 public:
-	typedef typename CONAINER::size_type size_type;
-	typedef index_associative_iteratior<typename CONAINER::iterator, size_type> iterator_type;
+	typedef typename CONTAINER::size_type size_type;
+	typedef index_associative_iteratior<typename CONTAINER::iterator, size_type> iterator_type;
 
-	index_associative_iteratior_adapter(CONAINER& c) : c(c) {}
+	index_associative_iteratior_adapter(CONTAINER& c) : c(c) {}
 	index_associative_iteratior_adapter(const index_associative_iteratior_adapter& src) = default;
 
 	index_associative_iteratior_adapter& operator=(const index_associative_iteratior_adapter&) = delete;
@@ -132,13 +132,13 @@ public:
  * Maybe make it store a reference to the container, and just access it when
  * we need it() ? Won't work well for std::list, though.
  */
-template<typename CONAINER>
-index_associative_iteratior_adapter<CONAINER> index_assoc_iterate(CONAINER& c) {
-	return index_associative_iteratior_adapter<CONAINER>(c);
+template<typename CONTAINER>
+index_associative_iteratior_adapter<CONTAINER> index_assoc_iterate(CONTAINER& c) {
+	return index_associative_iteratior_adapter<CONTAINER>(c);
 }
 
 /*************
- * Begin definition of Container Contenation Adapter. See end for usage
+ * Begin definition of Container Concatenation Adapter. See end for usage
  *************/
 
 template<typename ADAPTER>
