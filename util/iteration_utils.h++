@@ -137,4 +137,102 @@ index_associative_iteratior_adapter<CONAINER> index_assoc_iterate(CONAINER& c) {
 	return index_associative_iteratior_adapter<CONAINER>(c);
 }
 
+/*************
+ * Begin definition of Container Contenation Adapter. See end for usage
+ *************/
+
+template<typename ADAPTER>
+class container_concat_adapter_iterator {
+public:
+	ADAPTER& adapter;
+
+	typedef typename std::remove_reference<decltype(adapter.get_containers().begin())>::type container_iter_type;
+	container_iter_type container_iter;
+
+	typedef typename std::remove_reference<decltype((*adapter.get_containers().begin())->begin())>::type iterator_type;
+	iterator_type iter;
+
+	container_concat_adapter_iterator(ADAPTER& a, container_iter_type ci, iterator_type i)
+		: adapter(a)
+		, container_iter(ci)
+		, iter(i)
+	{
+		skip_empties();
+	}
+
+	container_concat_adapter_iterator(const container_concat_adapter_iterator&) = default;
+	container_concat_adapter_iterator& operator=(const container_concat_adapter_iterator&) = default;
+
+	auto operator*() { return *iter; }
+
+	void skip_empties() {
+		while ((container_iter+1) != adapter.get_containers().end() && iter == (*container_iter)->end()) {
+			++container_iter;
+			iter = (*container_iter)->begin();
+		}
+	}
+
+	container_concat_adapter_iterator& operator++() {
+		++iter;
+		skip_empties();
+		return *this;
+	}
+
+	bool operator==(const container_concat_adapter_iterator& rhs) const {
+		return container_iter == rhs.container_iter && iter == rhs.iter;
+	}
+	bool operator!=(const container_concat_adapter_iterator& rhs) const {
+		return container_iter != rhs.container_iter || iter != rhs.iter;
+	}
+};
+
+template<typename CONTAINER, size_t SIZE_MINUS_ONE>
+class container_concat_adapter {
+public:
+	std::array<CONTAINER*,SIZE_MINUS_ONE + 1> containers;
+	typedef CONTAINER container_type;
+	typedef typename CONTAINER::size_type size_type;
+	typedef container_concat_adapter_iterator<container_concat_adapter> iterator_type;
+
+	container_concat_adapter(const decltype(containers)& cs)
+		: containers(cs)
+	{ }
+
+	container_concat_adapter(const container_concat_adapter& src) = default;
+
+	container_concat_adapter& operator=(const container_concat_adapter&) = delete;
+
+	iterator_type begin() {
+		return iterator_type(*this, containers.begin(), (*containers.begin())->begin());
+	}
+
+	iterator_type end() {
+		return iterator_type(*this, (containers.end()-1), (*(containers.end()-1))->end());
+	}
+
+	auto& get_containers() { return containers; }
+};
+
+/**
+ * Allows runtime "concatination" of containers, from the perspective of iteration.
+ * Ie. iterate over a set of containers as if the were one, but without actually
+ * combining or copying them. All containers must be convertable to the type of the first.\
+ * Any number of containers may be empty.
+ * Example:
+ *
+ * vector<int> v1 { 1, 2, 3};
+ * vector<int> v2 { };
+ * vector<int> v3 { 4, 5, 6};
+ *
+ * // this will print 1 2 3 4 5 6
+ * for (auto node : iterate_all(v1,v2,v3)) {
+ *     std::cout << node << ' ';
+ * }
+ *
+ */
+template<typename CONTAINER, typename... REST>
+auto iterate_all(CONTAINER& c_first, REST&... c_rest) {
+	return container_concat_adapter<CONTAINER, sizeof...(REST)>({&c_first, (&c_rest)...});
+}
+
 #endif /* UTIL__ITERATION_UTILS_H */

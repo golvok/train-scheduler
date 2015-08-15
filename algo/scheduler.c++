@@ -114,6 +114,7 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		auto pop_indent = dout.indentWithTitle([&](auto& s){ s << "populating train " << train_passengers.size(); });
 		dout << "routing to " << p1.getName() << ":\n";
 		auto route_to_passenger = get_shortest_route(spawn_loc, (p1).getEntryId(), network);
+		route_to_passenger.pop_back(); // remove overlap with passenger_route
 
 		// now, iterate nodes in the paths, and find other passengers to pick up
 
@@ -123,22 +124,18 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		// time must be positive?
 		uint time = std::max(0, (int)p1.getStartTime() - (int)route_to_passenger.size());
 		dout << "train will enter at time " << time << '\n';
-
 		// iterate over nodes in the path to this passenger, and this passenger's path
-		for (auto node = route_to_passenger.begin();
-			node != passenger_route.end();
-			((node == route_to_passenger.end()) ? node = passenger_route.begin() : ++node), ++time
-		) {
+		for (auto node : iterate_all(route_to_passenger,passenger_route)) {
 			// look at other passengers
 			for (auto piter2 : index_assoc_iterate(sorted_passegners)) {
 				Passenger& p2 = *piter2.it();
 				if (has_ride.at(piter2.i()) == false) {
-					if ((*node) == p2.getEntryId() && time >= p2.getStartTime()) {
+					if (node == p2.getEntryId() && time >= p2.getStartTime()) {
 						// this passenger enters somewhere the train will be
 						pickupable_passengers.insert(p2);
 					} else if (pickupable_passengers.find(p2) != pickupable_passengers.end()) {
 						// this can be picked up
-						if ((*node) == p2.getExitId()) {
+						if (node == p2.getExitId()) {
 							// this passenger can be dropped off here as well, so add it to the train
 							has_ride.at(piter2.i()) = true;
 							train_passengers.back().push_back(p2);
@@ -146,6 +143,7 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 					}
 				}
 			}
+			++time;
 		}
 		dout << "passengers are: {";
 		bool first = true;

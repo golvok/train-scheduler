@@ -3,6 +3,19 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <type_traits>
+
+template <typename...> struct all_convertible;
+
+template <> struct all_convertible<> : std::true_type { };
+
+template <typename T> struct all_convertible<T> : std::true_type { };
+
+template <typename T, typename V, typename... Rest> struct all_convertible<T, V, Rest...>
+: std::integral_constant<
+	bool,
+	std::is_convertible<V, T>::value && all_convertible<T,Rest...>::value
+> { };
 
 namespace util {
 	template<typename T>
