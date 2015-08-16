@@ -35,11 +35,11 @@ class Graphics::Impl {
 
 	bool is_initialized;
 
-	TrainsAreaData tad;
+	TrainsAreaData& data;
 
 	std::thread app_thread;
 public:
-	Impl()
+	Impl(TrainsAreaData& tad)
 		: app()
 		, window()
 		, ta()
@@ -47,7 +47,7 @@ public:
 		, buttons_vbox()
 		, wait_for_press(new util::SafeWaitForNotify())
 		, is_initialized(false)
-		, tad()
+		, data(tad)
 		, app_thread()
 	{ }
 
@@ -72,7 +72,7 @@ public:
 			app = Gtk::Application::create(i, cc, "golvok.train-sch");
 
 			window.reset(new Gtk::Window());
-			ta.reset(new TrainsArea(tad));
+			ta.reset(new TrainsArea(data));
 
 			window->set_default_size(800,600);
 			window->set_title("Train Scheduler");
@@ -112,10 +112,6 @@ public:
 		// careful - threads may be here after this is destructed
 	}
 
-	TrainsAreaData& getTrainsAreaData() {
-		return tad;
-	}
-
 	template<typename FUNC>
 	size_t addButton(std::string text, FUNC f) {
 		buttons.emplace_back(new Gtk::Button(text));
@@ -129,20 +125,21 @@ public:
 
 Graphics::Graphics()
 	: impl(nullptr)
+	, data()
 { }
 
 bool Graphics::initialize() {
 	if (!impl) {
-		impl.reset(new Graphics::Impl());
+		impl.reset(new Graphics::Impl(data));
 	} else {
 		impl->~Impl();
-		new (&(*impl)) Graphics::Impl();
+		new (&(*impl)) Graphics::Impl(data);
 	}
 	return impl->initialize();
 }
 
-void Graphics::waitForPress() { impl->waitForPress(); }
+void Graphics::waitForPress() { if (impl) { impl->waitForPress(); } }
 
-TrainsAreaData& Graphics::getTrainsAreaData() { return impl->getTrainsAreaData(); }
+TrainsAreaData& Graphics::getTrainsAreaData() { return data; }
 
 } // end namespace graphics

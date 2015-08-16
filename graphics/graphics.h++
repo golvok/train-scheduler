@@ -39,6 +39,8 @@ class Graphics {
 	// PIMPL as to keep windowing & drawing dependencies in this directory
 	class Impl;
 	std::unique_ptr<Impl> impl;
+
+	TrainsAreaData data;
 public:
 	Graphics();
 
