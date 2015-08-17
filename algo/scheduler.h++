@@ -39,25 +39,33 @@ class Train {
 	std::string name;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
-	uint start_time;
+	uint deprture_time;
+	uint arrival_time;
+	uint speed;
 
 public:
 	Train(
 		const std::string name,
 		TrackNetwork::ID entry_id,
 		TrackNetwork::ID exit_id,
-		uint start_time
+		uint deprture_time,
+		uint arrival_time,
+		uint speed
 	)
 		: name(name)
 		, entry_id(entry_id)
 		, exit_id(exit_id)
-		, start_time(start_time)
+		,deprture_time(deprture_time)
+		,arrival_time(arrival_time)
+		,speed(speed)
 	{}
 
 	const std::string& getName() const { return name; }
 	TrackNetwork::ID getEntryId() const { return entry_id; }
 	TrackNetwork::ID getExitId() const { return exit_id; }
-	uint getStartTime() const { return start_time; }
+	uint getDeprtureTime() const { return deprture_time; }
+	uint getArrivalTime() const { return arrival_time; }
+	uint getSpeed() const { return speed; }
 
 	bool operator==(const Train& rhs) const {
 		return name == rhs.name;
