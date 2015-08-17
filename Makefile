@@ -108,16 +108,16 @@ $(DIRS):
 
 clean:
 	-rm -f $(EXES);
-	-if [ -a $(EXE_DIR)  ]; then rmdir --ignore-fail-on-non-empty $(EXE_DIR);  fi;
+	-if [ -e $(EXE_DIR)  ]; then rmdir --ignore-fail-on-non-empty $(EXE_DIR);  fi;
 
 	for subdir in $(SOURCE_DIRS); do \
-		if [ -a $(DEPS_DIR)$${subdir} ]; then \
+		if [ -e $(DEPS_DIR)$${subdir} ]; then \
 			deps_subdir=$$(readlink --canonicalize $(DEPS_DIR)$${subdir})/; \
 			echo $${deps_subdir}; \
 			rm -f $${deps_subdir}*.d; \
 			rmdir --ignore-fail-on-non-empty $${deps_subdir}; \
 		fi; \
-		if [ -a $(OBJ_DIR)$${subdir} ]; then \
+		if [ -e $(OBJ_DIR)$${subdir} ]; then \
 			objs_subdir=$$(readlink --canonicalize $(OBJ_DIR)$${subdir})/; \
 			echo $${objs_subdir}; \
 			rm -f $${objs_subdir}*.o; \
