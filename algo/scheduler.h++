@@ -7,7 +7,7 @@
 namespace algo {
 
 class Train {
-	std::string name;
+	uint train_id;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
 	uint deprture_time;
@@ -16,14 +16,14 @@ class Train {
 
 	public:
 		Train(
-			const std::string name,
+			const uint train_id,
 			TrackNetwork::ID entry_id,
 			TrackNetwork::ID exit_id,
 			uint deprture_time,
 			uint arrival_time,
 			uint speed
 		)
-			: name(name)
+			: train_id(train_id)
 			, entry_id(entry_id)
 			, exit_id(exit_id)
 			,deprture_time(deprture_time)
@@ -32,7 +32,7 @@ class Train {
 		{}
 
 		// getters
-		const std::string& getName() const { return name; }
+		uint gettrain_id() const { return train_id; }
 		TrackNetwork::ID getEntryId() const { return entry_id; }
 		TrackNetwork::ID getExitId() const { return exit_id; }
 		uint getDeprtureTime() const { return deprture_time; }
@@ -45,7 +45,7 @@ class Train {
 		void setSpeed(uint s) { speed = s; }
 
 		bool operator==(const Train& rhs) const {
-			return name == rhs.name;
+			return train_id == rhs.train_id;
 		}
 };
 
@@ -70,6 +70,10 @@ class Schedule {
 		bool operator==(const Schedule& rhs) const {
 			return name == rhs.name;
 		}
+
+		void addTrain();
+		void removeTrain();
+		void clear();
 };
 
 int schedule(TrackNetwork& network, std::vector<Passenger>& passengers);

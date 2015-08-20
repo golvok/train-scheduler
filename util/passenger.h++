@@ -5,7 +5,8 @@
 #include <util/track_network.h++>
 
 class Passenger {
-	std::string name;
+	const std::string& name;
+	uint passenger_id;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
 	uint start_time;
@@ -18,18 +19,20 @@ public:
 		uint start_time
 	)
 		: name(name)
+		, passenger_id(0)
 		, entry_id(entry_id)
 		, exit_id(exit_id)
 		, start_time(start_time)
 	{}
 
+	uint getPassenger_id() const { return passenger_id; }
 	const std::string& getName() const { return name; }
 	TrackNetwork::ID getEntryId() const { return entry_id; }
 	TrackNetwork::ID getExitId() const { return exit_id; }
 	uint getStartTime() const { return start_time; }
 
 	bool operator==(const Passenger& rhs) const {
-		return name == rhs.name;
+		return passenger_id == rhs.passenger_id;
 	}
 };
 
@@ -37,7 +40,7 @@ namespace std {
 	template<>
 	struct hash<Passenger> {
 		size_t operator()(const Passenger& p) const {
-			return std::hash<std::string>()(p.getName());
+			return std::hash<uint>()(p.getPassenger_id());
 		}
 	};
 }
