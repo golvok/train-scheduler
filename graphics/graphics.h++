@@ -2,35 +2,19 @@
 #ifndef GRAPHICS__GRAPHICS_H
 #define GRAPHICS__GRAPHICS_H
 
+#include <graphics/trains_area_data.h++>
+
 #include <memory>
-#include <util/track_network.h++>
 
 namespace graphics {
 
-class TrainsAreaData;
 class Graphics;
+class TrainsArea;
 
 /**
  * Singleton getter for graphics
  */
 Graphics& get();
-
-/**
- * Data class for the trains area. The main way of geting data
- * into the graphics subsystem
- */
-class TrainsAreaData {
-	TrackNetwork* tn;
-public:
-	TrainsAreaData() : tn(nullptr) {}
-	TrainsAreaData(const TrainsAreaData&) = delete;
-	TrainsAreaData& operator=(const TrainsAreaData) = delete;
-
-	TrackNetwork& getTN();
-	bool hasTN();
-	void clearTN();
-	void setTN(TrackNetwork& new_tn);
-};
 
 /**
  * The main API for making windows, and graphics elements.
@@ -40,7 +24,7 @@ class Graphics {
 	class Impl;
 	std::unique_ptr<Impl> impl;
 
-	TrainsAreaData data;
+	TrainsAreaData trains_area_data;
 public:
 	Graphics();
 
@@ -54,9 +38,17 @@ public:
 	 */
 	bool initialize();
 
+	/**
+	 * Blocks until the ever-present continue button is pressed.
+	 * Returns immediately if no graphics are on
+	 */
 	void waitForPress();
 
-	TrainsAreaData& getTrainsAreaData();
+	/**
+	 * Get the data interface for the Trains Area.
+	 * Main way of matking data availible to the Trains Area graphics.
+	 */
+	TrainsAreaData& trainsArea();
 };
 
 } // end namespace graphics

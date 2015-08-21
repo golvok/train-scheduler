@@ -65,6 +65,7 @@ $(EXE_DIR)train-sch: \
 	$(OBJ_DIR)algo/scheduler.o \
 	$(OBJ_DIR)graphics/graphics.o \
 	$(OBJ_DIR)graphics/trains_area.o \
+	$(OBJ_DIR)graphics/trains_area_data.o \
 	$(OBJ_DIR)graphics/utils.o \
 	$(OBJ_DIR)parsing/input_parser.o \
 	$(OBJ_DIR)util/logging.o \

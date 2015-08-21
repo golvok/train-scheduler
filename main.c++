@@ -37,7 +37,7 @@ int program_main() {
 		bool good;
 
 		std::tie(tn,passengers,good) = parsing::input::parse_data(std::cin);
-		graphics::get().getTrainsAreaData().setTN(tn);
+		graphics::get().trainsArea().displayTrackNetwork(tn);
 
 		if (good == false) {
 			break;
@@ -50,6 +50,7 @@ int program_main() {
 		auto results = algo::schedule(tn, passengers);
 		(void)results;
 
+		graphics::get().trainsArea().presentResults(tn,passengers);
 		graphics::get().waitForPress();
 	}
 

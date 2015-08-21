@@ -14,15 +14,6 @@ Graphics& get() {
 	return singleton;
 }
 
-TrackNetwork& TrainsAreaData::getTN() { assert(tn != nullptr); return *tn; }
-bool TrainsAreaData::hasTN() { return tn != nullptr; }
-void TrainsAreaData::clearTN() { tn = nullptr; }
-void TrainsAreaData::setTN(TrackNetwork& new_tn) {
-	assert(&new_tn != nullptr);
-	clearTN();
-	tn = &new_tn;
-}
-
 class Graphics::Impl {
 	Glib::RefPtr<Gtk::Application> app;
 	std::unique_ptr<Gtk::Window> window;
@@ -49,7 +40,9 @@ public:
 		, is_initialized(false)
 		, data(tad)
 		, app_thread()
-	{ }
+	{
+		initialize();
+	}
 
 	Impl(const Impl&) = delete;
 	Impl& operator=(const Impl&) = delete;
@@ -125,21 +118,21 @@ public:
 
 Graphics::Graphics()
 	: impl(nullptr)
-	, data()
+	, trains_area_data()
 { }
 
 bool Graphics::initialize() {
 	if (!impl) {
-		impl.reset(new Graphics::Impl(data));
+		impl.reset(new Graphics::Impl(trains_area_data));
 	} else {
 		impl->~Impl();
-		new (&(*impl)) Graphics::Impl(data);
+		new (&(*impl)) Graphics::Impl(trains_area_data);
 	}
-	return impl->initialize();
+	return true;
 }
 
 void Graphics::waitForPress() { if (impl) { impl->waitForPress(); } }
 
-TrainsAreaData& Graphics::getTrainsAreaData() { return data; }
+TrainsAreaData& Graphics::trainsArea() { return trains_area_data; }
 
 } // end namespace graphics

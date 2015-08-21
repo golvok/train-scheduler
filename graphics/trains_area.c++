@@ -20,32 +20,39 @@ const uint INVALID_TIME = -1;
 TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
 	, time(INVALID_TIME)
+	, is_animating(false)
 {
-	// set refresh rate for this
-	Glib::signal_timeout().connect( sigc::mem_fun(*this, &TrainsArea::forceRedraw), 1000 );
+	data.setTrainsArea(this);
 }
 
-/**
- * Draws the track & trains
- */
 bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (time == INVALID_TIME) { return true; }
+	auto sdl = data.getScopedDataLock();
 	if (data.hasTN() == false) { return true; }
-	auto& tn = data.getTN();
+	centerOnTrackNework(cc);
+	drawTrackNetwork(cc);
+	drawTrains(cc);
+	drawPassengers(cc);
 
+	return true;
+}
+
+void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
+	if (data.hasTN() == false) { return; }
+	auto& tn = data.getTN();
 
 	const double alloc_width  = get_allocation().get_width();
 	const double alloc_height = get_allocation().get_height();
 	BoundBox<float> track_bb(tn.getVertexPosition(0),0.0,0.0);
 
+	// figure out bounds.
 	for (auto vi : make_iterable(boost::vertices(tn.g()))) {
 		// draw vertex
 		Point<float> v = tn.getVertexPosition(vi);
 
 		if (v.x < track_bb.min_point().x) { track_bb.min_point().x = v.x; }
 		if (v.y < track_bb.min_point().y) { track_bb.min_point().y = v.y; }
-		if (v.x > track_bb.max_point().x  ) { track_bb.max_point().x = v.x;   }
-		if (v.y > track_bb.max_point().y  ) { track_bb.max_point().y = v.y;   }
+		if (v.x > track_bb.max_point().x) { track_bb.max_point().x = v.x; }
+		if (v.y > track_bb.max_point().y) { track_bb.max_point().y = v.y; }
 	}
 
 	const float padding = std::max(track_bb.get_width(),track_bb.get_height()) * 0.2;
@@ -75,6 +82,11 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 		// need to shift towards +x
 		cc->translate((alloc_width/2-track_bb.get_width()*scale.value()/2)/scale.value(),0.0);
 	}
+}
+
+void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
+	if (data.hasTN() == false) { return; }
+	auto& tn = data.getTN();
 
 	for (auto vi : make_iterable(boost::vertices(tn.g()))) {
 		// draw vertex
@@ -97,19 +109,48 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	}
 
 	cc->stroke();
+}
 
+void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
+	if (data.hasTrains() == false ) { return; }
+	if (is_animating == false) { return; }
+	(void)cc;
+	// draw trains...
+}
+
+void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
+	if (data.hasPassengers() == false) { return; }
+	if (is_animating == false) { return; }
+	(void)cc;
+	// draw passengers
+}
+
+bool TrainsArea::causeAnimationFrame() {
+	if (!is_animating) { return false; }
+	time += 1;
+
+	forceRedraw();
 	return true;
 }
 
-bool TrainsArea::forceRedraw() {
-	time += 1;
+void TrainsArea::beginAnimating() {
+	if (!is_animating) {
+		is_animating = true;
+		Glib::signal_timeout().connect( sigc::mem_fun(*this, &TrainsArea::causeAnimationFrame), 1000 );
+	}
+}
+
+void TrainsArea::stopAnimating() {
+	is_animating = false;
+}
+
+void TrainsArea::forceRedraw() {
 	// force redraw of entire area
 	Glib::RefPtr<Gdk::Window> win = get_window();
 	if (win) {
 		Gdk::Rectangle r(0, 0, get_allocation().get_width(),get_allocation().get_height());
 		win->invalidate_rect(r, false);
 	}
-	return true;
 }
 
-}
+} // end namespace graphics
