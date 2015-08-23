@@ -38,6 +38,7 @@ int program_main() {
 
 		std::tie(tn,passengers,good) = parsing::input::parse_data(std::cin);
 		graphics::get().trainsArea().displayTrackNetwork(tn);
+		graphics::get().waitForPress();
 
 		if (good == false) {
 			break;

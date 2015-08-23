@@ -21,6 +21,7 @@ TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
 	, time(INVALID_TIME)
 	, is_animating(false)
+	, stop_animating(false)
 {
 	data.setTrainsArea(this);
 }
@@ -114,15 +115,39 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 	if (data.hasTrains() == false ) { return; }
 	if (is_animating == false) { return; }
-	(void)cc;
 	// draw trains...
+	cc->stroke();
 }
 
 void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (data.hasPassengers() == false) { return; }
-	if (is_animating == false) { return; }
-	(void)cc;
-	// draw passengers
+	if (data.hasTN() == false) { return; dout << "no TN\n"; }
+	if (data.hasPassengers() == false) { return;  dout << "no Passengers\n";}
+	if (is_animating == false) { return;  dout << "not animating\n";}
+
+	auto& tn = data.getTN();
+	auto& psgrs = data.getPassengers();
+
+	auto passenger_counts = tn.makeVertexMap<uint>(0);
+
+	for (auto& p : psgrs) {
+		if (time == p.getStartTime()) {
+			cc->set_source_rgb(0.0,1.0,0.0); // green
+		} else if (time > p.getStartTime()) {
+			cc->set_source_rgb(1.0,1.0,0.0); // yellow
+		} else {
+			continue; // skip it
+		}
+
+		auto entry_id = p.getEntryId();
+		auto& count_at_etry = passenger_counts[entry_id];
+		count_at_etry += 1;
+		auto draw_point = tn.getVertexPosition(entry_id);
+		draw_point += count_at_etry * make_point(0,-2);
+
+		cc->move_to(draw_point.x,draw_point.y);
+		cc->arc(draw_point.x,draw_point.y, 0.5, 0, 2 * M_PI);
+		cc->stroke();
+	}
 }
 
 bool TrainsArea::causeAnimationFrame() {
@@ -130,18 +155,29 @@ bool TrainsArea::causeAnimationFrame() {
 	time += 1;
 
 	forceRedraw();
-	return true;
+
+	if (stop_animating == true) {
+		stop_animating = false;
+		is_animating = false;
+		return false;
+	} else {
+		return true;
+	}
 }
 
 void TrainsArea::beginAnimating() {
-	if (!is_animating) {
+	if (!is_animating && !stop_animating) {
+		time = 0;
 		is_animating = true;
 		Glib::signal_timeout().connect( sigc::mem_fun(*this, &TrainsArea::causeAnimationFrame), 1000 );
 	}
 }
 
 void TrainsArea::stopAnimating() {
-	is_animating = false;
+	if (is_animating) {
+		dout << "stop animating\n";
+		stop_animating = true;
+	}
 }
 
 void TrainsArea::forceRedraw() {

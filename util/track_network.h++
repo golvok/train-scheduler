@@ -44,6 +44,14 @@ public:
 
 	ID getTrainSpawnLocation() { return train_spawn_location; }
 	void setTrainSpawnLocation(ID id) { train_spawn_location = id; }
+
+	template<typename MAPPED_TO, typename PARAM>
+	auto makeVertexMap(const PARAM& init) {
+		return std::vector<MAPPED_TO>(
+			num_vertices(g()),
+			init
+		);
+	}
 };
 
 #endif /* GRAPH_H */

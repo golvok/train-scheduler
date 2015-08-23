@@ -10,16 +10,11 @@
 namespace graphics {
 
 class TrainsArea : public Gtk::DrawingArea {
-	friend class TrainsAreaData;
-
-	TrainsAreaData& data;
-	uint time;
-	bool is_animating;
 public:
 	TrainsArea(TrainsAreaData& data);
 	virtual ~TrainsArea() { }
-protected:
 
+protected:
 	virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cc) override;
 	void centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc);
 	void drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc);
@@ -29,8 +24,16 @@ protected:
 	bool causeAnimationFrame();
 	void beginAnimating();
 	void stopAnimating();
+
 private:
+	friend class TrainsAreaData;
+
 	void forceRedraw();
+
+	TrainsAreaData& data;
+	uint time;
+	bool is_animating;
+	bool stop_animating;
 };
 
 } // end namespace graphics

@@ -26,6 +26,9 @@ TrainsAreaData::TrainsAreaData()
 
 TrainsAreaData::~TrainsAreaData() {
 	auto sdl = getScopedDataLock();
+	if (hasTrainsArea()) {
+		trains_area->stopAnimating();
+	}
 }
 
 void TrainsAreaData::clear() {
@@ -33,6 +36,10 @@ void TrainsAreaData::clear() {
 	data.tn = nullptr;
 	data.passengers = nullptr;
 	cache.impl->clearAll();
+
+	if (hasTrainsArea()) {
+		trains_area->stopAnimating();
+	}
 }
 
 void TrainsAreaData::displayTrackNetwork(TrackNetwork& new_tn) {
@@ -41,6 +48,7 @@ void TrainsAreaData::displayTrackNetwork(TrackNetwork& new_tn) {
 	data.tn = &new_tn;
 
 	if (hasTrainsArea()) {
+		trains_area->stopAnimating();
 		trains_area->forceRedraw();
 	}
 }
