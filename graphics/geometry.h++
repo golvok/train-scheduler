@@ -43,32 +43,34 @@ struct Point {
 	 *
 	 * Naturally, {+,-} don't modify and {+,-}= do.
 	 */
-	Point operator+ (const Point& rhs) const {
-		Point result = *this;
-		result += rhs;
-		return result;
+	template<typename PRECISION2>
+	Point operator+ (const Point<PRECISION2>& rhs) const {
+		return make_point(x + rhs.x, y + rhs.y);
 	}
-	Point operator- (const Point& rhs) const {
-		Point result = *this;
-		result -= rhs;
-		return result;
+	template<typename PRECISION2>
+	Point operator- (const Point<PRECISION2>& rhs) const {
+		return make_point(x - rhs.x, y - rhs.y);
 	}
-	Point operator* (PRECISION rhs) const {
+	template<typename PRECISION2>
+	Point operator* (PRECISION2 rhs) const {
 		Point result = *this;
 		result *= rhs;
 		return result;
 	}
-	Point& operator+= (const Point& rhs) {
+	template<typename PRECISION2>
+	Point& operator+= (const Point<PRECISION2>& rhs) {
 		this->x += rhs.x;
 		this->y += rhs.y;
 		return *this;
 	}
-	Point& operator-= (const Point& rhs) {
+	template<typename PRECISION2>
+	Point& operator-= (const Point<PRECISION2>& rhs) {
 		this->x -= rhs.x;
 		this->y -= rhs.y;
 		return *this;
 	}
-	Point& operator*= (PRECISION rhs) {
+	template<typename PRECISION2>
+	Point& operator*= (PRECISION2 rhs) {
 		this->x *= rhs;
 		this->y *= rhs;
 		return *this;
@@ -191,8 +193,8 @@ auto perpindictularDeltaVectorToLine(Point<PRECISION> direction, Point<PRECISION
 	return delta(p, project(p, direction));
 }
 
-template<typename PRECISION>
-auto operator*(PRECISION lhs, const Point<PRECISION>& rhs) {
+template<typename PRECISION, typename PRECISION2>
+auto operator*(PRECISION lhs, const Point<PRECISION2>& rhs) {
 	return rhs*lhs;
 }
 
