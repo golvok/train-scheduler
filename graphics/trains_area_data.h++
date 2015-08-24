@@ -40,7 +40,7 @@ public:
 	void displayTrackNetwork(TrackNetwork& new_tn);
 
 	/**
-	 * Cause the passed TrackNetwork and Passengers to be displayde,
+	 * Cause the passed TrackNetwork and Passengers to be displayed,
 	 * nothing else.
 	 */
 	void displayTNAndPassengers(

@@ -44,8 +44,11 @@ void TrainsAreaData::clear() {
 
 void TrainsAreaData::displayTrackNetwork(TrackNetwork& new_tn) {
 	auto sdl = getScopedDataLock();
-	cache.impl->clearTNRelated();
-	data.tn = &new_tn;
+
+	if (data.tn != &new_tn) {
+		cache.impl->clearTNRelated();
+		data.tn = &new_tn;
+	}
 
 	if (hasTrainsArea()) {
 		trains_area->stopAnimating();
@@ -55,12 +58,16 @@ void TrainsAreaData::displayTrackNetwork(TrackNetwork& new_tn) {
 
 void TrainsAreaData::displayTNAndPassengers(TrackNetwork& new_tn, std::vector<Passenger>& new_passgrs) {
 	auto sdl = getScopedDataLock();
-	cache.impl->clearPassengerRelated();
-	data.passengers = &new_passgrs;
+
+	if (data.passengers != &new_passgrs) {
+		cache.impl->clearPassengerRelated();
+		data.passengers = &new_passgrs;
+	}
 
 	displayTrackNetwork(new_tn);
 
-	if (hasTrainsArea()) {
+	if (hasTrainsArea() && hasPassengers()) {
+		trains_area->resetAnimationTime();
 		trains_area->beginAnimating();
 	}
 }

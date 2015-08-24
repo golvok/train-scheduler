@@ -29,11 +29,13 @@ private:
 	friend class TrainsAreaData;
 
 	void forceRedraw();
+	bool isAnimating() { return animation_connection.connected(); }
+	void resetAnimationTime();
 
 	TrainsAreaData& data;
 	uint time;
-	bool is_animating;
-	bool stop_animating;
+
+	sigc::connection animation_connection;
 };
 
 } // end namespace graphics

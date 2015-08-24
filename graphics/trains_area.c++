@@ -3,6 +3,7 @@
 
 #include <graphics/utils.h++>
 #include <util/iteration_utils.h++>
+#include <util/logging.h++>
 #include <util/utils.h++>
 
 #include <cmath>
@@ -20,8 +21,7 @@ const uint INVALID_TIME = -1;
 TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
 	, time(INVALID_TIME)
-	, is_animating(false)
-	, stop_animating(false)
+	, animation_connection()
 {
 	data.setTrainsArea(this);
 }
@@ -29,6 +29,7 @@ TrainsArea::TrainsArea(TrainsAreaData& data)
 bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock();
 	if (data.hasTN() == false) { return true; }
+
 	centerOnTrackNework(cc);
 	drawTrackNetwork(cc);
 	drawTrains(cc);
@@ -114,15 +115,15 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 	if (data.hasTrains() == false ) { return; }
-	if (is_animating == false) { return; }
+	if (isAnimating() == false) { return; }
 	// draw trains...
 	cc->stroke();
 }
 
 void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 	if (data.hasTN() == false) { return; dout << "no TN\n"; }
-	if (data.hasPassengers() == false) { return;  dout << "no Passengers\n";}
-	if (is_animating == false) { return;  dout << "not animating\n";}
+	if (data.hasPassengers() == false) { return;  dout << "no Passengers\n"; }
+	if (isAnimating() == false) { return;  dout << "not animating\n"; }
 
 	auto& tn = data.getTN();
 	auto& psgrs = data.getPassengers();
@@ -151,32 +152,32 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 bool TrainsArea::causeAnimationFrame() {
-	if (!is_animating) { return false; }
-	time += 1;
+
+	bool retval = true;
+	if (isAnimating()) {
+		time += 1;
+		retval = true;
+	} else {
+		retval = false;
+	}
 
 	forceRedraw();
 
-	if (stop_animating == true) {
-		stop_animating = false;
-		is_animating = false;
-		return false;
-	} else {
-		return true;
-	}
+	return retval;
 }
 
 void TrainsArea::beginAnimating() {
-	if (!is_animating && !stop_animating) {
-		time = 0;
-		is_animating = true;
-		Glib::signal_timeout().connect( sigc::mem_fun(*this, &TrainsArea::causeAnimationFrame), 1000 );
+	if (!isAnimating()) {
+		animation_connection = Glib::signal_timeout().connect(
+			sigc::mem_fun(*this, &TrainsArea::causeAnimationFrame),
+			1000
+		);
 	}
 }
 
 void TrainsArea::stopAnimating() {
-	if (is_animating) {
-		dout << "stop animating\n";
-		stop_animating = true;
+	if (isAnimating()) {
+		animation_connection.disconnect();
 	}
 }
 
@@ -187,6 +188,10 @@ void TrainsArea::forceRedraw() {
 		Gdk::Rectangle r(0, 0, get_allocation().get_width(),get_allocation().get_height());
 		win->invalidate_rect(r, false);
 	}
+}
+
+void TrainsArea::resetAnimationTime() {
+	time = 0;
 }
 
 } // end namespace graphics

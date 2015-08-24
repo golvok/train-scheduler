@@ -40,6 +40,9 @@ int program_main() {
 		graphics::get().trainsArea().displayTrackNetwork(tn);
 		graphics::get().waitForPress();
 
+		graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
+		graphics::get().waitForPress();
+
 		if (good == false) {
 			break;
 		}
