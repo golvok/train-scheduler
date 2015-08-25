@@ -16,7 +16,7 @@ public:
 
 TrainsAreaData::TrainsAreaData()
 	: trains_area(nullptr)
-	, data{nullptr,nullptr}
+	, data{}
 	, results{}
 	, cache{}
 	, data_mutex()
@@ -33,22 +33,22 @@ TrainsAreaData::~TrainsAreaData() {
 
 void TrainsAreaData::clear() {
 	auto sdl = getScopedDataLock();
-	data.tn = nullptr;
-	data.passengers = nullptr;
 	cache.impl->clearAll();
+	data.tn.reset();
+	data.passengers.reset();
 
 	if (hasTrainsArea()) {
 		trains_area->stopAnimating();
 	}
 }
 
-void TrainsAreaData::displayTrackNetwork(TrackNetwork& new_tn) {
+void TrainsAreaData::displayTrackNetwork(
+	std::weak_ptr<TrackNetwork> new_tn
+) {
 	auto sdl = getScopedDataLock();
+	clear();
 
-	if (data.tn != &new_tn) {
-		cache.impl->clearTNRelated();
-		data.tn = &new_tn;
-	}
+	data.tn = new_tn;
 
 	if (hasTrainsArea()) {
 		trains_area->stopAnimating();
@@ -56,15 +56,16 @@ void TrainsAreaData::displayTrackNetwork(TrackNetwork& new_tn) {
 	}
 }
 
-void TrainsAreaData::displayTNAndPassengers(TrackNetwork& new_tn, std::vector<Passenger>& new_passgrs) {
+void TrainsAreaData::displayTNAndPassengers(
+	std::weak_ptr<TrackNetwork> new_tn,
+	std::weak_ptr<std::vector<Passenger>> new_passgrs
+) {
 	auto sdl = getScopedDataLock();
-
-	if (data.passengers != &new_passgrs) {
-		cache.impl->clearPassengerRelated();
-		data.passengers = &new_passgrs;
-	}
+	clear();
 
 	displayTrackNetwork(new_tn);
+
+	data.passengers = new_passgrs;
 
 	if (hasTrainsArea() && hasPassengers()) {
 		trains_area->resetAnimationTime();
@@ -73,10 +74,12 @@ void TrainsAreaData::displayTNAndPassengers(TrackNetwork& new_tn, std::vector<Pa
 }
 
 void TrainsAreaData::presentResults(
-	TrackNetwork& new_tn,
-	std::vector<Passenger>& new_passgrs
+	std::weak_ptr<TrackNetwork> new_tn,
+	std::weak_ptr<std::vector<Passenger>> new_passgrs
 ) {
 	auto sdl = getScopedDataLock();
+	clear();
+
 	displayTNAndPassengers(new_tn, new_passgrs);
 }
 
@@ -96,12 +99,12 @@ std::unique_lock<std::recursive_mutex> TrainsAreaData::getScopedDataLock() {
 
 bool TrainsAreaData::hasTN()         {
 	auto sdl = getScopedDataLock();
-	return data.tn != nullptr;
+	return data.tn.expired() == false;
 }
 
 bool TrainsAreaData::hasPassengers() {
 	auto sdl = getScopedDataLock();
-	return data.passengers != nullptr;
+	return data.passengers.expired() == false;
 }
 
 bool TrainsAreaData::hasTrains()     {
@@ -109,19 +112,22 @@ bool TrainsAreaData::hasTrains()     {
 	return false;
 }
 
-TrackNetwork& TrainsAreaData::getTN() {
+std::shared_ptr<TrackNetwork> TrainsAreaData::getTN() {
 	auto sdl = getScopedDataLock();
 	assert(hasTN());
-	return *data.tn;
+	return data.tn.lock();
 }
 
-std::vector<Passenger>& TrainsAreaData::getPassengers() {
+std::shared_ptr<std::vector<Passenger>> TrainsAreaData::getPassengers() {
 	auto sdl = getScopedDataLock();
 	assert(hasPassengers());
-	return *data.passengers;
+	return data.passengers.lock();
 }
 
-// TRAINS& getTrains() { return results.trains; }
-
+// std::shared_ptr<TRAINS> getTrains() {
+// 	auto sdl = getScopedDataLock();
+// 	assert(hasTrains());
+// 	return results.trains.lock();
+// }
 
 } // end namespace graphics

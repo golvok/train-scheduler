@@ -5,6 +5,7 @@
 #include <util/passenger.h++>
 #include <util/track_network.h++>
 
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -37,34 +38,35 @@ public:
 	/**
 	 * Cause the passed TrackNetwork to be displayed, nothing else.
 	 */
-	void displayTrackNetwork(TrackNetwork& new_tn);
+	void displayTrackNetwork(
+		std::weak_ptr<TrackNetwork> new_tn);
 
 	/**
 	 * Cause the passed TrackNetwork and Passengers to be displayed,
 	 * nothing else.
 	 */
 	void displayTNAndPassengers(
-		TrackNetwork& new_tn,
-		std::vector<Passenger>& new_passgrs
+		std::weak_ptr<TrackNetwork> new_tn,
+		std::weak_ptr<std::vector<Passenger>> new_passgrs
 	);
 
 	/**
 	 * Display and Animate the results passed in
 	 */
 	void presentResults(
-		TrackNetwork& new_tn,
-		std::vector<Passenger>& new_passgrs
+		std::weak_ptr<TrackNetwork> new_tn,
+		std::weak_ptr<std::vector<Passenger>> new_passgrs
 		// add more params later
 	);
 private:
 	friend class TrainsArea;
 
 	struct Data {
-		TrackNetwork* tn;
-		std::vector<Passenger>* passengers;
+		std::weak_ptr<TrackNetwork> tn;
+		std::weak_ptr<std::vector<Passenger>> passengers;
 	};
 	struct Results {
-		// TRAINS trains;
+		// std::weak_ptr<TRAINS> trains;
 	};
 	struct Cache {
 		class Impl;
@@ -81,9 +83,9 @@ private:
 	bool hasPassengers();
 	bool hasTrains();
 
-	TrackNetwork& getTN();
-	std::vector<Passenger>& getPassengers();
-	// TRAINS& getTrains();
+	std::shared_ptr<TrackNetwork> getTN();
+	std::shared_ptr<std::vector<Passenger>> getPassengers();
+	// std::shared_ptr<TRAINS> getTrains();
 
 	TrainsArea* trains_area;
 	Data data;

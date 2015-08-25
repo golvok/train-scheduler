@@ -28,6 +28,7 @@ TrainsArea::TrainsArea(TrainsAreaData& data)
 
 bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock();
+
 	if (data.hasTN() == false) { return true; }
 
 	centerOnTrackNework(cc);
@@ -39,17 +40,18 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (data.hasTN() == false) { return; }
-	auto& tn = data.getTN();
+	auto tn = data.getTN();
+
+	if (!tn) { return; }
 
 	const double alloc_width  = get_allocation().get_width();
 	const double alloc_height = get_allocation().get_height();
-	BoundBox<float> track_bb(tn.getVertexPosition(0),0.0,0.0);
+	BoundBox<float> track_bb(tn->getVertexPosition(0),0.0,0.0);
 
 	// figure out bounds.
-	for (auto vi : make_iterable(boost::vertices(tn.g()))) {
+	for (auto vi : make_iterable(boost::vertices(tn->g()))) {
 		// draw vertex
-		Point<float> v = tn.getVertexPosition(vi);
+		Point<float> v = tn->getVertexPosition(vi);
 
 		if (v.x < track_bb.min_point().x) { track_bb.min_point().x = v.x; }
 		if (v.y < track_bb.min_point().y) { track_bb.min_point().y = v.y; }
@@ -87,13 +89,14 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (data.hasTN() == false) { return; }
-	auto& tn = data.getTN();
+	auto tn = data.getTN();
 
-	for (auto vi : make_iterable(boost::vertices(tn.g()))) {
+	if (!tn) { return; }
+
+	for (auto vi : make_iterable(boost::vertices(tn->g()))) {
 		// draw vertex
-		Point<float> v = tn.getVertexPosition(vi);
-		const std::string& name = tn.getVertexName(vi);
+		Point<float> v = tn->getVertexPosition(vi);
+		const std::string& name = tn->getVertexName(vi);
 
 		// draw a circle there
 		cc->move_to(v.x,v.y);
@@ -104,8 +107,8 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 		cc->show_text(name);
 
 		// draw out edges
-		for (auto outv : make_iterable(boost::out_edges(vi,tn.g()))) {
-			auto outv_point = tn.getVertexPosition(boost::target(outv,tn.g()));
+		for (auto outv : make_iterable(boost::out_edges(vi,tn->g()))) {
+			auto outv_point = tn->getVertexPosition(boost::target(outv,tn->g()));
 			graphics::util::draw_arrow(cc,v,outv_point);
 		}
 	}
@@ -114,23 +117,29 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (data.hasTrains() == false ) { return; }
 	if (isAnimating() == false) { return; }
+
+	// auto trains_ptr = data.getTrains();
+	// if (!trains_ptr) { return; }
+	// auto& trains = *trains_ptr;
+
 	// draw trains...
+
 	cc->stroke();
 }
 
 void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (data.hasTN() == false) { return; dout << "no TN\n"; }
-	if (data.hasPassengers() == false) { return;  dout << "no Passengers\n"; }
-	if (isAnimating() == false) { return;  dout << "not animating\n"; }
+	if (isAnimating() == false) { return; }
 
-	auto& tn = data.getTN();
-	auto& psgrs = data.getPassengers();
+	auto tn = data.getTN();
+	auto psgrs = data.getPassengers();
 
-	auto passenger_counts = tn.makeVertexMap<uint>(0);
+	if (!tn) { return; }
+	if (!psgrs) { return; }
 
-	for (auto& p : psgrs) {
+	auto passenger_counts = tn->makeVertexMap<uint>(0);
+
+	for (auto& p : *psgrs) {
 		if (time == p.getStartTime()) {
 			cc->set_source_rgb(0.0,1.0,0.0); // green
 		} else if (time > p.getStartTime()) {
@@ -142,7 +151,7 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 		auto entry_id = p.getEntryId();
 		auto& count_at_etry = passenger_counts[entry_id];
 		count_at_etry += 1;
-		auto draw_point = tn.getVertexPosition(entry_id);
+		auto draw_point = tn->getVertexPosition(entry_id);
 		draw_point += count_at_etry * make_point(0,-2);
 
 		cc->move_to(draw_point.x,draw_point.y);

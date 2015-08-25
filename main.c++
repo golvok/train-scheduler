@@ -4,10 +4,11 @@
 #include <parsing/input_parser.h++>
 #include <util/logging.h++>
 
-#include <string>
-#include <vector>
+#include <memory>
 #include <iostream>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 int program_main();
 
@@ -32,11 +33,11 @@ int program_main() {
 
 	while (true) {
 		tn_counter += 1;
-		TrackNetwork tn;
-		std::vector<Passenger> passengers;
+		std::shared_ptr<TrackNetwork> tn = std::make_shared<TrackNetwork>();
+		std::shared_ptr<std::vector<Passenger>> passengers = std::make_shared<std::vector<Passenger>>();
 		bool good;
 
-		std::tie(tn,passengers,good) = parsing::input::parse_data(std::cin);
+		std::tie(*tn,*passengers,good) = parsing::input::parse_data(std::cin);
 		graphics::get().trainsArea().displayTrackNetwork(tn);
 		graphics::get().waitForPress();
 
@@ -51,7 +52,7 @@ int program_main() {
 		auto d_indent = dout.indentWithTitle([&](auto& s){s << "Input Data #" << tn_counter;});
 		dout << '\n';
 
-		auto results = algo::schedule(tn, passengers);
+		auto results = algo::schedule(*tn, *passengers);
 		(void)results;
 
 		graphics::get().trainsArea().presentResults(tn,passengers);
