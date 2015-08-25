@@ -57,7 +57,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 		if (v.y > track_bb.max_point().y) { track_bb.max_point().y = v.y; }
 	}
 
-	const float padding = std::max(track_bb.get_width(),track_bb.get_height()) * 0.2;
+	const float padding = std::max({track_bb.get_width(),track_bb.get_height(),50.0f}) * 0.2;
 	track_bb.min_point() -= Point<float>{padding,padding};
 	track_bb.max_point() += Point<float>{padding,padding};
 
