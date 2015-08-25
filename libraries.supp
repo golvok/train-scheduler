@@ -1,40 +1,59 @@
 {
    libglib
    Memcheck:Leak
+   ...
+   fun:*alloc
+   obj:*libglib-2.0.so*
+   ...
+}
+{
+   libglib-pthread_create
+   Memcheck:Leak
    fun:*alloc
    ...
+   fun:pthread_create*
    obj:*libglib-2.0.so*
    ...
 }
 {
    libglibmm
    Memcheck:Leak
-   fun:*alloc
    ...
+   fun:*alloc
    obj:*libglibmm-2.4.so*
    ...
 }
 {
    libfontconfig
    Memcheck:Leak
-   fun:*alloc
    ...
+   fun:*alloc
+   obj:*libfontconfig.so*
+   ...
+}
+{
+   libfontconfig-indirect-strdup
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:strdup
+   fun:FcValueSave
    obj:*libfontconfig.so*
    ...
 }
 {
    libgtkmm
    Memcheck:Leak
-   fun:*alloc
    ...
+   fun:*alloc
    obj:*libgtkmm-3.0.so*
    ...
 }
 {
-   libgtkmm
+   libgdkmm
    Memcheck:Leak
-   fun:_Znwm
    ...
-   obj:*libgtk-3.so*
+   fun:_Znwm
+   obj:*gdkmm-3.0.so*
    ...
 }
