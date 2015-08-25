@@ -5,7 +5,7 @@
 #include <util/track_network.h++>
 
 class Passenger {
-	const std::string& name;
+	std::string name;
 	uint passenger_id;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
@@ -13,7 +13,7 @@ class Passenger {
 
 public:
 	Passenger(
-		const std::string name,
+		const std::string& name,
 		TrackNetwork::ID entry_id,
 		TrackNetwork::ID exit_id,
 		uint start_time
