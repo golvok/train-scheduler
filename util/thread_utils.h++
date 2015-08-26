@@ -2,8 +2,9 @@
 #ifndef UTILS__THREAD_UTILS_H
 #define UTILS__THREAD_UTILS_H
 
-#include <thread>
 #include <condition_variable>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 namespace util {
@@ -51,6 +52,28 @@ private:
 	bool dying;
 	// destructor thread waits on this
 	std::condition_variable dying_cv;
+};
+
+template<typename DATA,typename MUTEX = std::recursive_mutex>
+class ScopedLockAndData {
+private:
+	DATA data;
+	std::unique_lock<MUTEX> ul;
+
+public:
+	ScopedLockAndData(const DATA& d, MUTEX& m)
+		: data(d)
+		, ul(m)
+	{ }
+
+	ScopedLockAndData(const DATA& d, std::unique_lock<MUTEX>&& ul_)
+		: data(d)
+		, ul(std::move(ul_))
+	{ }
+
+	operator DATA() {
+		return data;
+	}
 };
 
 } // end namespace util

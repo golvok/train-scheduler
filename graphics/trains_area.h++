@@ -4,8 +4,10 @@
 
 #include "graphics.h++"
 #include <graphics/windowing_includes.h++>
+#include <util/thread_utils.h++>
 
 #include <cstdint>
+#include <mutex>
 
 namespace graphics {
 
@@ -29,13 +31,15 @@ private:
 	friend class TrainsAreaData;
 
 	void forceRedraw();
-	bool isAnimating() { return animation_connection.connected(); }
+	std::unique_lock<std::recursive_mutex> getScopedDrawingLock();
+	util::ScopedLockAndData<bool,std::recursive_mutex> getIsAnimatingAndLock();
 	void resetAnimationTime();
 
 	TrainsAreaData& data;
 	uint time;
 
 	sigc::connection animation_connection;
+	std::recursive_mutex drawing_mutex;
 };
 
 } // end namespace graphics

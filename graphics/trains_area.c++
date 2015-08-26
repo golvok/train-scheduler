@@ -22,12 +22,14 @@ TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
 	, time(INVALID_TIME)
 	, animation_connection()
+	, drawing_mutex()
 {
 	data.setTrainsArea(this);
 }
 
 bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock();
+	auto sdrl = getScopedDrawingLock();
 
 	if (data.hasTN() == false) { return true; }
 
@@ -117,11 +119,11 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (isAnimating() == false) { return; }
+	auto is_animating = getIsAnimatingAndLock();
+	// auto trains = data.getTrains();
 
-	// auto trains_ptr = data.getTrains();
-	// if (!trains_ptr) { return; }
-	// auto& trains = *trains_ptr;
+	if (!is_animating) { return; }
+	// if (!trains) { return; }
 
 	// draw trains...
 
@@ -129,11 +131,11 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
-	if (isAnimating() == false) { return; }
-
+	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();
 	auto psgrs = data.getPassengers();
 
+	if (!is_animating) { return; }
 	if (!tn) { return; }
 	if (!psgrs) { return; }
 
@@ -161,9 +163,11 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 bool TrainsArea::causeAnimationFrame() {
+	auto sdrl = getScopedDrawingLock();
+	auto is_animating = getIsAnimatingAndLock();
 
 	bool retval = true;
-	if (isAnimating()) {
+	if (is_animating) {
 		time += 1;
 		retval = true;
 	} else {
@@ -176,7 +180,10 @@ bool TrainsArea::causeAnimationFrame() {
 }
 
 void TrainsArea::beginAnimating() {
-	if (!isAnimating()) {
+	auto srdl = getScopedDrawingLock();
+	auto is_animating = getIsAnimatingAndLock();
+
+	if (!is_animating) {
 		animation_connection = Glib::signal_timeout().connect(
 			sigc::mem_fun(*this, &TrainsArea::causeAnimationFrame),
 			1000
@@ -185,7 +192,10 @@ void TrainsArea::beginAnimating() {
 }
 
 void TrainsArea::stopAnimating() {
-	if (isAnimating()) {
+	auto srdl = getScopedDrawingLock();
+	auto is_animating = getIsAnimatingAndLock();
+
+	if (is_animating) {
 		animation_connection.disconnect();
 	}
 }
@@ -199,7 +209,19 @@ void TrainsArea::forceRedraw() {
 	}
 }
 
+std::unique_lock<std::recursive_mutex> TrainsArea::getScopedDrawingLock() {
+	return std::unique_lock<std::recursive_mutex>(drawing_mutex);
+}
+
+::util::ScopedLockAndData<bool,std::recursive_mutex> TrainsArea::getIsAnimatingAndLock() {
+	return ::util::ScopedLockAndData<bool,std::recursive_mutex>(
+		animation_connection.connected(),
+		getScopedDrawingLock()
+	);
+}
+
 void TrainsArea::resetAnimationTime() {
+	getScopedDrawingLock();
 	time = 0;
 }
 

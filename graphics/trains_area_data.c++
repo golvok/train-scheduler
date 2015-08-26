@@ -114,19 +114,16 @@ bool TrainsAreaData::hasTrains()     {
 
 std::shared_ptr<TrackNetwork> TrainsAreaData::getTN() {
 	auto sdl = getScopedDataLock();
-	assert(hasTN());
 	return data.tn.lock();
 }
 
 std::shared_ptr<std::vector<Passenger>> TrainsAreaData::getPassengers() {
 	auto sdl = getScopedDataLock();
-	assert(hasPassengers());
 	return data.passengers.lock();
 }
 
 // std::shared_ptr<TRAINS> getTrains() {
 // 	auto sdl = getScopedDataLock();
-// 	assert(hasTrains());
 // 	return results.trains.lock();
 // }
 
