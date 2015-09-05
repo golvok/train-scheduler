@@ -18,6 +18,23 @@ class TrainsArea;
  * of the graphics, and for passing data to it.
  */
 class TrainsAreaData {
+private:
+	friend class TrainsArea;
+
+	struct Data {
+		using WantedCapacityMap = std::vector<float>;
+		std::weak_ptr<TrackNetwork> tn;
+		std::weak_ptr<std::vector<Passenger>> passengers;
+		std::weak_ptr<WantedCapacityMap> wanted_edge_capacities;
+	};
+	struct Results {
+		// std::weak_ptr<TRAINS> trains;
+	};
+	struct Cache {
+		class Impl;
+		Impl* impl;
+	};
+
 public:
 	TrainsAreaData();
 	TrainsAreaData(const TrainsAreaData&) = delete;
@@ -50,6 +67,11 @@ public:
 		std::weak_ptr<std::vector<Passenger>> new_passgrs
 	);
 
+	void displayTNAndWantedCapacities(
+		// std::weak_ptr<TrackNetwork> new_tn,
+		std::weak_ptr<Data::WantedCapacityMap> new_wanted_edge_capacities
+	);
+
 	/**
 	 * Display and Animate the results passed in
 	 */
@@ -58,21 +80,8 @@ public:
 		std::weak_ptr<std::vector<Passenger>> new_passgrs
 		// add more params later
 	);
+
 private:
-	friend class TrainsArea;
-
-	struct Data {
-		std::weak_ptr<TrackNetwork> tn;
-		std::weak_ptr<std::vector<Passenger>> passengers;
-	};
-	struct Results {
-		// std::weak_ptr<TRAINS> trains;
-	};
-	struct Cache {
-		class Impl;
-		Impl* impl;
-	};
-
 	void setTrainsArea(TrainsArea* ta);
 	bool hasTrainsArea();
 	void clearCache();
@@ -82,10 +91,12 @@ private:
 	bool hasTN();
 	bool hasPassengers();
 	bool hasTrains();
+	bool hasWantedEdgeCapacities();
 
 	std::shared_ptr<TrackNetwork> getTN();
 	std::shared_ptr<std::vector<Passenger>> getPassengers();
 	// std::shared_ptr<TRAINS> getTrains();
+	std::shared_ptr<Data::WantedCapacityMap> getWantedEdgeCapacities();
 
 	TrainsArea* trains_area;
 	Data data;

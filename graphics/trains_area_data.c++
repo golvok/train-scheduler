@@ -73,6 +73,17 @@ void TrainsAreaData::displayTNAndPassengers(
 	}
 }
 
+void TrainsAreaData::displayTNAndWantedCapacities(
+	// std::weak_ptr<TrackNetwork> new_tn,
+	std::weak_ptr<Data::WantedCapacityMap> new_wanted_edge_capacities
+) {
+	auto sdl = getScopedDataLock();
+	// clear();
+
+	// displayTrackNetwork(new_tn);
+	data.wanted_edge_capacities = new_wanted_edge_capacities;
+}
+
 void TrainsAreaData::presentResults(
 	std::weak_ptr<TrackNetwork> new_tn,
 	std::weak_ptr<std::vector<Passenger>> new_passgrs
@@ -126,5 +137,10 @@ std::shared_ptr<std::vector<Passenger>> TrainsAreaData::getPassengers() {
 // 	auto sdl = getScopedDataLock();
 // 	return results.trains.lock();
 // }
+
+std::shared_ptr<TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWantedEdgeCapacities() {
+	auto sdl = getScopedDataLock();
+	return data.wanted_edge_capacities.lock();
+}
 
 } // end namespace graphics

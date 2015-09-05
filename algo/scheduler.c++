@@ -1,5 +1,6 @@
 #include "scheduler.h++"
 
+#include <graphics/graphics.h++>
 #include <util/graph_utils.h++>
 #include <util/iteration_utils.h++>
 #include <util/logging.h++>
@@ -101,6 +102,9 @@ Schedule Scheduler::do_schedule() {
 	auto& edge_wanted_capacities = *edge_wanted_capacities_sp;
 
 	edge_wanted_capacities = compute_edge_wanted_capacities();
+
+	graphics::get().trainsArea().displayTNAndWantedCapacities(edge_wanted_capacities_sp);
+	graphics::get().waitForPress();
 
 	make_rotues(edge_wanted_capacities);
 

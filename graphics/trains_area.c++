@@ -8,6 +8,7 @@
 #include <util/utils.h++>
 
 #include <cmath>
+#include <string>
 
 namespace graphics {
 
@@ -38,6 +39,7 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	drawTrackNetwork(cc);
 	drawTrains(cc);
 	drawPassengers(cc);
+	drawWantedEdgeCapacities(cc);
 
 	return true;
 }
@@ -160,6 +162,33 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 		cc->move_to(draw_point.x,draw_point.y);
 		cc->arc(draw_point.x,draw_point.y, 0.5, 0, 2 * M_PI);
 		cc->stroke();
+	}
+}
+
+void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto tn = data.getTN();
+	auto wecs = data.getWantedEdgeCapacities();
+
+	if (!tn) { return; }
+	if (!wecs) { return; }
+
+	auto& g = tn->g();
+
+	cc->set_source_rgb(0,0,0); // black
+	cc->set_font_size(6);
+
+	for (auto edge_desc : make_iterable(edges(g))) {
+		auto edge_index = tn->getEdgeIndex(edge_desc);
+		auto source_point = tn->getVertexPosition(source(edge_desc,g));
+		auto target_point = tn->getVertexPosition(target(edge_desc,g));
+
+		auto middle_point = (source_point + target_point) / 2;
+
+		cc->move_to(middle_point.x,middle_point.y+10);
+		cc->save();
+		cc->rotate_degrees(45);
+		cc->show_text(std::to_string((*wecs)[edge_index]).c_str());
+		cc->restore();
 	}
 }
 

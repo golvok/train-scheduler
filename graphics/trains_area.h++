@@ -22,6 +22,7 @@ protected:
 	void drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc);
 	void drawTrains(const Cairo::RefPtr<Cairo::Context>& cc);
 	void drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc);
+	void drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& cc);
 
 	bool causeAnimationFrame();
 	void beginAnimating();
