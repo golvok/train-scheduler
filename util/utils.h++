@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <type_traits>
+#include <memory>
 
 template <typename...> struct all_convertible;
 
@@ -28,6 +28,16 @@ namespace util {
 		for (uint i = 1; i <= count; ++i) {
 			f();
 		}
+	}
+	template<typename T>
+	auto make_shared(T&& t) {
+		return std::make_shared<
+			typename std::remove_cv<
+				typename std::remove_reference<T>::type
+			>::type
+		>(
+			std::forward<T>(t)
+		);
 	}
 }
 
