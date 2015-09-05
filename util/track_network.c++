@@ -1,5 +1,7 @@
 #include "track_network.h++"
 
+#include <util/graph_utils.h++>
+
 #include <cassert>
 
 TrackNetwork::ID TrackNetwork::createVertex(const std::string& name, geom::Point<float> xy) {
@@ -45,4 +47,12 @@ geom::Point<float> TrackNetwork::getVertexPosition(TrackNetwork::ID id) const {
 	} else {
 		return find_results->second.second;
 	}
+}
+
+TrackNetwork::EdgeIndex TrackNetwork::getEdgeIndex(EdgeID eid) const {
+	return boost::get(&TrackNetwork::EdgeProperties::index, g(), eid);
+}
+
+std::vector<TrackNetwork::Weight> TrackNetwork::makeEdgeWeightMapCopy() const {
+	return ::util::getEdgePropertyMapCopy<Weight>(g(),&EdgeProperties::index, &EdgeProperties::weight);
 }

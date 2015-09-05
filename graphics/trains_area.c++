@@ -2,6 +2,7 @@
 #include "trains_area.h++"
 
 #include <graphics/utils.h++>
+#include <util/graph_utils.h++>
 #include <util/iteration_utils.h++>
 #include <util/logging.h++>
 #include <util/utils.h++>
@@ -139,7 +140,7 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 	if (!tn) { return; }
 	if (!psgrs) { return; }
 
-	auto passenger_counts = tn->makeVertexMap<uint>(0);
+	auto passenger_counts = ::util::makeVertexMap<uint>(tn->g(),0);
 
 	for (auto& p : *psgrs) {
 		if (time == p.getStartTime()) {

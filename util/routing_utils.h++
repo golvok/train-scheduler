@@ -32,7 +32,7 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 		start,
 		end,
 		network.g(),
-		boost::get(boost::edge_weight, network.g()) // default weight mapping
+		boost::get(&TrackNetwork::EdgeProperties::weight, network.g()) // default weight mapping
 	);
 }
 

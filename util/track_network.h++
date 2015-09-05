@@ -1,20 +1,38 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include <unordered_map>
-#include <boost/graph/adjacency_list.hpp>
-
 #include <graphics/geometry.h++>
 
+#include <boost/graph/adjacency_list.hpp>
+#include <unordered_map>
+#include <limits>
+#include <vector>
+
 class TrackNetwork {
-	using Weight = boost::property<boost::edge_weight_t, uint>;
+public:
+	using Weight = float;
+	using EdgeIndex = uint;
+	struct EdgeProperties {
+		Weight weight;
+		EdgeIndex index;
+		EdgeProperties()
+			: weight(std::numeric_limits<decltype(weight)>::max())
+			, index(-1)
+		{ }
+		EdgeProperties(Weight w, EdgeIndex ei)
+			: weight(w)
+			, index(ei)
+		{ }
+	};
+
 	using BackingGraphType = boost::adjacency_list<
-		boost::vecS, boost::vecS, boost::directedS, boost::no_property, Weight
+		boost::vecS, boost::vecS, boost::directedS, boost::no_property, EdgeProperties
 	>;
 
-public:
 	using ID        = boost::graph_traits<BackingGraphType>::vertex_descriptor;
 	using EdgeID    = boost::graph_traits<BackingGraphType>::edge_descriptor;
+
+	using EdgeWeightMap = std::vector<Weight>;
 
 	static const ID INVALID_ID = -1;
 private:
@@ -46,13 +64,8 @@ public:
 	ID getTrainSpawnLocation() const { return train_spawn_location; }
 	void setTrainSpawnLocation(ID id) { train_spawn_location = id; }
 
-	template<typename MAPPED_TO, typename PARAM>
-	auto makeVertexMap(const PARAM& init) {
-		return std::vector<MAPPED_TO>(
-			num_vertices(g()),
-			init
-		);
-	}
+	EdgeIndex getEdgeIndex(EdgeID eid) const;
+	EdgeWeightMap makeEdgeWeightMapCopy() const;
 };
 
 #endif /* GRAPH_H */

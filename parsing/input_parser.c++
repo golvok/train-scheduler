@@ -114,6 +114,7 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 
 			// add edges
 			bool first_edge = true;
+			uint e_index = 0;
 			for (auto& elem : fake_data::graphs[graph_id]) {
 				if (first_edge) {
 					tn.setTrainSpawnLocation(tn.getVertex(std::get<0>(elem)));
@@ -122,9 +123,13 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 					boost::add_edge(
 						tn.getVertex(std::get<0>(elem)),
 						tn.getVertex(std::get<1>(elem)),
-						std::get<2>(elem),
+						TrackNetwork::EdgeProperties (
+							std::get<2>(elem),
+							e_index
+						),
 						tn.g()
 					);
+					e_index += 1;
 				}
 			}
 		} else {
