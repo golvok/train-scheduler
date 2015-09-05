@@ -1,79 +1,13 @@
 #include "scheduler.h++"
 
+#include <util/graph_utils.h++>
 #include <util/iteration_utils.h++>
 #include <util/logging.h++>
+#include <util/routing_utils.h++>
 
-#include <boost/graph/graph_traits.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/property_map/function_property_map.hpp>
 #include <iostream>
 #include <unordered_set>
-
-namespace {
-
-std::vector<TrackNetwork::ID> get_shortest_route(
-	TrackNetwork::ID start,
-	TrackNetwork::ID end,
-	TrackNetwork& network
-) {
-	auto& g = network.g();
-	std::vector<TrackNetwork::ID> predecessors(num_vertices(g));
-	std::vector<int> distances(num_vertices(g));
-
-	dijkstra_shortest_paths(
-		g, start,
-		predecessor_map(
-			boost::make_iterator_property_map(
-				predecessors.begin(),
-				get(boost::vertex_index, g)
-			)
-		).
-		distance_map(
-			boost::make_iterator_property_map(
-				distances.begin(),
-				get(boost::vertex_index, g)
-			)
-		)
-	);
-
-	std::vector<TrackNetwork::ID> route;
-	for (
-		auto vi = end;
-		vi != start;
-		vi = predecessors[vi]
-	) {
-		if (route.empty() == false && route.back() == vi) {
-			dout << "no route to destination! start = ";
-			route.clear();
-			break;
-		} else {
-			dout << network.getVertexName(vi) << " <- ";
-			route.push_back(vi);
-		}
-	}
-	dout << network.getVertexName(start) << '\n';
-	route.push_back(start);
-	util::reverse(route);
-
-	return route;
-}
-
-std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
-	TrackNetwork& network, std::vector<Passenger>& passengers
-) {
-	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
-
-	for (auto passenger : passengers) {
-		dout << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
-
-		auto route = get_shortest_route(passenger.getEntryId(),passenger.getExitId(),network);
-
-		passenger2route.emplace(passenger,std::move(route));
-
-	}
-	return passenger2route;
-}
-
-} // end anonymous namespace
 
 namespace algo {
 
@@ -81,7 +15,7 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 
 	auto fnd_routes_indent = dout.indentWithTitle("finding routes");
 
-	auto passenger2route = get_shortest_routes(network, passengers);
+	auto passenger2route = ::util::get_shortest_routes(network, passengers);
 	TrackNetwork::ID spawn_loc = network.getTrainSpawnLocation();
 
 	fnd_routes_indent.endIndent();
@@ -114,7 +48,7 @@ int schedule(TrackNetwork& network, std::vector<Passenger>& passengers) {
 		train_passengers.push_back({}); // "add" a new train
 		auto pop_indent = dout.indentWithTitle([&](auto& s){ s << "populating train " << train_passengers.size(); });
 		dout << "routing to " << p1.getName() << ":\n";
-		auto route_to_passenger = get_shortest_route(spawn_loc, (p1).getEntryId(), network);
+		auto route_to_passenger = ::util::get_shortest_route(spawn_loc, (p1).getEntryId(), network);
 		route_to_passenger.pop_back(); // remove overlap with passenger_route
 
 		// now, iterate nodes in the paths, and find other passengers to pick up
