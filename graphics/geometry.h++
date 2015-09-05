@@ -2,8 +2,9 @@
 #ifndef GRAPHICS__GEOMETRY_H
 #define GRAPHICS__GEOMETRY_H
 
-#include <ostream>
 #include <cmath>
+#include <ostream>
+#include <array>
 
 namespace geom {
 
@@ -37,24 +38,16 @@ struct Point {
 		y += y;
 	}
 
-	/**
-	 * These add the given point to this point in a
-	 * componentwise fashion, ie x = x + rhs.x
-	 *
-	 * Naturally, {+,-} don't modify and {+,-}= do.
-	 */
-	template<typename PRECISION2>
-	Point operator+ (const Point<PRECISION2>& rhs) const {
-		return make_point(x + rhs.x, y + rhs.y);
-	}
-	template<typename PRECISION2>
-	Point operator- (const Point<PRECISION2>& rhs) const {
-		return make_point(x - rhs.x, y - rhs.y);
-	}
 	template<typename PRECISION2>
 	Point operator* (PRECISION2 rhs) const {
 		Point result = *this;
 		result *= rhs;
+		return result;
+	}
+	template<typename PRECISION2>
+	Point operator/ (PRECISION2 rhs) const {
+		Point result = *this;
+		result /= rhs;
 		return result;
 	}
 	template<typename PRECISION2>
@@ -73,6 +66,12 @@ struct Point {
 	Point& operator*= (PRECISION2 rhs) {
 		this->x *= rhs;
 		this->y *= rhs;
+		return *this;
+	}
+	template<typename PRECISION2>
+	Point& operator/= (PRECISION2 rhs) {
+		this->x /= rhs;
+		this->y /= rhs;
 		return *this;
 	}
 
@@ -98,6 +97,21 @@ auto make_point(PRECISION1 x, PRECISION2 y) -> Point<decltype(x+y)> {
 
 const int POSITIVE_DOT_PRODUCT = 0;
 const int NEGATIVE_DOT_PRODUCT = 1;
+
+/**
+ * These add the given point to this point in a
+ * componentwise fashion, ie x = x + rhs.x
+ *
+ * Naturally, {+,-} don't modify and {+,-}= do.
+ */
+template<typename PRECISION, typename PRECISION2>
+auto operator+ (const Point<PRECISION>& lhs, const Point<PRECISION2>& rhs) {
+	return make_point(lhs.x + rhs.x, lhs.y + rhs.y);
+}
+template<typename PRECISION, typename PRECISION2>
+auto operator- (const Point<PRECISION>& lhs, const Point<PRECISION2>& rhs) {
+	return make_point(lhs.x - rhs.x, lhs.y - rhs.y);
+}
 
 template<typename PRECISION, typename PRECISION2>
 auto deltaX(Point<PRECISION> p1, Point<PRECISION2> p2) {
@@ -151,30 +165,31 @@ template<typename PRECISION, typename PRECISION2>
 auto project(Point<PRECISION> source, Point<PRECISION2> wall) {
 	return multiply(wall, dotProduct(wall, source) / magnitudeSquared(wall));
 }
-template<typename PRECISION, typename POINT_TYPE>
-POINT_TYPE& farthestPoint(Point<PRECISION> p, const std::vector<POINT_TYPE>& tests) {
+template<typename PRECISION, typename POINT_LIST>
+auto& farthestPoint(Point<PRECISION> p, const POINT_LIST& test_points) {
 	int farthestIndex = 0;
-	auto farthestDistance = distancef(p, tests[0]);
-	for (int i = 1; i < tests.size(); ++i) {
-		auto distance = distancef(p, tests[i]);
+	auto farthestDistance = distancef(p, *std::begin(test_points));
+	auto farthest_point = &(*std::begin(test_points));
+	for (auto& test_point : test_points) {
+		auto distance = distancef(p, test_point);
 		if (farthestDistance < distance) {
-			farthestIndex = i;
+			farthest_point = &test_point;
 			farthestDistance = distance;
 		}
 	}
-	return tests[farthestIndex];
+	return *farthest_point;
 }
-template<typename PRECISION, typename PRECISION2, typename POINT_TYPE>
-std::array<POINT_TYPE*,2> farthestFromLineWithSides(Point<PRECISION> p, Point<PRECISION2> q, std::vector<POINT_TYPE>& tests) {
+template<typename PRECISION, typename PRECISION2, typename POINT_LIST>
+auto farthestFromLineWithSides(Point<PRECISION> p, Point<PRECISION2> q, POINT_LIST& test_points) {
 	auto line = delta(p, q);
-	std::array<POINT_TYPE,2> farthests;
-	std::array<decltype(magnitude(perpindictularDeltaVectorToLine(line, delta(p, tests[0])))),2> farthestDistance;
-	for (int i = 0; i < tests.size(); ++i) {
-		auto relativeToP = delta(p, tests[i]);
+	std::array<decltype(*std::begin(test_points)),2> farthests;
+	std::array<decltype(magnitude(perpindictularDeltaVectorToLine(line, delta(p, test_points[0])))),2> farthestDistance;
+	for (auto& test_point : test_points) {
+		auto relativeToP = delta(p, test_point);
 		auto distance = magnitude(perpindictularDeltaVectorToLine(line, relativeToP));
 		int dotProductSign = dotProduct(line, relativeToP) < 0 ? NEGATIVE_DOT_PRODUCT : POSITIVE_DOT_PRODUCT;
 		if (farthestDistance[dotProductSign] < distance) {
-			farthests[dotProductSign] = &tests[i];
+			farthests[dotProductSign] = &test_point;
 			farthestDistance[dotProductSign] = distance;
 		}
 	}
