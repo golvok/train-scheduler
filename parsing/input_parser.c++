@@ -32,6 +32,18 @@ namespace fake_data {
 			{"K",{200,  0}},
 			{"Z",{220,  0}},
 		},
+		{
+			{"A", {  0,  0}},
+			{"B", { 40,  0}},
+			{"C0",{ 80,-40}},
+			{"C1",{ 80,+60}},
+			{"D0",{120,-40}},
+			{"D1",{120,+60}},
+			{"E", {160,  0}},
+			{"F", {200,  0}},
+			{"G0",{240,-40}},
+			{"G1",{240,+40}},
+		},
 	};
 
 	std::vector<std::vector<std::tuple<std::string, std::string, uint>>> graphs {
@@ -57,6 +69,19 @@ namespace fake_data {
 			std::make_tuple("I","J",1),
 			std::make_tuple("J","K",1),
 			std::make_tuple("K","Z",1),
+		},
+		{
+			std::make_tuple("A", " ", 0),
+			std::make_tuple("A", "B", 1),
+			std::make_tuple("B", "C0",1),
+			std::make_tuple("B", "C1",2),
+			std::make_tuple("C0","D0",1),
+			std::make_tuple("C1","D1",1),
+			std::make_tuple("D0","E", 1),
+			std::make_tuple("D1","E", 2),
+			std::make_tuple("E", "F", 1),
+			std::make_tuple("F", "G0",1),
+			std::make_tuple("F", "G1",1),
 		},
 	};
 
@@ -84,6 +109,14 @@ namespace fake_data {
 			std::make_tuple("p1","A","Z", 1),
 			std::make_tuple("p2","A","Z", 3),
 			std::make_tuple("p3","B","K", 3),
+		},
+		{
+			std::make_tuple(" "      ," " ," " , 2),
+			std::make_tuple("pA-G0",  "A" ,"G0", 1),
+			std::make_tuple("pA-G1_0","A" ,"G1", 1),
+			std::make_tuple("pA-G1_1","A" ,"G1", 1),
+			std::make_tuple("pC0-G0", "C0","G0", 1),
+			std::make_tuple("pC1-G0", "C0","G0", 1),
 		},
 	};
 }
