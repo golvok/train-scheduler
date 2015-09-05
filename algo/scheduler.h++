@@ -76,6 +76,11 @@ class Schedule {
 		void clear();
 };
 
+/**
+ * Main entry point into the scheduler
+ *
+ * Call this function to do scheduling
+ */
 Schedule schedule(
 	const TrackNetwork& network,
 	const std::vector<Passenger>& passengers
