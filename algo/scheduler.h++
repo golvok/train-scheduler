@@ -76,7 +76,10 @@ class Schedule {
 		void clear();
 };
 
-int schedule(TrackNetwork& network, std::vector<Passenger>& passengers);
+Schedule schedule(
+	const TrackNetwork& network,
+	const std::vector<Passenger>& passengers
+);
 
 } // end namespace algo
 
