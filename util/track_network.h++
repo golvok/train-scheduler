@@ -13,8 +13,8 @@ class TrackNetwork {
 	>;
 
 public:
-	typedef boost::graph_traits<BackingGraphType>::vertex_descriptor ID;
-	typedef boost::graph_traits<BackingGraphType>::edge_descriptor EdgeID;
+	using ID        = boost::graph_traits<BackingGraphType>::vertex_descriptor;
+	using EdgeID    = boost::graph_traits<BackingGraphType>::edge_descriptor;
 
 	static const ID INVALID_ID = -1;
 private:
@@ -36,13 +36,14 @@ public:
 	TrackNetwork(TrackNetwork&&) = default;
 
 	BackingGraphType& g() { return backing_graph; }
+	const BackingGraphType& g() const { return backing_graph; }
 
 	ID createVertex(const std::string& name, geom::Point<float> pos);
-	ID getVertex(const std::string& name);
-	const std::string& getVertexName(ID id);
-	geom::Point<float> getVertexPosition(ID id);
+	ID getVertex(const std::string& name) const;
+	const std::string& getVertexName(ID id) const;
+	geom::Point<float> getVertexPosition(ID id) const;
 
-	ID getTrainSpawnLocation() { return train_spawn_location; }
+	ID getTrainSpawnLocation() const { return train_spawn_location; }
 	void setTrainSpawnLocation(ID id) { train_spawn_location = id; }
 
 	template<typename MAPPED_TO, typename PARAM>

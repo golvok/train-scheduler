@@ -16,7 +16,7 @@ TrackNetwork::ID TrackNetwork::createVertex(const std::string& name, geom::Point
 	}
 }
 
-TrackNetwork::ID TrackNetwork::getVertex(const std::string& name) {
+TrackNetwork::ID TrackNetwork::getVertex(const std::string& name) const {
 	auto find_results = name2id.find(name);
 	if (find_results == name2id.end()) {
 		return INVALID_ID;
@@ -29,7 +29,7 @@ namespace {
 	const std::string empty{};
 }
 
-const std::string& TrackNetwork::getVertexName(TrackNetwork::ID id) {
+const std::string& TrackNetwork::getVertexName(TrackNetwork::ID id) const {
 	auto find_results = id2data.find(id);
 	if (find_results == id2data.end()) {
 		return empty;
@@ -38,7 +38,7 @@ const std::string& TrackNetwork::getVertexName(TrackNetwork::ID id) {
 	}
 }
 
-geom::Point<float> TrackNetwork::getVertexPosition(TrackNetwork::ID id) {
+geom::Point<float> TrackNetwork::getVertexPosition(TrackNetwork::ID id) const {
 	auto find_results = id2data.find(id);
 	if (find_results == id2data.end()) {
 		return geom::Point<float>();
