@@ -34,8 +34,11 @@ TrainsAreaData::~TrainsAreaData() {
 void TrainsAreaData::clear() {
 	auto sdl = getScopedDataLock();
 	cache.impl->clearAll();
+
 	data.tn.reset();
 	data.passengers.reset();
+
+	results.schedule.reset();
 
 	if (hasTrainsArea()) {
 		trains_area->stopAnimating();
@@ -86,12 +89,14 @@ void TrainsAreaData::displayTNAndWantedCapacities(
 
 void TrainsAreaData::presentResults(
 	std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<std::vector<Passenger>> new_passgrs
+	std::weak_ptr<std::vector<Passenger>> new_passgrs,
+	std::weak_ptr<algo::Schedule> new_schedule
 ) {
 	auto sdl = getScopedDataLock();
 	clear();
 
 	displayTNAndPassengers(new_tn, new_passgrs);
+	results.schedule = new_schedule;
 }
 
 void TrainsAreaData::setTrainsArea(TrainsArea* ta) {
@@ -133,10 +138,10 @@ std::shared_ptr<std::vector<Passenger>> TrainsAreaData::getPassengers() {
 	return data.passengers.lock();
 }
 
-// std::shared_ptr<TRAINS> getTrains() {
-// 	auto sdl = getScopedDataLock();
-// 	return results.trains.lock();
-// }
+std::shared_ptr<algo::Schedule> TrainsAreaData::getSchedule() {
+	auto sdl = getScopedDataLock();
+	return results.schedule.lock();
+}
 
 std::shared_ptr<TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWantedEdgeCapacities() {
 	auto sdl = getScopedDataLock();

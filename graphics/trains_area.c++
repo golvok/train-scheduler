@@ -123,14 +123,42 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto is_animating = getIsAnimatingAndLock();
-	// auto trains = data.getTrains();
+	auto schedule = data.getSchedule();
+	auto tn = data.getTN();
 
 	if (!is_animating) { return; }
-	// if (!trains) { return; }
+	if (!tn) { return; }
+	if (!schedule) { return; }
 
-	// draw trains...
+	auto& g = tn->g();
 
-	cc->stroke();
+	cc->set_source_rgb(0.0,0.0,1.0); // blue
+
+	for (auto& train : schedule->getTrains()) {
+		auto& route = train.getRoute();
+
+		float time_until_current_vertex = 0;
+
+		auto prev_vertex = route[0];
+		bool first = true;
+		for (TrackNetwork::ID id : route) {
+			if (first) { first = false; continue; }
+			auto edge_desc = boost::edge(prev_vertex,id,g).first;
+
+			time_until_current_vertex +=
+				boost::get(&TrackNetwork::EdgeProperties::weight,g,edge_desc) / train.getSpeed();
+
+			if (time_until_current_vertex > time) {
+				auto p = tn->getVertexPosition(prev_vertex);
+				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
+				cc->stroke();
+				break;
+			}
+
+			prev_vertex = std::move(id);
+		}
+	}
+
 }
 
 void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {

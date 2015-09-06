@@ -55,7 +55,7 @@ int program_main() {
 		std::shared_ptr<algo::Schedule> schedule = std::make_shared<algo::Schedule>();
 		(*schedule) = algo::schedule(*tn, *passengers);
 
-		graphics::get().trainsArea().presentResults(tn,passengers);
+		graphics::get().trainsArea().presentResults(tn,passengers,schedule);
 		graphics::get().waitForPress();
 	}
 

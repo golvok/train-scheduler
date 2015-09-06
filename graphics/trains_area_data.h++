@@ -4,6 +4,7 @@
 
 #include <util/passenger.h++>
 #include <util/track_network.h++>
+#include <algo/scheduler.h++>
 
 #include <memory>
 #include <mutex>
@@ -23,12 +24,13 @@ private:
 
 	struct Data {
 		using WantedCapacityMap = std::vector<float>;
+
 		std::weak_ptr<TrackNetwork> tn;
 		std::weak_ptr<std::vector<Passenger>> passengers;
 		std::weak_ptr<WantedCapacityMap> wanted_edge_capacities;
 	};
 	struct Results {
-		// std::weak_ptr<TRAINS> trains;
+		std::weak_ptr<algo::Schedule> schedule;
 	};
 	struct Cache {
 		class Impl;
@@ -45,12 +47,6 @@ public:
 	 * Call to clear all data, effectively clearing the TrainsArea
 	 */
 	void clear();
-
-	/**
-	 * Call to revert to newly constructed state:
-	 * no TrainsArea associated, and no data.
-	 */
-	void reset();
 
 	/**
 	 * Cause the passed TrackNetwork to be displayed, nothing else.
@@ -77,8 +73,8 @@ public:
 	 */
 	void presentResults(
 		std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<std::vector<Passenger>> new_passgrs
-		// add more params later
+		std::weak_ptr<std::vector<Passenger>> new_passgrs,
+		std::weak_ptr<algo::Schedule> new_schedule
 	);
 
 private:
@@ -95,7 +91,7 @@ private:
 
 	std::shared_ptr<TrackNetwork> getTN();
 	std::shared_ptr<std::vector<Passenger>> getPassengers();
-	// std::shared_ptr<TRAINS> getTrains();
+	std::shared_ptr<algo::Schedule> getSchedule();
 	std::shared_ptr<Data::WantedCapacityMap> getWantedEdgeCapacities();
 
 	TrainsArea* trains_area;
