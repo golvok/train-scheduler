@@ -52,7 +52,6 @@ template<typename IA_ITERATOR>
 class index_associative_iteratior_value {
 	const IA_ITERATOR* src;
 public:
-	typedef typename IA_ITERATOR::value_type value_type;
 
 	typename IA_ITERATOR::iterator_type it() const { return src->it(); }
 	typename IA_ITERATOR::size_type i() const { return src->i(); }
@@ -62,8 +61,7 @@ public:
 
 	index_associative_iteratior_value& operator=(const index_associative_iteratior_value&) = delete;
 
-	operator value_type() { return *(it()); }
-	value_type& operator*() { return *(it()); }
+	auto& operator*() { return *(it()); }
 };
 
 template<typename ITERATOR, typename INDEX>
