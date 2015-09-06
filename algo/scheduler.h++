@@ -8,45 +8,35 @@ namespace algo {
 
 class Train {
 	uint train_id;
-	TrackNetwork::ID entry_id;
-	TrackNetwork::ID exit_id;
+	std::vector<TrackNetwork::ID> route;
 	uint deprture_time;
-	uint arrival_time;
 	uint speed;
 
 	public:
 		Train(
 			const uint train_id,
-			TrackNetwork::ID entry_id,
-			TrackNetwork::ID exit_id,
-			uint deprture_time,
-			uint arrival_time,
-			uint speed
+			std::vector<TrackNetwork::ID>&& route_,
+			uint deprture_time
 		)
 			: train_id(train_id)
-			, entry_id(entry_id)
-			, exit_id(exit_id)
-			,deprture_time(deprture_time)
-			,arrival_time(arrival_time)
-			,speed(speed)
-		{}
+			, route(std::move(route_))
+			, deprture_time(deprture_time)
+			, speed(1)
+		{ }
+
+		Train(const Train&) = default;
+		Train(Train&&) = default;
+		Train& operator=(const Train&) = default;
+		Train& operator=(Train&&) = default;
 
 		// getters
-		uint gettrain_id() const { return train_id; }
-		TrackNetwork::ID getEntryId() const { return entry_id; }
-		TrackNetwork::ID getExitId() const { return exit_id; }
+		uint getId() const { return train_id; }
+		auto& getRoute() { return route; }
+		const auto& getRoute() const { return route; }
+		TrackNetwork::ID getEntryId() const { return route.front(); }
+		TrackNetwork::ID getExitId() const { return route.back(); }
 		uint getDeprtureTime() const { return deprture_time; }
-		uint getArrivalTime() const { return arrival_time; }
 		uint getSpeed() const { return speed; }
-
-		// setters
-		void setDeprtureTime(uint d) { deprture_time = d; }
-		void setArrivalTime(uint a) { arrival_time = a; }
-		void setSpeed(uint s) { speed = s; }
-
-		bool operator==(const Train& rhs) const {
-			return train_id == rhs.train_id;
-		}
 };
 
 class Schedule {
@@ -54,26 +44,30 @@ class Schedule {
 	std::vector<Train> trains;
 
 	public:
+		Schedule()
+			: name("")
+			, trains()
+		{ }
+
 		Schedule(
-			const std::string name
+			const std::string& name,
+			std::vector<Train>&& trains
 		)
 			: name(name)
-			,trains()
-		{}
+			, trains(std::move(trains))
+		{ }
+
+		Schedule(const Schedule&) = default;
+		Schedule(Schedule&&) = default;
+		Schedule& operator=(const Schedule&) = default;
+		Schedule& operator=(Schedule&&) = default;
 
 		// getters
 		const std::string& getName() const { return name; }
-		std::vector<Train> getTrains() const { return trains; }
-
-		// setters
-
-		bool operator==(const Schedule& rhs) const {
-			return name == rhs.name;
-		}
+		std::vector<Train>& getTrains() { return trains; }
+		const std::vector<Train>& getTrains() const { return trains; }
 
 		void addTrain();
-		void removeTrain();
-		void clear();
 };
 
 /**

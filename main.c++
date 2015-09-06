@@ -52,8 +52,8 @@ int program_main() {
 		auto d_indent = dout.indentWithTitle([&](auto& s){s << "Input Data #" << tn_counter;});
 		dout << '\n';
 
-		auto results = algo::schedule(*tn, *passengers);
-		(void)results;
+		std::shared_ptr<algo::Schedule> schedule = std::make_shared<algo::Schedule>();
+		(*schedule) = algo::schedule(*tn, *passengers);
 
 		graphics::get().trainsArea().presentResults(tn,passengers);
 		graphics::get().waitForPress();

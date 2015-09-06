@@ -46,7 +46,7 @@ public:
 	 * Take the edge wanted capacites, and turn that into a set of
 	 * train routes.
 	 */
-	void make_rotues(
+	std::vector<Route> make_rotues(
 		const EdgeWantedCapacities& edge_wanted_capacities
 	);
 
@@ -106,9 +106,15 @@ Schedule Scheduler::do_schedule() {
 	graphics::get().trainsArea().displayTNAndWantedCapacities(edge_wanted_capacities_sp);
 	graphics::get().waitForPress();
 
-	make_rotues(edge_wanted_capacities);
+	auto train_routes = make_rotues(edge_wanted_capacities);
 
-	return Schedule("abc");
+	std::vector<Train> trains;
+
+	for(auto route_iai_iter : index_assoc_iterate(train_routes)) {
+		trains.emplace_back(route_iai_iter.i(),std::move(*route_iai_iter),0);
+	}
+
+	return Schedule("abc",std::move(trains));
 }
 
 Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
@@ -169,7 +175,7 @@ void Scheduler::dump_edge_wanted_capacites_to_dout(
 }
 
 
-void Scheduler::make_rotues(
+std::vector<Scheduler::Route> Scheduler::make_rotues(
 	const EdgeWantedCapacities& edge_wanted_capacities
 ) {
 	auto routing_indent = dout.indentWithTitle("making train routes");
@@ -178,7 +184,7 @@ void Scheduler::make_rotues(
 	auto trains_go_to_vertex = ::util::makeVertexMap<bool>(g,false);
 	uint vertex_covered_count = 0;
 
-	std::vector<Route> trains;
+	std::vector<Route> routes;
 
 	auto routing_indent2 = dout.indentWithTitle("Traversing");
 
@@ -196,7 +202,7 @@ void Scheduler::make_rotues(
 			break;
 		}
 
-		trains.push_back(new_route);
+		routes.push_back(new_route);
 
 		if (vertex_covered_count >= num_vertices(g)) {
 			break;
@@ -205,7 +211,9 @@ void Scheduler::make_rotues(
 
 	routing_indent2.endIndent();
 
-	dump_trains_to_dout(trains);
+	dump_trains_to_dout(routes);
+
+	return routes;
 }
 
 std::tuple<Scheduler::Route, Scheduler::TrainsGoToVertex, uint> Scheduler::make_train_route(
