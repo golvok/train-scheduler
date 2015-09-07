@@ -13,6 +13,8 @@ namespace graphics {
 
 class TrainsArea : public Gtk::DrawingArea {
 public:
+	using Time = float;
+
 	TrainsArea(TrainsAreaData& data);
 	virtual ~TrainsArea() { }
 
@@ -37,7 +39,7 @@ private:
 	void resetAnimationTime();
 
 	TrainsAreaData& data;
-	uint time;
+	Time time;
 
 	sigc::connection animation_connection;
 	std::recursive_mutex drawing_mutex;

@@ -126,6 +126,7 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto schedule = data.getSchedule();
 	auto tn = data.getTN();
 
+
 	if (!is_animating) { return; }
 	if (!tn) { return; }
 	if (!schedule) { return; }
@@ -137,25 +138,37 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 	for (auto& train : schedule->getTrains()) {
 		auto& route = train.getRoute();
 
-		float time_until_current_vertex = 0;
+		TrainsArea::Time time_in_nework = time - train.getDepartureTime();
+		float time_until_prev_vertex = 0;
 
-		auto prev_vertex = route[0];
-		bool first = true;
+		TrackNetwork::ID prev_vertex(-1);
 		for (TrackNetwork::ID id : route) {
-			if (first) { first = false; continue; }
+			if (prev_vertex == TrackNetwork::ID(-1)) {
+				prev_vertex = std::move(id);
+				continue; // skip first one.
+			}
+
 			auto edge_desc = boost::edge(prev_vertex,id,g).first;
 
-			time_until_current_vertex +=
+			float additional_time_to_next_vertex =
 				boost::get(&TrackNetwork::EdgeProperties::weight,g,edge_desc) / train.getSpeed();
 
-			if (time_until_current_vertex > time) {
-				auto p = tn->getVertexPosition(prev_vertex);
+			if ((time_until_prev_vertex + additional_time_to_next_vertex) >= time_in_nework) {
+				auto prev_pt = tn->getVertexPosition(prev_vertex);
+				auto next_pt = tn->getVertexPosition(id);
+
+				// interpolate
+				auto fraction_distance_travelled = ((time_in_nework - time_until_prev_vertex)/(additional_time_to_next_vertex));
+				auto offset_to_next = (next_pt - prev_pt) * fraction_distance_travelled;
+				auto p = prev_pt + offset_to_next;
+
 				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
 				cc->stroke();
 				break;
 			}
 
 			prev_vertex = std::move(id);
+			time_until_prev_vertex += additional_time_to_next_vertex;
 		}
 	}
 
