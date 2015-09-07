@@ -43,34 +43,33 @@ private:
 };
 
 class Schedule {
+public:
+	Schedule()
+		: name("")
+		, trains()
+	{ }
+
+	Schedule(
+		const std::string& name,
+		std::vector<Train>&& trains
+	)
+		: name(name)
+		, trains(std::move(trains))
+	{ }
+
+	Schedule(const Schedule&) = default;
+	Schedule(Schedule&&) = default;
+	Schedule& operator=(const Schedule&) = default;
+	Schedule& operator=(Schedule&&) = default;
+
+	// getters
+	const std::string& getName() const { return name; }
+	std::vector<Train>& getTrains() { return trains; }
+	const std::vector<Train>& getTrains() const { return trains; }
+
+private:
 	std::string name;
 	std::vector<Train> trains;
-
-	public:
-		Schedule()
-			: name("")
-			, trains()
-		{ }
-
-		Schedule(
-			const std::string& name,
-			std::vector<Train>&& trains
-		)
-			: name(name)
-			, trains(std::move(trains))
-		{ }
-
-		Schedule(const Schedule&) = default;
-		Schedule(Schedule&&) = default;
-		Schedule& operator=(const Schedule&) = default;
-		Schedule& operator=(Schedule&&) = default;
-
-		// getters
-		const std::string& getName() const { return name; }
-		std::vector<Train>& getTrains() { return trains; }
-		const std::vector<Train>& getTrains() const { return trains; }
-
-		void addTrain();
 };
 
 /**
