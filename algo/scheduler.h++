@@ -7,36 +7,39 @@
 namespace algo {
 
 class Train {
+public:
+	using Speed = float;
+
+	Train(
+		const uint train_id,
+		std::vector<TrackNetwork::ID>&& route_,
+		uint departure_time
+	)
+		: train_id(train_id)
+		, route(std::move(route_))
+		, departure_time(departure_time)
+		, speed(0.5)
+	{ }
+
+	Train(const Train&) = default;
+	Train(Train&&) = default;
+	Train& operator=(const Train&) = default;
+	Train& operator=(Train&&) = default;
+
+	// getters
+	uint getId() const { return train_id; }
+	auto& getRoute() { return route; }
+	const auto& getRoute() const { return route; }
+	TrackNetwork::ID getEntryId() const { return route.front(); }
+	TrackNetwork::ID getExitId() const { return route.back(); }
+	uint getDepartureTime() const { return departure_time; }
+	Speed getSpeed() const { return speed; }
+
+private:
 	uint train_id;
 	std::vector<TrackNetwork::ID> route;
-	uint deprture_time;
-	uint speed;
-
-	public:
-		Train(
-			const uint train_id,
-			std::vector<TrackNetwork::ID>&& route_,
-			uint deprture_time
-		)
-			: train_id(train_id)
-			, route(std::move(route_))
-			, deprture_time(deprture_time)
-			, speed(1)
-		{ }
-
-		Train(const Train&) = default;
-		Train(Train&&) = default;
-		Train& operator=(const Train&) = default;
-		Train& operator=(Train&&) = default;
-
-		// getters
-		uint getId() const { return train_id; }
-		auto& getRoute() { return route; }
-		const auto& getRoute() const { return route; }
-		TrackNetwork::ID getEntryId() const { return route.front(); }
-		TrackNetwork::ID getExitId() const { return route.back(); }
-		uint getDeprtureTime() const { return deprture_time; }
-		uint getSpeed() const { return speed; }
+	uint departure_time;
+	Speed speed;
 };
 
 class Schedule {
