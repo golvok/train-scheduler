@@ -72,11 +72,13 @@ public:
 	);
 
 	void dump_edge_wanted_capacites_to_dout(
-		const EdgeWantedCapacities& edge_wanted_capacities
+		const EdgeWantedCapacities& edge_wanted_capacities,
+		DebugLevel::Level level
 	);
 
 	void dump_trains_to_dout(
-		const std::vector<Route>& trains
+		const std::vector<Route>& trains,
+		DebugLevel::Level level
 	);
 };
 
@@ -96,7 +98,7 @@ Schedule schedule(
 }
 
 Schedule Scheduler::do_schedule() {
-	auto fnd_routes_indent = dout.indentWithTitle("finding routes (scheduler2)");
+	auto fnd_routes_indent = dout(DL::INFO).indentWithTitle("finding routes (scheduler2)");
 
 	auto edge_wanted_capacities_sp = util::make_shared(::util::makeEdgeMap<float>(g,float()));
 	auto& edge_wanted_capacities = *edge_wanted_capacities_sp;
@@ -120,12 +122,12 @@ Schedule Scheduler::do_schedule() {
 Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 	auto edge_wanted_capacities = ::util::makeEdgeMap<float>(g,1);
 
-	auto ewc_indent = dout.indentWithTitle("Computing Edge Wanted Capacities");
+	auto ewc_indent = dout(DL::WC_D1).indentWithTitle("Computing Edge Wanted Capacities");
 	for (const Passenger& p : passengers) {
-		auto p_indent = dout.indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
+		auto p_indent = dout(DL::WC_D1).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
 		auto next_iteration_weights = network.makeEdgeWeightMapCopy();
 		for (uint iteration_num = 1; true; ++iteration_num) {
-			auto p_indent = dout.indentWithTitle([&](auto&& out){ out << "Iteration " << iteration_num; });
+			auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Iteration " << iteration_num; });
 			auto iteration_weights = next_iteration_weights; // get ourselves a copy
 
 			auto iteration_weights_f = [&](TrackNetwork::BackingGraphType::edge_descriptor edge_desc) {
@@ -137,7 +139,7 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 				network,
 				weight_map
 			);
-			::util::print_route(route_for_p,network,dout);
+			::util::print_route(route_for_p,network,dout(DL::WC_D2));
 			{
 				auto prev_vertex = route_for_p[0];
 				bool first = true;
@@ -159,18 +161,19 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 		}
 	}
 
-	dump_edge_wanted_capacites_to_dout(edge_wanted_capacities);
+	dump_edge_wanted_capacites_to_dout(edge_wanted_capacities,DL::WC_D1);
 
 	return edge_wanted_capacities;
 }
 
 void Scheduler::dump_edge_wanted_capacites_to_dout(
-	const EdgeWantedCapacities& edge_wanted_capacities
+	const EdgeWantedCapacities& edge_wanted_capacities,
+	DebugLevel::Level level
 ) {
-	auto edge_wc_indent = dout.indentWithTitle("Computed edge wanted capacities");
+	auto edge_wc_indent = dout(level).indentWithTitle("Computed edge wanted capacities");
 	for (auto edge_desc : make_iterable(edges(g))) {
 		auto edge_index = network.getEdgeIndex(edge_desc);
-		dout << edge_index << " : " << edge_wanted_capacities[edge_index] << '\n';
+		dout(level) << edge_index << " : " << edge_wanted_capacities[edge_index] << '\n';
 	}
 }
 
@@ -178,7 +181,7 @@ void Scheduler::dump_edge_wanted_capacites_to_dout(
 std::vector<Scheduler::Route> Scheduler::make_rotues(
 	const EdgeWantedCapacities& edge_wanted_capacities
 ) {
-	auto routing_indent = dout.indentWithTitle("making train routes");
+	auto routing_indent = dout(DL::INFO).indentWithTitle("making train routes");
 
 
 	auto trains_go_to_vertex = ::util::makeVertexMap<bool>(g,false);
@@ -186,7 +189,7 @@ std::vector<Scheduler::Route> Scheduler::make_rotues(
 
 	std::vector<Route> routes;
 
-	auto routing_indent2 = dout.indentWithTitle("Traversing");
+	auto routing_indent2 = dout(DL::TR_D1).indentWithTitle("Traversing");
 
 	while (true) {
 
@@ -211,7 +214,7 @@ std::vector<Scheduler::Route> Scheduler::make_rotues(
 
 	routing_indent2.endIndent();
 
-	dump_trains_to_dout(routes);
+	dump_trains_to_dout(routes,DL::TR_D1);
 
 	return routes;
 }
@@ -221,7 +224,7 @@ std::tuple<Scheduler::Route, Scheduler::TrainsGoToVertex, uint> Scheduler::make_
 	TrainsGoToVertex&& trains_go_to_vertex,
 	uint vertex_covered_count
 ) {
-	auto train_indent = dout.indentWithTitle("Train");
+	auto train_indent = dout(DL::TR_D1).indentWithTitle("Train");
 
 
 	Route route;
@@ -237,7 +240,7 @@ std::tuple<Scheduler::Route, Scheduler::TrainsGoToVertex, uint> Scheduler::make_
 		);
 
 		if (next == TrackNetwork::ID(-1)) {
-			dout << "didn't find anything. Ending route.\n";
+			dout(DL::TR_D3) << "didn't find anything. Ending route.\n";
 			break;
 		} else {
 			if (trains_go_to_vertex[next] == false) {
@@ -260,7 +263,7 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 	const TrainsGoToVertex& trains_go_to_vertex,
 	TrackNetwork::ID curr
 ) {
-	auto vertex_index = dout.indentWithTitle([&](auto&&out){ out << "Vertex " << network.getVertexName(curr); });
+	auto vertex_index = dout(DL::TR_D2).indentWithTitle([&](auto&&out){ out << "Vertex " << network.getVertexName(curr); });
 
 	// check if all adjacent vertices already have trains -- cache?
 	bool heed_trains_going_to = false;
@@ -272,7 +275,7 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 	}
 
 	if (!heed_trains_going_to) {
-		dout << "-- ignoring existing trains --\n";
+		dout(DL::TR_D3) << "-- ignoring existing trains --\n";
 	}
 
 	TrackNetwork::ID next(-1);
@@ -280,17 +283,17 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 
 	for (auto e_desc : make_iterable(out_edges(curr,g))) {
 		TrackNetwork::ID target_v = target(e_desc,g);
-		dout << "looking at " << network.getVertexName(target_v) << ", ";
+		dout(DL::TR_D3) << "looking at " << network.getVertexName(target_v) << ", ";
 
 		if (heed_trains_going_to && trains_go_to_vertex[target_v]) {
-			dout << "skipping!\n";
+			dout(DL::TR_D3) << "skipping!\n";
 			continue;
 		}
 
 		float wc = edge_wanted_capacities[network.getEdgeIndex(e_desc)];
-		dout << "wc = " << wc;
+		dout(DL::TR_D3) << "wc = " << wc;
 		if (wc > best_wanted_capacity) {
-			dout << " - is best!\n";
+			dout(DL::TR_D3) << " - is best!\n";
 			next = target_v;
 			best_wanted_capacity = wc;
 		}
@@ -300,13 +303,14 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 }
 
 void Scheduler::dump_trains_to_dout(
-	const std::vector<Route>& trains
+	const std::vector<Route>& trains,
+	DebugLevel::Level level
 ) {
-	auto output_indent = dout.indentWithTitle("Trains");
+	auto output_indent = dout(level).indentWithTitle("Trains");
 	uint i = 1;
 	for (auto& route : trains) {
-		auto route_indent = dout.indentWithTitle([&](auto&&out){ out << "train " << i; });
-		::util::print_route(route,network,dout);
+		auto route_indent = dout(level).indentWithTitle([&](auto&&out){ out << "train " << i; });
+		::util::print_route(route,network,dout(level));
 		++i;
 	}
 }

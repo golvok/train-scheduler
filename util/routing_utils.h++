@@ -42,7 +42,7 @@ std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortes
 	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
 
 	for (auto passenger : passengers) {
-		dout << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
+		dout(DL::INFO) << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
 
 		auto route = get_shortest_route(passenger.getEntryId(),passenger.getExitId(),network);
 
@@ -56,7 +56,7 @@ template<typename CONTAINER, typename OSTREAM>
 void print_route(
 	const CONTAINER& route,
 	const TrackNetwork& network,
-	OSTREAM& os
+	OSTREAM&& os
 ) {
 	std::for_each(std::begin(route), std::end(route), [&](auto& v){
 		os << network.getVertexName(v) << " -> ";

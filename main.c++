@@ -25,6 +25,10 @@ int main(int argc_int, char const** argv) {
 		graphics::get().initialize();
 	}
 
+	for (std::underlying_type_t<DebugLevel::Level> i = 0; i < DL::LEVEL_COUNT; ++i) {
+		dout.enable_level(static_cast<DebugLevel::Level>(i));
+	}
+
 	return program_main();
 }
 
@@ -48,9 +52,9 @@ int program_main() {
 			break;
 		}
 
-		dout << '\n';
-		auto d_indent = dout.indentWithTitle([&](auto&& s){s << "Input Data #" << tn_counter;});
-		dout << '\n';
+		dout(DL::INFO) << '\n';
+		auto d_indent = dout(DL::INFO).indentWithTitle([&](auto&& s){s << "Input Data #" << tn_counter;});
+		dout(DL::INFO) << '\n';
 
 		std::shared_ptr<algo::Schedule> schedule = std::make_shared<algo::Schedule>();
 		(*schedule) = algo::schedule(*tn, *passengers);

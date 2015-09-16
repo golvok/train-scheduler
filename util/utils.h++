@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <type_traits>
 
 template <typename...> struct all_convertible;
 
@@ -97,5 +98,11 @@ template<typename T, typename U>
 ComparesWithTag<T,U> compare_with_tag(const T& thing, U id) {
 	return ComparesWithTag<T,U>(thing,id);
 }
+
+template<typename T, typename V = void>
+using EnableIfEnum = typename std::enable_if<std::is_enum<T>::value,V>;
+
+template<typename T, typename V = void>
+using EnableIfIntegral = typename std::enable_if<std::is_integral<T>::value,V>;
 
 #endif /* UTIL_H */

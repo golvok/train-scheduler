@@ -28,4 +28,4 @@ IndentLevel::~IndentLevel() {
 	}
 }
 
-IndentingDebugPrinter dout(std::cout, 0);
+IndentingLeveledDebugPrinter dout(std::cout, 0);
