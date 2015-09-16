@@ -33,12 +33,30 @@ public:
 
 class IndentLevel {
 	friend class IndentingDebugPrinter;
-	IndentingDebugPrinter& src;
+	IndentingDebugPrinter* src;
 	bool ended;
-	IndentLevel(IndentingDebugPrinter& src) : src(src), ended(false) { }
+	IndentLevel(IndentingDebugPrinter* src) : src(src), ended(false) { }
 public:
 	void endIndent();
 	~IndentLevel();
+
+	IndentLevel(IndentLevel&& src_ilevel)
+		: src(std::move(src_ilevel.src))
+		, ended(std::move(src_ilevel.ended))
+	{
+		src_ilevel.ended = true;
+	}
+
+	IndentLevel(const IndentLevel&) = delete;
+
+	IndentLevel& operator=(IndentLevel&& rhs) {
+		this->src = std::move(rhs.src);
+		this->ended = std::move(rhs.ended);
+		rhs.ended = true;
+		return *this;
+	}
+
+	IndentLevel& operator=(const IndentLevel&) = delete;
 };
 
 class IndentingDebugPrinter : boost::iostreams::filtering_ostream {
@@ -89,9 +107,9 @@ public:
 	}
 
 	template<typename FUNC>
-	auto indentWithTitle(const FUNC& f) -> decltype(f(*this),IndentLevel(*this)) {
+	auto indentWithTitle(const FUNC& f) -> decltype(f(*this),IndentLevel(this)) {
 		// the weird return value is so the compiler SFINAE's away this
-		// override if FUNC is not a lambda style type
+		// overload if FUNC is not a lambda style type
 		util::repeat(getTitleLevel(),[&](){
 			(*this) << '=';
 		});
@@ -103,7 +121,7 @@ public:
 		});
 		(*this) << '\n';
 		indent_level++;
-		return IndentLevel(*this);
+		return IndentLevel(this);
 	}
 
 	IndentLevel indentWithTitle(const std::string& title) {

@@ -17,12 +17,14 @@ bool indent_filter::put(SINK& dest, int c) {
 
 void IndentLevel::endIndent() {
 	ended = true;
-	src.endIndent();
+	if (src) {
+		src->endIndent();
+	}
 }
 
 IndentLevel::~IndentLevel() {
-	if (!ended) {
-		src.endIndent();
+	if (src && !ended) {
+		src->endIndent();
 	}
 }
 
