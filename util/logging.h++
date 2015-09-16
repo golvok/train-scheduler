@@ -107,11 +107,11 @@ public:
 	}
 
 	IndentLevel indentWithTitle(const std::string& title) {
-		return indentWithTitle([&](auto& s){ s << title; });
+		return indentWithTitle([&](auto&& s){ s << title; });
 	}
 
 	IndentLevel indentWithTitle(const char*& title) {
-		return indentWithTitle([&](auto& s){ s << title; });
+		return indentWithTitle([&](auto&& s){ s << title; });
 	}
 
 	void setMaxIndentation(int level) { max_indent_level = level; }

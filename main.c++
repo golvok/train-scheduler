@@ -49,7 +49,7 @@ int program_main() {
 		}
 
 		dout << '\n';
-		auto d_indent = dout.indentWithTitle([&](auto& s){s << "Input Data #" << tn_counter;});
+		auto d_indent = dout.indentWithTitle([&](auto&& s){s << "Input Data #" << tn_counter;});
 		dout << '\n';
 
 		std::shared_ptr<algo::Schedule> schedule = std::make_shared<algo::Schedule>();

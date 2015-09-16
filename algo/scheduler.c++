@@ -122,10 +122,10 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 
 	auto ewc_indent = dout.indentWithTitle("Computing Edge Wanted Capacities");
 	for (const Passenger& p : passengers) {
-		auto p_indent = dout.indentWithTitle([&](auto& out){ out << "Passenger " << p.getName(); });
+		auto p_indent = dout.indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
 		auto next_iteration_weights = network.makeEdgeWeightMapCopy();
 		for (uint iteration_num = 1; true; ++iteration_num) {
-			auto p_indent = dout.indentWithTitle([&](auto& out){ out << "Iteration " << iteration_num; });
+			auto p_indent = dout.indentWithTitle([&](auto&& out){ out << "Iteration " << iteration_num; });
 			auto iteration_weights = next_iteration_weights; // get ourselves a copy
 
 			auto iteration_weights_f = [&](TrackNetwork::BackingGraphType::edge_descriptor edge_desc) {
@@ -260,7 +260,7 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 	const TrainsGoToVertex& trains_go_to_vertex,
 	TrackNetwork::ID curr
 ) {
-	auto vertex_index = dout.indentWithTitle([&](auto& out){ out << "Vertex " << network.getVertexName(curr); });
+	auto vertex_index = dout.indentWithTitle([&](auto&&out){ out << "Vertex " << network.getVertexName(curr); });
 
 	// check if all adjacent vertices already have trains -- cache?
 	bool heed_trains_going_to = false;
@@ -305,7 +305,7 @@ void Scheduler::dump_trains_to_dout(
 	auto output_indent = dout.indentWithTitle("Trains");
 	uint i = 1;
 	for (auto& route : trains) {
-		auto route_indent = dout.indentWithTitle([&](auto& out){ out << "train " << i; });
+		auto route_indent = dout.indentWithTitle([&](auto&&out){ out << "train " << i; });
 		::util::print_route(route,network,dout);
 		++i;
 	}
