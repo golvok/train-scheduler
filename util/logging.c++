@@ -1,7 +1,49 @@
 
 #include "logging.h++"
 
+
+IndentingLeveledDebugPrinter dout(std::cout, 0);
+
+
 namespace DebugLevel {
+	std::vector<Level> getDefaultSet() {
+		return {
+			INFO,WARN,ERROR
+		};
+	}
+
+	std::vector<Level> getAllDebug() {
+		return {
+			WC_D1, WC_D2, WC_D3,
+			TR_D1, TR_D2, TR_D3,
+			PR_D1, PR_D2, PR_D3,
+		};
+	}
+
+	/**
+	 * The enable chains.
+	 * if a level is in one of these, then it and all the ones after it
+	 * will be returned by getAllShouldBeEnabled(...).
+	 * a given Level may appear in multiple chains.
+	 */
+	std::vector<std::vector<Level>> enable_chains {
+		{ WC_D3, WC_D2, WC_D1, },
+		{ TR_D3, TR_D2, TR_D1, },
+		{ PR_D3, PR_D2, PR_D1, },
+	};
+
+	std::vector<Level> getAllShouldBeEnabled(Level l) {
+		std::vector<Level> retset;
+		for (auto& enable_chain : enable_chains) {
+			// find the Level
+			auto it = std::find(begin(enable_chain),end(enable_chain),l);
+			// insert *it and the ones after
+			// if it == .end() (ie. l was not found), then nothing happens!
+			retset.insert(retset.end(),it,enable_chain.end());
+		}
+		return retset;
+	}
+
 	std::vector<std::pair<Level,std::string>> levels_and_strings {
 		{ INFO,  "INFO"  },
 		{ WARN,  "WARN"  },
@@ -70,5 +112,3 @@ IndentLevel::~IndentLevel() {
 		src->endIndent();
 	}
 }
-
-IndentingLeveledDebugPrinter dout(std::cout, 0);

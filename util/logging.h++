@@ -14,22 +14,45 @@
 class IndentingLeveledDebugPrinter;
 
 namespace DebugLevel {
-	enum Level {
-		INFO,
-		WARN,
-		ERROR,
+	/**
+	 * The Enum of the levels usable with IndentingLeveledDebugPrinter
+	 * If adding a level make sure to update the various functions in this namespace.
+	 */
+	enum Level : uint {
+		INFO,  // probably always going to have this on?
+		WARN,  // same as ^ ?
+		ERROR, // always on
 
 		WC_D1, // Wanted capacity debug
 		WC_D2, // Wanted capacity debug level 2
 		WC_D3, // Wanted capacity lowest level debug
-		TR_D1, // Train Roting debug
-		TR_D2, // Train Roting debug level 2
-		TR_D3, // Train Roting lowest level debug
-		PR_D1, // Passenger Roting debug
-		PR_D2, // Passenger Roting debug level 2
-		PR_D3, // Passenger Roting lowest level debug
-		LEVEL_COUNT,
+		TR_D1, // Train Routing debug
+		TR_D2, // Train Routing debug level 2
+		TR_D3, // Train Routing lowest level debug
+		PR_D1, // Passenger Routing debug
+		PR_D2, // Passenger Routing debug level 2
+		PR_D3, // Passenger Routing lowest level debug
+
+		LEVEL_COUNT, // please make sure this is at the end
 	};
+
+	/**
+	 * Get the default set of print levels that should probably always be enabled
+	 * Most code assumes these are already on.
+	 */
+	std::vector<Level> getDefaultSet();
+
+	/**
+	 * Get all the levels that you might ever want if debugging was your goal
+	 */
+	std::vector<Level> getAllDebug();
+
+	/**
+	 * If you feel like enabling a particular level, then
+	 * call this function to get all the levels that probably
+	 * should also be enabled
+	 */
+	std::vector<Level> getAllShouldBeEnabled(Level l);
 
 	std::pair<Level,bool> getFromString(std::string str);
 	std::string getAsString(Level l);

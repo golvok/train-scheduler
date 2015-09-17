@@ -7,7 +7,7 @@ namespace cmdargs {
 
 ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 	: graphics_enabled(false)
-	, levels_to_enable({DL::INFO,DL::WARN,DL::ERROR})
+	, levels_to_enable(DebugLevel::getDefaultSet())
  {
 	uint arg_count = argc_int;
 	std::vector<std::string> args;
@@ -22,7 +22,7 @@ ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 	}
 
 	if (std::find(begin(args),end(args),"--debug") != end(args)) {
-		auto debug_levels = {DL::WC_D1,DL::WC_D2,DL::WC_D3,DL::TR_D1,DL::TR_D2,DL::TR_D3,DL::PR_D1,DL::PR_D2,DL::PR_D3};
+		auto debug_levels = DebugLevel::getAllDebug();
 		levels_to_enable.insert(end(levels_to_enable),begin(debug_levels),end(debug_levels));
 	} else {
 		for (auto& arg : args) {
@@ -35,7 +35,8 @@ ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 
 			auto result = DebugLevel::getFromString(arg.substr(6));
 			if (result.second) {
-				levels_to_enable.push_back(result.first);
+				auto levels_in_chain = DebugLevel::getAllShouldBeEnabled(result.first);
+				levels_to_enable.insert(end(levels_to_enable),begin(levels_in_chain),end(levels_in_chain));
 			}
 		}
 	}
