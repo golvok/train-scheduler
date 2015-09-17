@@ -2,6 +2,7 @@
 #include <algo/scheduler.h++>
 #include <graphics/graphics.h++>
 #include <parsing/input_parser.h++>
+#include <parsing/cmdargs_parser.h++>
 #include <util/logging.h++>
 
 #include <memory>
@@ -12,16 +13,12 @@
 
 int program_main();
 
-int main(int argc_int, char const** argv) {
+int main(int argc, char const** argv) {
 	dout.setMaxIndentation(7);
 
-	uint arg_count = argc_int;
-	std::vector<std::string> args;
-	for (uint i = 0; i < arg_count; ++i) {
-		args.emplace_back(argv[i]);
-	}
+	auto parsed_args = parsing::cmdargs::parse(argc,argv);
 
-	if (std::find(args.begin(),args.end(),"--graphics") != args.end()) {
+	if (parsed_args.shouldEnableGraphics()) {
 		graphics::get().initialize();
 	}
 
