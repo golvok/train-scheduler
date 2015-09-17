@@ -22,8 +22,8 @@ int main(int argc, char const** argv) {
 		graphics::get().initialize();
 	}
 
-	for (std::underlying_type_t<DebugLevel::Level> i = 0; i < DL::LEVEL_COUNT; ++i) {
-		dout.enable_level(static_cast<DebugLevel::Level>(i));
+	for (auto& l : parsed_args.getDebugLevelsToEnable()) {
+		dout.enable_level(l);
 	}
 
 	return program_main();

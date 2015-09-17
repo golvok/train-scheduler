@@ -30,6 +30,10 @@ namespace DebugLevel {
 		PR_D3, // Passenger Roting lowest level debug
 		LEVEL_COUNT,
 	};
+
+	std::pair<Level,bool> getFromString(std::string str);
+	std::string getAsString(Level l);
+
 }
 
 using DL = DebugLevel::Level;
