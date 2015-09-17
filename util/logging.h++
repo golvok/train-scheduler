@@ -13,8 +13,7 @@
 
 class IndentingLeveledDebugPrinter;
 
-class DebugLevel {
-public:
+namespace DebugLevel {
 	enum Level {
 		INFO,
 		WARN,
@@ -31,7 +30,7 @@ public:
 		PR_D3, // Passenger Roting lowest level debug
 		LEVEL_COUNT,
 	};
-};
+}
 
 using DL = DebugLevel::Level;
 
