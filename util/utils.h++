@@ -105,4 +105,12 @@ using EnableIfEnum = typename std::enable_if<std::is_enum<T>::value,V>;
 template<typename T, typename V = void>
 using EnableIfIntegral = typename std::enable_if<std::is_integral<T>::value,V>;
 
+template<typename CAST_TO>
+struct StaticCaster {
+	template<typename SRC>
+	auto operator()(SRC src) const {
+		return static_cast<CAST_TO>(src);
+	}
+};
+
 #endif /* UTIL_H */

@@ -61,8 +61,27 @@ namespace DebugLevel {
 
 using DL = DebugLevel::Level;
 
+/**
+ * This class supplies REDIRECT_TYPE operator()(LEVEL_TYPE) and
+ * methods for manipulating the enable/disable state of each level
+ *
+ * Classes that use this are expected to inherit from this class,
+ * so that the level manipulation & operator() usage is seamless.
+ * It is not necessary, however.
+ *
+ * Template Arguments:
+ * STREAM_GET_TYPE - something that provides operator()(LevelRedirecter*)
+ *     which converts it's argument to something that can be passed
+ *     to the constructor of REDIRECT_TYPE
+ * REDIRECT_TYPE - the return value of the operator()(LEVEL_TYPE). Must
+ *     be constructable from the return value of STREAM_GET_TYPE()(LevelRedirecter*)
+ * LEVEL_TYPE - the type that should be passed to operator()(LEVEL_TYPE)
+ * NUM_LEVELS - the total number & one plus the maximum of the levels that will be usable
+ *     The enable/disable functions will throw exceptions if called with something
+ *     equal or greater to this.
+ */
 template<
-	typename STREAM_TYPE,
+	typename STREAM_GET_TYPE,
 	typename REDIRECT_TYPE,
 	typename LEVEL_TYPE,
 	size_t NUM_LEVELS
@@ -71,7 +90,6 @@ class LevelRedirecter {
 private:
 	std::bitset<NUM_LEVELS> enabled_levels;
 
-	STREAM_TYPE* cast_to_str() { return static_cast<STREAM_TYPE*>(this); }
 public:
 	LevelRedirecter()
 		: enabled_levels()
@@ -87,7 +105,7 @@ public:
 
 	REDIRECT_TYPE operator()(const LEVEL_TYPE& level) {
 		if (enabled_levels.test(level)) {
-			return REDIRECT_TYPE(cast_to_str());
+			return REDIRECT_TYPE(STREAM_GET_TYPE()(this));
 		} else {
 			return REDIRECT_TYPE(nullptr);
 		}
@@ -129,6 +147,10 @@ public:
 	}
 };
 
+/**
+ * The class that detects lines and inserts the tabs to indent the lines
+ * properly
+ */
 class indent_filter	: public boost::iostreams::output_filter {
 private:
 	friend class IndentingLeveledDebugPrinter;
@@ -148,6 +170,10 @@ public:
 	template<typename SINK> void close(SINK&) { just_saw_newline = true; }
 };
 
+/**
+ * A little helper class that is returned when an indent is done
+ * It will either unindent when its destructor is called, or endIndent() is called
+ */
 class IndentLevel {
 	friend class IndentingLeveledDebugPrinter;
 	friend class LevelStream;
@@ -158,6 +184,9 @@ public:
 	void endIndent();
 	~IndentLevel();
 
+	/**
+	 * Move Constructor - disable the old one, but otherwise copy everything over
+	 */
 	IndentLevel(IndentLevel&& src_ilevel)
 		: src(std::move(src_ilevel.src))
 		, ended(std::move(src_ilevel.ended))
@@ -165,8 +194,12 @@ public:
 		src_ilevel.ended = true;
 	}
 
+	/// copying would cause problems - who would do the unindent?
 	IndentLevel(const IndentLevel&) = delete;
 
+	/**
+	 * Move Assignment - disable the old one, but otherwise copy everything over
+	 */
 	IndentLevel& operator=(IndentLevel&& rhs) {
 		this->src = std::move(rhs.src);
 		this->ended = std::move(rhs.ended);
@@ -174,9 +207,15 @@ public:
 		return *this;
 	}
 
+	/// same problems as copying
 	IndentLevel& operator=(const IndentLevel&) = delete;
 };
 
+/**
+ * A helper class for actually printing. IndentingLeveledDebugPrinter doesn't
+ * actually have operator<< defined, so that you have to use operator() to print.
+ * (it returns an object of this class)
+ */
 class LevelStream {
 private:
 	friend class IndentingLeveledDebugPrinter;
@@ -203,10 +242,22 @@ public:
 	bool enabled() { return src != nullptr; }
 };
 
+/**
+ * The class that handles most of the output control & formatting - the type of dout
+ * It inherits from LevelRedirecter to define operator()(Debug::Level) and the enable/disable
+ * controls. It also inherits from a filtering_ostream to allow filtering of the output.
+ *
+ * To print something, you must do dout(DL::*) << "string", and the same must be done for
+ * an indent level.
+ *
+ * The max_indent_level controls how many '=' to put around the title of the indent level at
+ * the default level. Each inner level will be indented one tab stop, and have one fewer '=' on
+ * each side of the title's text - with a minimum of one.
+ */
 class IndentingLeveledDebugPrinter
 	: private boost::iostreams::filtering_ostream
 	, public LevelRedirecter
-		< IndentingLeveledDebugPrinter
+		< StaticCaster<IndentingLeveledDebugPrinter*>
 		, LevelStream
 		, DebugLevel::Level
 		, DebugLevel::LEVEL_COUNT
@@ -240,8 +291,8 @@ public:
 			if (ss.eof()) { break; }
 			this->put(c);
 		}
-		this->flush(); // force priting now, so that indent is for sure correct.
-		ss.clear(); // clear eof bit
+		this->flush(); // force printing now, so that indent is for sure correct.
+		ss.clear(); // clear EOF bit
 	}
 
 	uint getIndentLevel() {
@@ -316,6 +367,8 @@ LevelStream& operator<<(LevelStream& lhs, const T& t) {
 	return lhs;
 }
 
+// has to be down here because the type of src (IndentingLeveledDebugPrinter*)
+// hadn't been defined yet, so it needed be be after it to call it's methods
 template<typename T>
 IndentLevel LevelStream::indentWithTitle(const T& t) {
 	if (enabled()) {

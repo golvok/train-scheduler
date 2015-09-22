@@ -81,7 +81,7 @@ private:
 	void setTrainsArea(TrainsArea* ta);
 	bool hasTrainsArea();
 	void clearCache();
-	
+
 	std::unique_lock<std::recursive_mutex> getScopedDataLock();
 
 	bool hasTN();
