@@ -311,6 +311,12 @@ public:
 		}
 	}
 
+	void setMaxIndentation(int level) { max_indent_level = level; }
+
+private:
+	friend class IndentLevel;
+	friend class LevelStream;
+
 	template<typename FUNC>
 	auto indentWithTitle(const FUNC& f) -> decltype(f(ss),IndentLevel(this)) {
 		// the weird return value is so the compiler SFINAE's away this
@@ -342,9 +348,6 @@ public:
 		return indentWithTitle([&](auto&& s){ s << title; });
 	}
 
-	void setMaxIndentation(int level) { max_indent_level = level; }
-private:
-	friend class IndentLevel;
 	void endIndent() {
 		if (indent_level > 0) {
 			indent_level = indent_level - 1;
