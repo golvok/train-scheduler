@@ -318,7 +318,7 @@ private:
 	friend class LevelStream;
 
 	template<typename FUNC>
-	auto indentWithTitle(const FUNC& f) -> decltype(f(ss),IndentLevel(this)) {
+	auto indentWithTitle(const FUNC& f) -> decltype(f(std::stringstream()),IndentLevel(this)) {
 		// the weird return value is so the compiler SFINAE's away this
 		// overload if FUNC is not a lambda style type
 		util::repeat(getTitleLevel(),[&](){
@@ -326,10 +326,10 @@ private:
 		});
 		print(' ');
 
-		f(ss);
-		std::string title = ss.str();
+		std::stringstream local_ss;
+		f(local_ss);
+		std::string title = local_ss.str();
 		print(title);
-		std::stringstream().swap(ss); // empty the stringstream
 
 		print(' ');
 		util::repeat(getTitleLevel(),[&](){
