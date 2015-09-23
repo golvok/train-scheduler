@@ -214,7 +214,7 @@ std::vector<Scheduler::Route> Scheduler::make_rotues(
 
 	routing_indent2.endIndent();
 
-	dump_trains_to_dout(routes,DL::TR_D1);
+	dump_trains_to_dout(routes,DL::INFO);
 
 	return routes;
 }
