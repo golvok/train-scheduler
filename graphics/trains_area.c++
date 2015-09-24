@@ -45,6 +45,7 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
 
 	if (!tn) { return; }
@@ -94,6 +95,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
 
 	if (!tn) { return; }
@@ -122,6 +124,7 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto schedule = data.getSchedule();
 	auto tn = data.getTN();
@@ -175,6 +178,7 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();
 	auto psgrs = data.getPassengers();
@@ -207,6 +211,7 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 }
 
 void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
 	auto wecs = data.getWantedEdgeCapacities();
 
