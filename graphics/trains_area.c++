@@ -234,7 +234,6 @@ void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& c
 }
 
 bool TrainsArea::causeAnimationFrame() {
-	auto sdrl = getScopedDrawingLock();
 	auto is_animating = getIsAnimatingAndLock();
 
 	bool retval = true;
@@ -251,7 +250,6 @@ bool TrainsArea::causeAnimationFrame() {
 }
 
 void TrainsArea::beginAnimating() {
-	auto srdl = getScopedDrawingLock();
 	auto is_animating = getIsAnimatingAndLock();
 
 	if (!is_animating) {
@@ -263,7 +261,6 @@ void TrainsArea::beginAnimating() {
 }
 
 void TrainsArea::stopAnimating() {
-	auto srdl = getScopedDrawingLock();
 	auto is_animating = getIsAnimatingAndLock();
 
 	if (is_animating) {
