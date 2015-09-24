@@ -250,7 +250,7 @@ public:
  * To print something, you must do dout(DL::*) << "string", and the same must be done for
  * an indent level.
  *
- * The max_indent_level controls how many '=' to put around the title of the indent level at
+ * The highest_title_rank controls how many '=' to put around the title of the indent level at
  * the default level. Each inner level will be indented one tab stop, and have one fewer '=' on
  * each side of the title's text - with a minimum of one.
  */
@@ -263,16 +263,16 @@ class IndentingLeveledDebugPrinter
 		, DebugLevel::LEVEL_COUNT
 	>
 {
-	int max_indent_level;
+	int highest_title_rank;
 	int indent_level;
 
 	std::stringstream ss;
 public:
 
-	IndentingLeveledDebugPrinter(std::ostream& os, int max_indent_level)
+	IndentingLeveledDebugPrinter(std::ostream& os, int highest_title_rank)
 		: boost::iostreams::filtering_ostream()
 		, LevelRedirecter()
-		, max_indent_level(max_indent_level)
+		, highest_title_rank(highest_title_rank)
 		, indent_level(0)
 		, ss()
 	{
@@ -304,14 +304,14 @@ public:
 	}
 
 	uint getTitleLevel() {
-		if (indent_level >= max_indent_level) {
+		if (indent_level >= highest_title_rank) {
 			return 1;
 		} else {
-			return max_indent_level-indent_level;
+			return highest_title_rank-indent_level;
 		}
 	}
 
-	void setMaxIndentation(int level) { max_indent_level = level; }
+	void setHighestTitleRank(int level) { highest_title_rank = level; }
 
 private:
 	friend class IndentLevel;

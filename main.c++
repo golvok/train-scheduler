@@ -14,7 +14,7 @@
 int program_main();
 
 int main(int argc, char const** argv) {
-	dout.setMaxIndentation(7);
+	dout.setHighestTitleRank(7);
 
 	auto parsed_args = parsing::cmdargs::parse(argc,argv);
 
