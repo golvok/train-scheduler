@@ -124,7 +124,7 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 
 	auto ewc_indent = dout(DL::WC_D1).indentWithTitle("Computing Edge Wanted Capacities");
 	for (const Passenger& p : passengers) {
-		auto p_indent = dout(DL::WC_D1).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
+		auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
 		auto next_iteration_weights = network.makeEdgeWeightMapCopy();
 		for (uint iteration_num = 1; true; ++iteration_num) {
 			auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Iteration " << iteration_num; });
@@ -224,7 +224,7 @@ std::tuple<Scheduler::Route, Scheduler::TrainsGoToVertex, uint> Scheduler::make_
 	TrainsGoToVertex&& trains_go_to_vertex,
 	uint vertex_covered_count
 ) {
-	auto train_indent = dout(DL::TR_D1).indentWithTitle("Train");
+	auto train_indent = dout(DL::TR_D2).indentWithTitle("Train");
 
 
 	Route route;
@@ -275,7 +275,7 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 	}
 
 	if (!heed_trains_going_to) {
-		dout(DL::TR_D3) << "-- ignoring existing trains --\n";
+		dout(DL::TR_D2) << "-- ignoring existing trains --\n";
 	}
 
 	TrackNetwork::ID next(-1);
@@ -283,17 +283,17 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 
 	for (auto e_desc : make_iterable(out_edges(curr,g))) {
 		TrackNetwork::ID target_v = target(e_desc,g);
-		dout(DL::TR_D3) << "looking at " << network.getVertexName(target_v) << ", ";
+		dout(DL::TR_D2) << "looking at " << network.getVertexName(target_v) << ", ";
 
 		if (heed_trains_going_to && trains_go_to_vertex[target_v]) {
-			dout(DL::TR_D3) << "skipping!\n";
+			dout(DL::TR_D2) << "skipping!\n";
 			continue;
 		}
 
 		float wc = edge_wanted_capacities[network.getEdgeIndex(e_desc)];
-		dout(DL::TR_D3) << "wc = " << wc;
+		dout(DL::TR_D2) << "wc = " << wc;
 		if (wc > best_wanted_capacity) {
-			dout(DL::TR_D3) << " - is best!\n";
+			dout(DL::TR_D2) << " - is best!\n";
 			next = target_v;
 			best_wanted_capacity = wc;
 		}
