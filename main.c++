@@ -39,15 +39,16 @@ int program_main() {
 		bool good;
 
 		std::tie(*tn,*passengers,good) = parsing::input::parse_data(std::cin);
+
+		if (good == false) {
+			break;
+		}
+
 		graphics::get().trainsArea().displayTrackNetwork(tn);
 		graphics::get().waitForPress();
 
 		graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
 		graphics::get().waitForPress();
-
-		if (good == false) {
-			break;
-		}
 
 		dout(DL::INFO) << '\n';
 		auto d_indent = dout(DL::INFO).indentWithTitle([&](auto&& s){s << "Input Data #" << tn_counter;});
