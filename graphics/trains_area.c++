@@ -33,8 +33,6 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock();
 	auto sdrl = getScopedDrawingLock();
 
-	if (data.hasTN() == false) { return true; }
-
 	centerOnTrackNework(cc);
 	drawTrackNetwork(cc);
 	drawTrains(cc);
