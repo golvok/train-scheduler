@@ -41,7 +41,7 @@ public:
 	TrainsAreaData();
 	TrainsAreaData(const TrainsAreaData&) = delete;
 	TrainsAreaData& operator=(const TrainsAreaData&) = delete;
-	~TrainsAreaData();
+	virtual ~TrainsAreaData();
 
 	/**
 	 * Call to clear all data, effectively clearing the TrainsArea
@@ -80,7 +80,6 @@ public:
 private:
 	void setTrainsArea(TrainsArea* ta);
 	bool hasTrainsArea();
-	void clearCache();
 
 	std::unique_lock<std::recursive_mutex> getScopedDataLock();
 

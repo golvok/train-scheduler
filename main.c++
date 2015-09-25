@@ -36,11 +36,11 @@ int program_main() {
 		tn_counter += 1;
 		std::shared_ptr<TrackNetwork> tn = std::make_shared<TrackNetwork>();
 		std::shared_ptr<std::vector<Passenger>> passengers = std::make_shared<std::vector<Passenger>>();
-		bool good;
 
-		std::tie(*tn,*passengers,good) = parsing::input::parse_data(std::cin);
+		bool data_is_good;
+		std::tie(*tn,*passengers,data_is_good) = parsing::input::parse_data(std::cin);
 
-		if (good == false) {
+		if (data_is_good == false) {
 			break;
 		}
 
