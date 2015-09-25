@@ -84,11 +84,6 @@ private:
 
 	std::unique_lock<std::recursive_mutex> getScopedDataLock();
 
-	bool hasTN();
-	bool hasPassengers();
-	bool hasTrains();
-	bool hasWantedEdgeCapacities();
-
 	std::shared_ptr<TrackNetwork> getTN();
 	std::shared_ptr<std::vector<Passenger>> getPassengers();
 	std::shared_ptr<algo::Schedule> getSchedule();

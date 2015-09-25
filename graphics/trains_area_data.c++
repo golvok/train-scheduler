@@ -70,7 +70,7 @@ void TrainsAreaData::displayTNAndPassengers(
 
 	data.passengers = new_passgrs;
 
-	if (hasTrainsArea() && hasPassengers()) {
+	if (hasTrainsArea() && getPassengers()) {
 		trains_area->resetAnimationTime();
 		trains_area->beginAnimating();
 	}
@@ -111,21 +111,6 @@ bool TrainsAreaData::hasTrainsArea() {
 
 std::unique_lock<std::recursive_mutex> TrainsAreaData::getScopedDataLock() {
 	return std::unique_lock<std::recursive_mutex> (data_mutex);
-}
-
-bool TrainsAreaData::hasTN()         {
-	auto sdl = getScopedDataLock();
-	return data.tn.expired() == false;
-}
-
-bool TrainsAreaData::hasPassengers() {
-	auto sdl = getScopedDataLock();
-	return data.passengers.expired() == false;
-}
-
-bool TrainsAreaData::hasTrains()     {
-	auto sdl = getScopedDataLock();
-	return false;
 }
 
 std::shared_ptr<TrackNetwork> TrainsAreaData::getTN() {
