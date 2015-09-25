@@ -17,13 +17,15 @@ class TrainsArea;
 Graphics& get();
 
 /**
- * The main API for making windows, and graphics elements.
+ * The main API for making windows and graphics elements.
  */
 class Graphics {
-	// PIMPL as to keep windowing & drawing dependencies in this directory
+	// PIMPL to keep windowing & drawing dependencies contained
 	class Impl;
 	std::unique_ptr<Impl> impl;
 
+	// this is here (as opposed to being in the Impl) so that it always exists
+	// and can be written to.
 	TrainsAreaData trains_area_data;
 public:
 	Graphics();
@@ -33,20 +35,21 @@ public:
 
 
 	/**
-	 * Initializes the graphics library and makes the
-	 * window(s) & graphics area(s)
+	 * Initializes the graphics library(ies) and makes the
+	 * initial window(s) & graphics area(s)
 	 */
 	bool initialize();
 
 	/**
 	 * Blocks until the ever-present continue button is pressed.
-	 * Returns immediately if no graphics are on
+	 * Returns immediately if no graphics, or if the window with the continue
+	 * button has been closed.
 	 */
 	void waitForPress();
 
 	/**
 	 * Get the data interface for the Trains Area.
-	 * Main way of matking data availible to the Trains Area graphics.
+	 * The intended way of making data availible to the Trains Area graphics.
 	 */
 	TrainsAreaData& trainsArea();
 };

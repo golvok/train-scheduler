@@ -9,6 +9,10 @@
 
 namespace util {
 
+/**
+ * return the shortest route according to WEIGHT_MAP
+ * from p.getEntryId() to p.getExitId()
+ */
 template<typename WEIGHT_MAP>
 std::vector<TrackNetwork::ID> get_shortest_route(
 	const Passenger& p,
@@ -23,6 +27,10 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 	);
 }
 
+/**
+ * return the shortest route from start to end using the default
+ * weight mapping.
+ */
 std::vector<TrackNetwork::ID> get_shortest_route(
 	TrackNetwork::ID start,
 	TrackNetwork::ID end,
@@ -36,6 +44,9 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 	);
 }
 
+/**
+ * determines the shortest route for each passenger, and stores it in a map keyed by the passenger
+ */
 std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
 	TrackNetwork& network, std::vector<Passenger>& passengers
 ) {
@@ -52,6 +63,10 @@ std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortes
 	return passenger2route;
 }
 
+/**
+ * iterates the route and uses operator<< to print to os, in the format
+ * START -> V2 -> V3 -> V4 -> END -> |
+ */
 template<typename CONTAINER, typename OSTREAM>
 void print_route(
 	const CONTAINER& route,

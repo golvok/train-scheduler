@@ -30,7 +30,9 @@ TrainsArea::TrainsArea(TrainsAreaData& data)
 }
 
 bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
+	// guarantee that the data will not change between drawing calls
 	auto sdl = data.getScopedDataLock();
+	// guarantee that state information will not change between drawing calls
 	auto sdrl = getScopedDrawingLock();
 
 	centerOnTrackNework(cc);
@@ -48,13 +50,14 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 	if (!tn) { return; }
 
+	// get the size of this Widget
 	const double alloc_width  = get_allocation().get_width();
 	const double alloc_height = get_allocation().get_height();
-	BoundBox<float> track_bb(tn->getVertexPosition(0),0.0,0.0);
 
-	// figure out bounds.
+	BoundBox<float> track_bb(tn->getVertexPosition(0),0.0,0.0); // a 0.0x0.0 rect at a valid vertex
+
+	// figure out bounds. Expand track_bb to cover all vertices
 	for (auto vi : make_iterable(boost::vertices(tn->g()))) {
-		// draw vertex
 		Point<float> v = tn->getVertexPosition(vi);
 
 		if (v.x < track_bb.min_point().x) { track_bb.min_point().x = v.x; }
@@ -63,6 +66,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 		if (v.y > track_bb.max_point().y) { track_bb.max_point().y = v.y; }
 	}
 
+	// padding is 20% of width, 20% of height, or 10.0. Whichever is larger
 	const float padding = std::max({track_bb.get_width(),track_bb.get_height(),50.0f}) * 0.2;
 	track_bb.min_point() -= Point<float>{padding,padding};
 	track_bb.max_point() += Point<float>{padding,padding};
@@ -71,6 +75,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 		HORIZ,VERT,
 	};
 
+	// we would like to zoom in/out enough so that we can see the complete bounds of the TN
 	auto scale = std::min(
 		compare_with_tag(alloc_width/track_bb.get_width(),Orientation::HORIZ),
 		compare_with_tag(alloc_height/track_bb.get_height(),Orientation::VERT)
@@ -142,6 +147,7 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 		TrainsArea::Time time_in_nework = time - train.getDepartureTime();
 		float time_until_prev_vertex = 0;
 
+		// figure out which edge the train should be on, and interpolate between
 		TrackNetwork::ID prev_vertex(-1);
 		for (TrackNetwork::ID id : route) {
 			if (prev_vertex == TrackNetwork::ID(-1)) {
@@ -154,6 +160,7 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 			float additional_time_to_next_vertex =
 				boost::get(&TrackNetwork::EdgeProperties::weight,g,edge_desc) / train.getSpeed();
 
+			// the next vertex would be too far, so it's currently on this edge
 			if ((time_until_prev_vertex + additional_time_to_next_vertex) >= time_in_nework) {
 				auto prev_pt = tn->getVertexPosition(prev_vertex);
 				auto next_pt = tn->getVertexPosition(id);
@@ -163,6 +170,7 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 				auto offset_to_next = (next_pt - prev_pt) * fraction_distance_travelled;
 				auto p = prev_pt + offset_to_next;
 
+				// draw
 				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
 				cc->stroke();
 				break;
@@ -187,6 +195,7 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 	auto passenger_counts = ::util::makeVertexMap<uint>(tn->g(),0);
 
+	// draw a dot for each passenger, at the vertex it starts at
 	for (auto& p : *psgrs) {
 		if (time == p.getStartTime()) {
 			cc->set_source_rgb(0.0,1.0,0.0); // green
@@ -196,6 +205,7 @@ void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
 			continue; // skip it
 		}
 
+		// update count at vertex, and this one a bit farther away than the last
 		auto entry_id = p.getEntryId();
 		auto& count_at_etry = passenger_counts[entry_id];
 		count_at_etry += 1;
@@ -221,6 +231,7 @@ void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& c
 	cc->set_source_rgb(0,0,0); // black
 	cc->set_font_size(6);
 
+	// draw the wanted capacity near the center of each edge
 	for (auto edge_desc : make_iterable(edges(g))) {
 		auto edge_index = tn->getEdgeIndex(edge_desc);
 		auto source_point = tn->getVertexPosition(source(edge_desc,g));
@@ -229,10 +240,10 @@ void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& c
 		auto middle_point = (source_point + target_point) / 2;
 
 		cc->move_to(middle_point.x,middle_point.y+10);
-		cc->save();
+		cc->save(); // would like to restore to unrotated matrix
 		cc->rotate_degrees(45);
 		cc->show_text(std::to_string((*wecs)[edge_index]).c_str());
-		cc->restore();
+		cc->restore(); // restore to unrotated matrix
 	}
 }
 

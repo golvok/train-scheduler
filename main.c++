@@ -18,10 +18,12 @@ int main(int argc, char const** argv) {
 
 	auto parsed_args = parsing::cmdargs::parse(argc,argv);
 
+	// enable graphics
 	if (parsed_args.shouldEnableGraphics()) {
 		graphics::get().initialize();
 	}
 
+	// enable logging levels
 	for (auto& l : parsed_args.getDebugLevelsToEnable()) {
 		dout.enable_level(l);
 	}
@@ -34,19 +36,26 @@ int program_main() {
 
 	while (true) {
 		tn_counter += 1;
+
+		// these will be shared with the graphics
 		std::shared_ptr<TrackNetwork> tn = std::make_shared<TrackNetwork>();
 		std::shared_ptr<std::vector<Passenger>> passengers = std::make_shared<std::vector<Passenger>>();
 
 		bool data_is_good;
+
+		// get the data
 		std::tie(*tn,*passengers,data_is_good) = parsing::input::parse_data(std::cin);
 
+		// if the data is bad, exit
 		if (data_is_good == false) {
 			break;
 		}
 
+		// display the track network first
 		graphics::get().trainsArea().displayTrackNetwork(tn);
 		graphics::get().waitForPress();
 
+		// then display the passengers too
 		graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
 		graphics::get().waitForPress();
 
@@ -54,9 +63,11 @@ int program_main() {
 		auto d_indent = dout(DL::INFO).indentWithTitle([&](auto&& s){s << "Input Data #" << tn_counter;});
 		dout(DL::INFO) << '\n';
 
+		// do scheduling
 		std::shared_ptr<algo::Schedule> schedule = std::make_shared<algo::Schedule>();
 		(*schedule) = algo::schedule(*tn, *passengers);
 
+		// display schedule
 		graphics::get().trainsArea().presentResults(tn,passengers,schedule);
 		graphics::get().waitForPress();
 	}

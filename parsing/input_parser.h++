@@ -9,6 +9,9 @@
 namespace parsing {
 namespace input {
 
+/**
+ * returns the input data for the program to work on
+ */
 std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& is);
 
 } // end namespace parsing

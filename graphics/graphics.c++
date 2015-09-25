@@ -15,19 +15,29 @@ Graphics& get() {
 }
 
 class Graphics::Impl {
+	/// Gtk "app"
 	Glib::RefPtr<Gtk::Application> app;
+	/// main window - needs to be pointer: constructor fails if app is not constructed
 	std::unique_ptr<Gtk::Window> window;
+	/// trains area in main window - also needs to be pointer
 	std::unique_ptr<TrainsArea> ta;
 
+	/// the list of buttons present at the side of the main window - also needs to be a pointer
 	std::vector<std::unique_ptr<Gtk::Button>> buttons;
+	/// the vbox containing them - also needs to be a pointer
 	std::unique_ptr<Gtk::Box> buttons_vbox;
 
+	/// cond var used for communicating presses from the GUI thread
+	/// is shared between the rest of the program and the GUI thread
 	std::shared_ptr<util::SafeWaitForNotify> wait_for_press;
 
+	/// prevents another call to initialize() while running.
 	bool is_initialized;
 
+	/// data for the trains area
 	TrainsAreaData& data;
 
+	/// the GUI thread
 	std::thread app_thread;
 public:
 	Impl(TrainsAreaData& tad)
@@ -58,24 +68,32 @@ public:
 		assert(is_initialized == false);
 		is_initialized = true;
 
+		// start the GUI thread
 		app_thread = std::thread([&] {
+
+			// create the "app"
 			int i = 0;
-			// char* cs[2] = {nullptr};
 			char** cc = nullptr;
 			app = Gtk::Application::create(i, cc, "golvok.train-sch");
 
+			// create & setup the window
 			window.reset(new Gtk::Window());
 			ta.reset(new TrainsArea(data));
 
 			window->set_default_size(800,600);
 			window->set_title("Train Scheduler");
 
+			// this will be the top level
 			Gtk::Box draw_and_buttons_hbox(Gtk::Orientation::ORIENTATION_HORIZONTAL);
+			// this will hold all the buttons
 			buttons_vbox.reset(new Gtk::Box(Gtk::Orientation::ORIENTATION_VERTICAL));
 
+			// make the button sidebar a different colour
 			buttons_vbox->override_background_color(Gdk::RGBA("#AAA"));
 
+			// put trains area at the left (will expand to fill remaining space)
 			draw_and_buttons_hbox.pack_start(*ta,true,true);
+			// put button container at the right (will remain original size)
 			draw_and_buttons_hbox.pack_end(*buttons_vbox,false,false);
 
 			window->add(draw_and_buttons_hbox);
@@ -85,6 +103,7 @@ public:
 			buttons_vbox->show();
 
 			// can't capture member variables directly...
+			// also, this probably creates a race condition...
 			auto& tmp_wait_for_press = wait_for_press;
 			addButton("continue", [tmp_wait_for_press] {
 				tmp_wait_for_press->notify_all();
@@ -122,6 +141,7 @@ Graphics::Graphics()
 { }
 
 bool Graphics::initialize() {
+	// create a new Impl if none exists, or destruct then construct the old one
 	if (!impl) {
 		impl.reset(new Graphics::Impl(trains_area_data));
 	} else {
