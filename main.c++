@@ -1,5 +1,6 @@
 
 #include <algo/scheduler.h++>
+#include <algo/passenger_routing.h++>
 #include <graphics/graphics.h++>
 #include <parsing/input_parser.h++>
 #include <parsing/cmdargs_parser.h++>
@@ -69,6 +70,11 @@ int program_main() {
 
 		// display schedule
 		graphics::get().trainsArea().presentResults(tn,passengers,schedule);
+		graphics::get().waitForPress();
+
+		// route passengers
+		::algo::route_passengers(*tn,*schedule,*passengers);
+
 		graphics::get().waitForPress();
 	}
 

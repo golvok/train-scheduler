@@ -94,6 +94,30 @@ auto get_shortest_route(
 }
 
 
+template <typename K, typename V, typename MAPTYPE = std::unordered_map<K,V>>
+class default_map {
+public:
+	using key_type = K;
+	using data_type = V;
+	using value_type = std::pair<K,V>;
+
+	default_map(V const& defaultValue)
+		: m()
+		, defaultValue(defaultValue)
+	{ }
+
+	V & operator[](K const& k) {
+		if (m.find(k) == m.end()) {
+			m[k] = defaultValue;
+		}
+		return m[k];
+	}
+
+private:
+	MAPTYPE m;
+	V const defaultValue;
+};
+
 } // end namespace util
 
 #endif /* UTIL__GRAPH_UTILS_H */

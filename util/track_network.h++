@@ -10,6 +10,8 @@
 
 class TrackNetwork {
 public:
+	using Time = uint;
+
 	using Weight = float;
 	using EdgeIndex = uint;
 	struct EdgeProperties {
