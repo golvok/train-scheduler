@@ -4,10 +4,10 @@
 
 #include <util/iteration_utils.h++>
 
-#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/astar_search.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/graph_traits.hpp>
 #include <boost/property_map/property_map.hpp>
-
 
 namespace util {
 
@@ -117,6 +117,27 @@ private:
 	MAPTYPE m;
 	V const defaultValue;
 };
+
+template <typename GRAPH, typename COST_TYPE, typename FUNC>
+class astar_heuristic : public boost::astar_heuristic<GRAPH, COST_TYPE> {
+private:
+	FUNC f;
+	using vertex_descriptor = typename boost::graph_traits<GRAPH>::vertex_descriptor;
+public:
+	using cost_type = COST_TYPE;
+
+	astar_heuristic(FUNC f) : f(f) { }
+
+	COST_TYPE operator()(const vertex_descriptor& vd) {
+		return f(vd);
+	}
+};
+
+template <typename GRAPH, typename FUNC>
+auto make_astar_heuristic(FUNC f) {
+	using vertex_descriptor = typename boost::graph_traits<GRAPH>::vertex_descriptor;
+	return ::util::astar_heuristic<GRAPH,decltype(f(vertex_descriptor())),FUNC>(f);
+}
 
 } // end namespace util
 
