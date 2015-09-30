@@ -146,14 +146,14 @@ public:
 
 	// member funcions
 
-	TrackNetwork::Weight get_edge_weight(const edge_descriptor& edge) const {
-		(void)edge;
+	TrackNetwork::Weight get_edge_weight(const edge_descriptor& ed) const {
+		(void)ed;
 		return 1;
 	}
 
 	auto get_edge_weight_map() const {
-		return boost::make_function_property_map<edge_descriptor>([&](const edge_descriptor& e){
-			return this->get_edge_weight(e);
+		return boost::make_function_property_map<edge_descriptor>([&](const edge_descriptor& ed){
+			return this->get_edge_weight(ed);
 		});
 	}
 
