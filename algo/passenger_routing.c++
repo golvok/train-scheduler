@@ -97,7 +97,6 @@ int route_passengers(
 		WrappedDistanceMap wrappedMap = WrappedDistanceMap(std::numeric_limits<unsigned>::max());
 		wrappedMap[start_vertex_and_time] = 0;
 		DistanceMap d = DistanceMap(wrappedMap);
-		auto weight_map = ::util::default_map<std::pair<STGA::vertex_descriptor,STGA::vertex_descriptor>,unsigned>(1);
 		auto vertex_index_map = std::unordered_map<STGA::vertex_descriptor,unsigned>();
 		auto rank_map = std::unordered_map<STGA::vertex_descriptor,unsigned>();
 		auto color_map = std::unordered_map<STGA::vertex_descriptor,boost::default_color_type>();
@@ -111,7 +110,6 @@ int route_passengers(
 				, visitor(astar_goal_visitor(goal_vertex))
 				. distance_map(d)
 				. predecessor_map(boost::ref(pred_map))
-				. weight_map(boost::associative_property_map< ::util::default_map<std::pair<STGA::vertex_descriptor,STGA::vertex_descriptor>,unsigned> >(weight_map))
 				. vertex_index_map(boost::associative_property_map< std::unordered_map<STGA::vertex_descriptor,unsigned> >(vertex_index_map))
 				. rank_map(boost::associative_property_map< std::unordered_map<STGA::vertex_descriptor,unsigned> >(rank_map))
 				. color_map(boost::associative_property_map< std::unordered_map<STGA::vertex_descriptor,boost::default_color_type> >(color_map))

@@ -3,6 +3,7 @@
 #define ALGO__SCHEDULE_TO_GRAPH_ADAPTER_HPP
 
 #include <util/track_network.h++>
+#include <util/graph_utils.h++>
 #include <algo/scheduler.h++>
 
 #include <boost/graph/graph_traits.hpp>
@@ -133,9 +134,18 @@ public:
 				out_edge_index = END_VAL;
 			}
 		}
-
 	};
 
+	TrackNetwork::Weight get_edge_weight(const edge_descriptor& edge) const {
+		(void)edge;
+		return 1;
+	}
+
+	auto get_edge_weight_map() const {
+		return boost::make_function_property_map<edge_descriptor>([&](const edge_descriptor& e){
+			return this->get_edge_weight(e);
+		});
+	}
 private:
 	vertex_descriptor getConnectingVertex(
 		vertex_descriptor src,
@@ -157,6 +167,18 @@ ScheduleToGraphAdapter::out_edge_iterator> out_edges(ScheduleToGraphAdapter::ver
 ScheduleToGraphAdapter::degree_size_type out_degree(ScheduleToGraphAdapter::vertex_descriptor v, ScheduleToGraphAdapter const& g);
 ScheduleToGraphAdapter::vertex_descriptor source(ScheduleToGraphAdapter::edge_descriptor e, ScheduleToGraphAdapter const& g);
 ScheduleToGraphAdapter::vertex_descriptor target(ScheduleToGraphAdapter::edge_descriptor e, ScheduleToGraphAdapter const& g);
+
+// Support for distance as an "internal" property
+auto get(
+	boost::edge_weight_t,
+	const ::algo::ScheduleToGraphAdapter& stga
+) -> decltype(stga.get_edge_weight_map());
+
+auto get(
+	boost::edge_weight_t,
+	const ::algo::ScheduleToGraphAdapter& stga,
+	const ::algo::ScheduleToGraphAdapter::edge_descriptor& edge
+) -> decltype(stga.get_edge_weight(edge));
 
 } // namespace algo
 
@@ -180,6 +202,15 @@ namespace boost {
 		using edge_iterator      = void;
 		using edges_size_type    = void;
 	};
+
+	template<>
+	struct property_map<::algo::ScheduleToGraphAdapter, edge_weight_t> {
+		using type = decltype (
+			std::declval<::algo::ScheduleToGraphAdapter>().get_edge_weight_map()
+		);
+		using const_type = type;
+	};
+
 }
 
 namespace std {

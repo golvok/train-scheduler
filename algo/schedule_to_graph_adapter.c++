@@ -84,4 +84,19 @@ STGA::vertex_descriptor target(
 	return e.second;
 }
 
+auto get(
+	boost::edge_weight_t,
+	const ::algo::ScheduleToGraphAdapter& stga
+) -> decltype(stga.get_edge_weight_map()) {
+	return stga.get_edge_weight_map();
+}
+
+auto get(
+	boost::edge_weight_t,
+	const ::algo::ScheduleToGraphAdapter& stga,
+	const ::algo::ScheduleToGraphAdapter::edge_descriptor& edge
+) -> decltype(stga.get_edge_weight(edge)) {
+	return stga.get_edge_weight(edge);
+}
+
 } // end namespace algo
