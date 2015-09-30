@@ -136,6 +136,16 @@ public:
 		}
 	};
 
+	// misc types
+
+	using backing_colour_map = std::unordered_map<
+		ScheduleToGraphAdapter::vertex_descriptor,
+		boost::default_color_type
+	>;
+	using colour_map = boost::associative_property_map<backing_colour_map>;
+
+	// member funcions
+
 	TrackNetwork::Weight get_edge_weight(const edge_descriptor& edge) const {
 		(void)edge;
 		return 1;
@@ -146,6 +156,11 @@ public:
 			return this->get_edge_weight(e);
 		});
 	}
+
+	backing_colour_map make_backing_colour_map() const;
+
+	colour_map make_colour_map(backing_colour_map& bcm) const;
+
 private:
 	vertex_descriptor getConnectingVertex(
 		vertex_descriptor src,
@@ -208,6 +223,12 @@ namespace boost {
 		using type = decltype (
 			std::declval<::algo::ScheduleToGraphAdapter>().get_edge_weight_map()
 		);
+		using const_type = type;
+	};
+
+	template<>
+	struct property_map<::algo::ScheduleToGraphAdapter, vertex_color_t> {
+		using type = ::algo::ScheduleToGraphAdapter::colour_map;
 		using const_type = type;
 	};
 

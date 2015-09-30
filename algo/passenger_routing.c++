@@ -99,7 +99,7 @@ int route_passengers(
 		DistanceMap d = DistanceMap(wrappedMap);
 		auto vertex_index_map = std::unordered_map<STGA::vertex_descriptor,unsigned>();
 		auto rank_map = std::unordered_map<STGA::vertex_descriptor,unsigned>();
-		auto color_map = std::unordered_map<STGA::vertex_descriptor,boost::default_color_type>();
+		auto backing_colour_map = baseGraph.make_backing_colour_map();
 
 		STGA::vertex_descriptor end_vertex_and_time;
 
@@ -112,7 +112,7 @@ int route_passengers(
 				. predecessor_map(boost::ref(pred_map))
 				. vertex_index_map(boost::associative_property_map< std::unordered_map<STGA::vertex_descriptor,unsigned> >(vertex_index_map))
 				. rank_map(boost::associative_property_map< std::unordered_map<STGA::vertex_descriptor,unsigned> >(rank_map))
-				. color_map(boost::associative_property_map< std::unordered_map<STGA::vertex_descriptor,boost::default_color_type> >(color_map))
+				. color_map(baseGraph.make_colour_map(backing_colour_map))
 				. distance_compare(std::less<unsigned>())
 				. distance_combine(std::plus<unsigned>())
 			);

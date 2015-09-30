@@ -43,6 +43,14 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 	return STGA::vertex_descriptor(); // return end node if nothing found.
 }
 
+STGA::backing_colour_map STGA::make_backing_colour_map() const {
+	return STGA::backing_colour_map();
+}
+
+STGA::colour_map STGA::make_colour_map(STGA::backing_colour_map& bcm) const {
+	return STGA::colour_map(bcm);
+}
+
 std::ostream& operator<<(std::ostream& os, const ScheduleToGraphAdapter::vertex_descriptor& vd) {
 	os << '{' << vd.getVertex() << "@t=" << vd.getTime() << '}';
 	return os;
