@@ -32,21 +32,6 @@ namespace {
 		}
 	};
 
-	template <typename Graph>
-	class distance_heuristic : public boost::astar_heuristic<Graph, int> {
-	private:
-		TrackNetwork::ID goal_vertex;
-	public:
-		distance_heuristic(TrackNetwork::ID goal)
-			: goal_vertex(goal)
-		{ }
-
-		unsigned operator()(STGA::vertex_descriptor vd) {
-			(void)vd;
-			return 1;
-		}
-	};
-
 	struct PredecessorMap {
 		PredecessorMap() : m() {}
 		PredecessorMap(PredecessorMap const& that) : m(that.m) {}
@@ -88,6 +73,13 @@ int route_passengers(
 		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryId(),0);
 		auto goal_vertex = passenger.getExitId();
 
+		auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
+			[&](const STGA::vertex_descriptor& vd) -> unsigned {
+				(void)vd;
+				return 1;
+			}
+		);
+
 		pretty_print(dout(DL::PR_D2) << "Start vertex and time: ",start_vertex_and_time,tn) << '\n';
 		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '\n';
 
@@ -105,7 +97,7 @@ int route_passengers(
 		try {
 			astar_search_no_init(baseGraph,
 				start_vertex_and_time,
-				distance_heuristic<ScheduleToGraphAdapter>(goal_vertex)
+				heuristic
 				, visitor(astar_goal_visitor(goal_vertex))
 				. distance_map(d)
 				. predecessor_map(boost::ref(pred_map))
