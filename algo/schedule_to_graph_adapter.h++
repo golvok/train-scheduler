@@ -144,6 +144,14 @@ public:
 	>;
 	using colour_map = boost::associative_property_map<backing_colour_map>;
 
+	template<typename CostType>
+	using backing_rank_map = std::unordered_map<
+		ScheduleToGraphAdapter::vertex_descriptor,
+		CostType
+	>;
+	template<typename CostType>
+	using rank_map = boost::associative_property_map<backing_rank_map<CostType>>;
+
 	// member funcions
 
 	TrackNetwork::Weight get_edge_weight(const edge_descriptor& ed) const {
@@ -169,8 +177,16 @@ public:
 	}
 
 	backing_colour_map make_backing_colour_map() const;
-
 	colour_map make_colour_map(backing_colour_map& bcm) const;
+
+	template<typename CostType>
+	auto make_backing_rank_map() const {
+		return backing_rank_map<CostType>();
+	}
+	template<typename CostType>
+	auto make_rank_map(backing_rank_map<CostType>& bcm) const {
+		return rank_map<CostType>(bcm);
+	}
 
 private:
 	vertex_descriptor getConnectingVertex(
