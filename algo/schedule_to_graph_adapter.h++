@@ -157,6 +157,17 @@ public:
 		});
 	}
 
+	TrackNetwork::ID get_vertex_index(const vertex_descriptor& vd) const {
+		(void)vd;
+		return vd.getVertex() + num_vertices(tn.g())*vd.getTime();
+	}
+
+	auto get_vertex_index_map() const {
+		return boost::make_function_property_map<vertex_descriptor>([&](const vertex_descriptor& vd){
+			return this->get_vertex_index(vd);
+		});
+	}
+
 	backing_colour_map make_backing_colour_map() const;
 
 	colour_map make_colour_map(backing_colour_map& bcm) const;
@@ -195,6 +206,17 @@ auto get(
 	const ::algo::ScheduleToGraphAdapter::edge_descriptor& edge
 ) -> decltype(stga.get_edge_weight(edge));
 
+auto get(
+	boost::vertex_index_t,
+	const ::algo::ScheduleToGraphAdapter& stga
+) -> decltype(stga.get_vertex_index_map());
+
+auto get(
+	boost::vertex_index_t,
+	const ::algo::ScheduleToGraphAdapter& stga,
+	const ::algo::ScheduleToGraphAdapter::vertex_descriptor& vd
+) -> decltype(stga.get_vertex_index(vd));
+
 } // namespace algo
 
 namespace boost {
@@ -222,6 +244,14 @@ namespace boost {
 	struct property_map<::algo::ScheduleToGraphAdapter, edge_weight_t> {
 		using type = decltype (
 			std::declval<::algo::ScheduleToGraphAdapter>().get_edge_weight_map()
+		);
+		using const_type = type;
+	};
+
+	template<>
+	struct property_map<::algo::ScheduleToGraphAdapter, vertex_index_t> {
+		using type = decltype (
+			std::declval<::algo::ScheduleToGraphAdapter>().get_vertex_index_map()
 		);
 		using const_type = type;
 	};

@@ -107,4 +107,19 @@ auto get(
 	return stga.get_edge_weight(edge);
 }
 
+auto get(
+	boost::vertex_index_t,
+	const ::algo::ScheduleToGraphAdapter& stga
+) -> decltype(stga.get_vertex_index_map()) {
+	return stga.get_vertex_index_map();
+}
+
+auto get(
+	boost::vertex_index_t,
+	const ::algo::ScheduleToGraphAdapter& stga,
+	const ::algo::ScheduleToGraphAdapter::vertex_descriptor& vd
+) -> decltype(stga.get_vertex_index(vd)) {
+	return stga.get_vertex_index(vd);
+}
+
 } // end namespace algo
