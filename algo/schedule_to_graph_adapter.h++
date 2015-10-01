@@ -48,6 +48,76 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
 
+using degree_size_type = size_t;
+
+class out_edge_iterator :
+	public boost::iterator_facade<
+		out_edge_iterator,
+		std::pair<vertex_descriptor,vertex_descriptor>,
+		boost::forward_traversal_tag,
+		std::pair<vertex_descriptor,vertex_descriptor>
+	> {
+private:
+	friend class ::algo::ScheduleToGraphAdapter;
+
+	ScheduleToGraphAdapter const* stga;
+	vertex_descriptor src_vd;
+	vertex_descriptor sink_vd;
+	degree_size_type out_edge_index;
+
+public:
+
+	static const degree_size_type BEGIN_VAL = 0;
+	static const degree_size_type END_VAL = -1;
+
+	out_edge_iterator() : stga(nullptr), src_vd(), sink_vd(), out_edge_index(-1) { }
+
+	out_edge_iterator(
+		vertex_descriptor src_vd,
+		ScheduleToGraphAdapter const* stga,
+		degree_size_type out_edge_index
+	)
+		: stga(stga)
+		, src_vd(src_vd)
+		, sink_vd()
+		, out_edge_index(out_edge_index)
+	{
+		update_sink_vd();
+	}
+
+	out_edge_iterator(const out_edge_iterator&) = default;
+	out_edge_iterator(out_edge_iterator&&) = default;
+
+	out_edge_iterator& operator=(out_edge_iterator const&) = default;
+	out_edge_iterator& operator=(out_edge_iterator&&) = default;
+
+	std::pair<vertex_descriptor,vertex_descriptor> operator*() const {
+		return std::make_pair(src_vd, sink_vd);
+	}
+
+	out_edge_iterator& operator++() {
+		out_edge_index += 1;
+		update_sink_vd();
+		return *this;
+	}
+
+	bool operator==(const out_edge_iterator& rhs) const {
+		return
+			           src_vd == rhs.src_vd
+			&&        sink_vd == rhs.sink_vd
+			&&           stga == rhs.stga
+			&& out_edge_index == rhs.out_edge_index
+		;
+	}
+
+	bool operator!=(const out_edge_iterator& rhs) const { return !(*this == rhs); }
+
+	bool equal(out_edge_iterator const& rhs) const { return *this == rhs; }
+	void increment() { operator++(); }
+
+	void update_sink_vd();
+};
+
 } // end namespace STGA
 } // end namespace detail
 } // end namespace algo
@@ -69,6 +139,7 @@ namespace algo{
 class ScheduleToGraphAdapter {
 private:
 	friend class ::algo::detail::STGA::vertex_descriptor;
+	friend class ::algo::detail::STGA::out_edge_iterator;
 
 	const TrackNetwork& tn;
 	const Schedule& sch;
@@ -94,78 +165,8 @@ public:
 	using traversal_category     = boost::incidence_graph_tag;
 
 	// IncidenceGraph concept requirements
-
-	using degree_size_type = size_t;
-	class out_edge_iterator :
-		public boost::iterator_facade<
-			out_edge_iterator,
-			std::pair<vertex_descriptor,vertex_descriptor>,
-			boost::forward_traversal_tag,
-			std::pair<vertex_descriptor,vertex_descriptor>
-		> {
-	private:
-		ScheduleToGraphAdapter const* stga;
-		vertex_descriptor src_vd;
-		vertex_descriptor sink_vd;
-		degree_size_type out_edge_index;
-
-	public:
-
-		static const degree_size_type BEGIN_VAL = 0;
-		static const degree_size_type END_VAL = -1;
-
-		out_edge_iterator() : stga(nullptr), src_vd(), sink_vd(), out_edge_index(-1) { }
-
-		out_edge_iterator(
-			vertex_descriptor src_vd,
-			ScheduleToGraphAdapter const* stga,
-			degree_size_type out_edge_index
-		)
-			: stga(stga)
-			, src_vd(src_vd)
-			, sink_vd()
-			, out_edge_index(out_edge_index)
-		{
-			update_sink_vd();
-		}
-
-		out_edge_iterator(const out_edge_iterator&) = default;
-		out_edge_iterator(out_edge_iterator&&) = default;
-
-		out_edge_iterator& operator=(out_edge_iterator const&) = default;
-		out_edge_iterator& operator=(out_edge_iterator&&) = default;
-
-		std::pair<vertex_descriptor,vertex_descriptor> operator*() const {
-			return std::make_pair(src_vd, sink_vd);
-		}
-
-		out_edge_iterator& operator++() {
-			out_edge_index += 1;
-			update_sink_vd();
-			return *this;
-		}
-
-		bool operator==(const out_edge_iterator& rhs) const {
-			return
-				           src_vd == rhs.src_vd
-				&&        sink_vd == rhs.sink_vd
-				&&           stga == rhs.stga
-				&& out_edge_index == rhs.out_edge_index
-			;
-		}
-
-		bool operator!=(const out_edge_iterator& rhs) const { return !(*this == rhs); }
-
-		bool equal(out_edge_iterator const& rhs) const { return *this == rhs; }
-		void increment() { operator++(); }
-
-		void update_sink_vd() {
-			sink_vd = stga->getConnectingVertex(src_vd,out_edge_index);
-			if (sink_vd == ScheduleToGraphAdapter::vertex_descriptor()) {
-				out_edge_index = END_VAL;
-			}
-		}
-	};
+	using degree_size_type = ::algo::detail::STGA::degree_size_type;
+	using out_edge_iterator = ::algo::detail::STGA::out_edge_iterator;
 
 	// misc types
 

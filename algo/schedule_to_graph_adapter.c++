@@ -10,6 +10,13 @@ namespace detail {
 			os << '{' << vd.getVertex() << "@t=" << vd.getTime() << '}';
 			return os;
 		}
+
+		void out_edge_iterator::update_sink_vd() {
+			sink_vd = stga->getConnectingVertex(src_vd,out_edge_index);
+			if (sink_vd == vertex_descriptor()) {
+				out_edge_index = END_VAL;
+			}
+		}
 	}
 }
 
