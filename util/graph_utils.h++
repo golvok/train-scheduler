@@ -139,6 +139,45 @@ auto make_astar_heuristic(FUNC f) {
 	return ::util::astar_heuristic<GRAPH,decltype(f(vertex_descriptor())),FUNC>(f);
 }
 
+template <typename KEY, typename VALUE, typename FUNC, typename MAP_TYPE = std::unordered_map<KEY,VALUE>>
+class writeable_function_proprety_map {
+public:
+	using category = boost::lvalue_property_map_tag;
+
+	writeable_function_proprety_map(const FUNC& f = FUNC()) : cache(), f(f) { }
+
+	VALUE& operator[](const KEY& key) {
+		return cache[key];
+	}
+
+	VALUE get(const KEY& k) const {
+		auto find_results = cache.find(k);
+		if (find_results == cache.end()) {
+			return f(k);
+		} else {
+			return find_results->second;
+		}
+	}
+private:
+	MAP_TYPE cache;
+	FUNC f;
+};
+
+template <typename KEY, typename VALUE, typename FUNC, typename MAP_TYPE>
+auto put(writeable_function_proprety_map<KEY,VALUE,FUNC,MAP_TYPE>& pm, const KEY& k, VALUE v) {
+	pm[k] = v;
+}
+
+template <typename KEY, typename VALUE, typename FUNC, typename MAP_TYPE>
+auto get(const writeable_function_proprety_map<KEY,VALUE,FUNC,MAP_TYPE>& pm, const KEY& k) {
+	return pm.get(k);
+}
+
+template <typename KEY, typename FUNC>
+auto make_writeable_function_proprety_map(FUNC f) {
+	return ::util::writeable_function_proprety_map<KEY,decltype(f(KEY())),FUNC>(f);
+}
+
 } // end namespace util
 
 #endif /* UTIL__GRAPH_UTILS_H */
