@@ -180,4 +180,17 @@ auto make_writeable_function_proprety_map(FUNC f) {
 
 } // end namespace util
 
+namespace std {
+
+	// allow passing of writable proprety maps by std::reference_wrapper
+	template<typename T, typename V, typename U>
+	auto put(reference_wrapper<T> ref, V&& v, U&& u) {
+		put(ref.get(),std::forward<V>(v),std::forward<U>(u));
+	}
+	template<typename T, typename V, typename U>
+	auto get(reference_wrapper<T> ref, V&& v, U&& u) {
+		get(ref.get(),std::forward<V>(v),std::forward<U>(u));
+	}
+}
+
 #endif /* UTIL__GRAPH_UTILS_H */
