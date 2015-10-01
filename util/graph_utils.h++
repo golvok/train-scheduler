@@ -140,11 +140,11 @@ auto make_astar_heuristic(FUNC f) {
 }
 
 template <typename KEY, typename VALUE, typename FUNC, typename MAP_TYPE = std::unordered_map<KEY,VALUE>>
-class writeable_function_proprety_map {
+class writable_function_proprety_map {
 public:
 	using category = boost::lvalue_property_map_tag;
 
-	writeable_function_proprety_map(const FUNC& f = FUNC()) : cache(), f(f) { }
+	writable_function_proprety_map(const FUNC& f = FUNC()) : cache(), f(f) { }
 
 	VALUE& operator[](const KEY& key) {
 		return cache[key];
@@ -164,18 +164,18 @@ private:
 };
 
 template <typename KEY, typename VALUE, typename FUNC, typename MAP_TYPE>
-auto put(writeable_function_proprety_map<KEY,VALUE,FUNC,MAP_TYPE>& pm, const KEY& k, VALUE v) {
+auto put(writable_function_proprety_map<KEY,VALUE,FUNC,MAP_TYPE>& pm, const KEY& k, VALUE v) {
 	pm[k] = v;
 }
 
 template <typename KEY, typename VALUE, typename FUNC, typename MAP_TYPE>
-auto get(const writeable_function_proprety_map<KEY,VALUE,FUNC,MAP_TYPE>& pm, const KEY& k) {
+auto get(const writable_function_proprety_map<KEY,VALUE,FUNC,MAP_TYPE>& pm, const KEY& k) {
 	return pm.get(k);
 }
 
 template <typename KEY, typename FUNC>
-auto make_writeable_function_proprety_map(FUNC f) {
-	return ::util::writeable_function_proprety_map<KEY,decltype(f(KEY())),FUNC>(f);
+auto make_writable_function_proprety_map(FUNC f) {
+	return ::util::writable_function_proprety_map<KEY,decltype(f(KEY())),FUNC>(f);
 }
 
 } // end namespace util
