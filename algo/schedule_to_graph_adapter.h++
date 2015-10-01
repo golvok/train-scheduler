@@ -183,6 +183,10 @@ public:
 	auto make_backing_rank_map() const {
 		return backing_rank_map<CostType>();
 	}
+	template<typename HURISTIC>
+	auto make_backing_rank_map(HURISTIC) const {
+		return make_backing_rank_map<typename HURISTIC::cost_type>();
+	}
 	template<typename CostType>
 	auto make_rank_map(backing_rank_map<CostType>& bcm) const {
 		return rank_map<CostType>(bcm);

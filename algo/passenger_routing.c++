@@ -89,7 +89,7 @@ int route_passengers(
 		WrappedDistanceMap wrappedMap = WrappedDistanceMap(std::numeric_limits<unsigned>::max());
 		wrappedMap[start_vertex_and_time] = 0;
 		DistanceMap d = DistanceMap(wrappedMap);
-		auto backing_rank_map = baseGraph.make_backing_rank_map<decltype(heuristic)::cost_type>();
+		auto backing_rank_map = baseGraph.make_backing_rank_map(heuristic);
 		auto backing_colour_map = baseGraph.make_backing_colour_map();
 
 		STGA::vertex_descriptor end_vertex_and_time;
