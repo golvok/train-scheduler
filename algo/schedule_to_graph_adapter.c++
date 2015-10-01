@@ -4,6 +4,15 @@
 
 namespace algo {
 
+namespace detail {
+	namespace STGA {
+		std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd) {
+			os << '{' << vd.getVertex() << "@t=" << vd.getTime() << '}';
+			return os;
+		}
+	}
+}
+
 using STGA = ScheduleToGraphAdapter;
 
 STGA::vertex_descriptor STGA::getConnectingVertex(
@@ -51,10 +60,6 @@ STGA::colour_map STGA::make_colour_map(STGA::backing_colour_map& bcm) const {
 	return STGA::colour_map(bcm);
 }
 
-std::ostream& operator<<(std::ostream& os, const ScheduleToGraphAdapter::vertex_descriptor& vd) {
-	os << '{' << vd.getVertex() << "@t=" << vd.getTime() << '}';
-	return os;
-}
 
 std::pair<STGA::out_edge_iterator, STGA::out_edge_iterator>
 out_edges(

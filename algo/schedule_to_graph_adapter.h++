@@ -12,8 +12,64 @@
 
 namespace algo {
 
+class ScheduleToGraphAdapter;
+
+namespace detail {
+namespace STGA {
+
+class vertex_descriptor {
+	friend class ::algo::ScheduleToGraphAdapter;
+
+	TrackNetwork::ID vertex;
+	TrackNetwork::Time time;
+public:
+	vertex_descriptor() : vertex(-1), time(-1) { }
+	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t)	: vertex(v), time(t) { }
+
+	vertex_descriptor(const vertex_descriptor&) = default;
+	vertex_descriptor(vertex_descriptor&&) = default;
+
+	vertex_descriptor& operator=(const vertex_descriptor&) = default;
+	vertex_descriptor& operator=(vertex_descriptor&&) = default;
+
+	decltype(vertex) getVertex() const { return vertex; }
+	decltype(time) getTime() const { return time; }
+
+	bool operator==(const vertex_descriptor& rhs) const {
+		return
+			   vertex == rhs.vertex
+			&&   time == rhs.time
+		;
+	}
+
+	bool operator!=(const vertex_descriptor& rhs) const { return !(*this == rhs); }
+
+};
+
+std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
+
+} // end namespace STGA
+} // end namespace detail
+} // end namespace algo
+
+namespace std {
+	template <>
+	struct hash<::algo::detail::STGA::vertex_descriptor> {
+		size_t operator()(const ::algo::detail::STGA::vertex_descriptor& vd) const {
+			return
+				  std::hash<decltype(vd.getVertex())>()(vd.getVertex())
+				^ std::hash<decltype(vd.getTime())>()(vd.getTime())
+			;
+		}
+	};
+}
+
+namespace algo{
+
 class ScheduleToGraphAdapter {
 private:
+	friend class ::algo::detail::STGA::vertex_descriptor;
+
 	const TrackNetwork& tn;
 	const Schedule& sch;
 public:
@@ -30,32 +86,7 @@ public:
 
 	// Graph concept requirements
 
-	class vertex_descriptor {
-		TrackNetwork::ID vertex;
-		TrackNetwork::Time time;
-	public:
-		vertex_descriptor() : vertex(-1), time(-1) { }
-		vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t)	: vertex(v), time(t) { }
-
-		vertex_descriptor(const vertex_descriptor&) = default;
-		vertex_descriptor(vertex_descriptor&&) = default;
-
-		vertex_descriptor& operator=(const vertex_descriptor&) = default;
-		vertex_descriptor& operator=(vertex_descriptor&&) = default;
-
-		decltype(vertex) getVertex() const { return vertex; }
-		decltype(time) getTime() const { return time; }
-
-		bool operator==(const vertex_descriptor& rhs) const {
-			return
-				   vertex == rhs.vertex
-				&&   time == rhs.time
-			;
-		}
-
-		bool operator!=(const vertex_descriptor& rhs) const { return !(*this == rhs); }
-
-	};
+	using vertex_descriptor = ::algo::detail::STGA::vertex_descriptor;
 
 	using edge_descriptor        = std::pair<vertex_descriptor,vertex_descriptor>;
 	using directed_category      = boost::directed_tag;
@@ -199,10 +230,8 @@ private:
 	) const;
 };
 
-std::ostream& operator<<(std::ostream& os, const ScheduleToGraphAdapter::vertex_descriptor& vd);
-
 template<typename STREAM>
-STREAM& pretty_print(STREAM&& os, const ScheduleToGraphAdapter::vertex_descriptor& vd, const TrackNetwork& tn) {
+STREAM& pretty_print(STREAM&& os, const ::algo::detail::STGA::vertex_descriptor& vd, const TrackNetwork& tn) {
 	os << '{' << tn.getVertexName(vd.getVertex()) << "@t=" << vd.getTime() << '}';
 	return os;
 }
@@ -285,16 +314,6 @@ namespace boost {
 }
 
 namespace std {
-	template <>
-	struct hash<::algo::ScheduleToGraphAdapter::vertex_descriptor> {
-		size_t operator()(const ::algo::ScheduleToGraphAdapter::vertex_descriptor& vd) const {
-			return
-				  std::hash<decltype(vd.getVertex())>()(vd.getVertex())
-				^ std::hash<decltype(vd.getTime())>()(vd.getTime())
-			;
-		}
-	};
-
 	template <>
 	struct hash<::algo::ScheduleToGraphAdapter::edge_descriptor> {
 		size_t operator()(const ::algo::ScheduleToGraphAdapter::edge_descriptor& ed) const {
