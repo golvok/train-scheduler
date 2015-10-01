@@ -224,6 +224,13 @@ public:
 		return rank_map<CostType>(bcm);
 	}
 
+	auto make_pred_map() const {
+		return ::util::make_writable_function_proprety_map<vertex_descriptor>(
+			[] (const vertex_descriptor& vd) -> vertex_descriptor {
+				return vd;
+			}
+		);
+	}
 private:
 	vertex_descriptor getConnectingVertex(
 		vertex_descriptor src,

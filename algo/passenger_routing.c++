@@ -32,27 +32,6 @@ namespace {
 		}
 	};
 
-	struct PredecessorMap {
-		PredecessorMap() : m() {}
-		PredecessorMap(PredecessorMap const& that) : m(that.m) {}
-
-		using key_type       = ScheduleToGraphAdapter::vertex_descriptor;
-		using value_type     = ScheduleToGraphAdapter::vertex_descriptor;
-		using reference_type = ScheduleToGraphAdapter::vertex_descriptor&;
-		using category       = boost::read_write_property_map_tag;
-
-		std::unordered_map<ScheduleToGraphAdapter::vertex_descriptor,ScheduleToGraphAdapter::vertex_descriptor> m;
-	};
-
-	STGA::vertex_descriptor get(PredecessorMap const& pm, STGA::vertex_descriptor vd) {
-		auto find_results = pm.m.find(vd);
-		return (find_results != pm.m.end()) ? find_results->second : vd;
-	}
-
-	void put(PredecessorMap & pm, STGA::vertex_descriptor key, STGA::vertex_descriptor value) {
-		pm.m[key] = value;
-	}
-
 } // end anonymous namespace
 
 int route_passengers(
@@ -83,7 +62,7 @@ int route_passengers(
 		pretty_print(dout(DL::PR_D2) << "Start vertex and time: ",start_vertex_and_time,tn) << '\n';
 		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '\n';
 
-		PredecessorMap pred_map;
+		auto pred_map = baseGraph.make_pred_map();
 		typedef boost::associative_property_map< ::util::default_map<STGA::vertex_descriptor,unsigned> > DistanceMap;
 		typedef ::util::default_map<STGA::vertex_descriptor,unsigned> WrappedDistanceMap;
 		WrappedDistanceMap wrappedMap = WrappedDistanceMap(std::numeric_limits<unsigned>::max());
@@ -100,7 +79,7 @@ int route_passengers(
 				heuristic
 				, visitor(astar_goal_visitor(goal_vertex))
 				. distance_map(d)
-				. predecessor_map(boost::ref(pred_map))
+				. predecessor_map(std::ref(pred_map)) // don't want to pass by value
 				. rank_map(baseGraph.make_rank_map(backing_rank_map))
 				. color_map(baseGraph.make_colour_map(backing_colour_map))
 				. distance_compare(std::less<unsigned>())
