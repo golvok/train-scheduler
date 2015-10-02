@@ -47,7 +47,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 							boost::edge(*vertex_it,next,tn.g()).first
 						) / train.getSpeed()
 					);
-					dout(DL::PR_D3) << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+					dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
 					return next_vd;
 				}
 
