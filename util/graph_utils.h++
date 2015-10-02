@@ -113,6 +113,8 @@ public:
 		return m[k];
 	}
 
+	auto begin() { return std::begin(m); }
+	auto end() { return std::end(m); }
 private:
 	MAPTYPE m;
 	V const defaultValue;
