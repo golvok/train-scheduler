@@ -184,6 +184,12 @@ public:
 	template<typename CostType>
 	using rank_map = boost::associative_property_map<backing_rank_map<CostType>>;
 
+	using backing_distance_map = ::util::default_map<
+		ScheduleToGraphAdapter::vertex_descriptor,
+		TrackNetwork::Weight
+	>;
+	using distance_map = boost::associative_property_map<backing_distance_map>;
+
 	// member funcions
 
 	TrackNetwork::Weight get_edge_weight(const edge_descriptor& ed) const {
@@ -231,6 +237,21 @@ public:
 			}
 		);
 	}
+
+	auto make_backing_distance_map(const vertex_descriptor& start_vd) const {
+		using bdm_mapped_type = backing_distance_map::mapped_type;
+		auto bdm = backing_distance_map(
+			std::numeric_limits<bdm_mapped_type>::has_infinity
+				? std::numeric_limits<bdm_mapped_type>::infinity()
+				: std::numeric_limits<bdm_mapped_type>::max()
+		);
+		bdm[start_vd] = 0;
+		return bdm;
+	}
+	auto make_distance_map(backing_distance_map& bdm) const {
+		return distance_map(bdm);
+	}
+
 private:
 	vertex_descriptor getConnectingVertex(
 		vertex_descriptor src,

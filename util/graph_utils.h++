@@ -98,7 +98,7 @@ template <typename K, typename V, typename MAPTYPE = std::unordered_map<K,V>>
 class default_map {
 public:
 	using key_type = K;
-	using data_type = V;
+	using mapped_type = V;
 	using value_type = std::pair<K,V>;
 
 	default_map(V const& defaultValue)

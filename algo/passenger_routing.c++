@@ -31,7 +31,6 @@ namespace {
 			}
 		}
 	};
-
 } // end anonymous namespace
 
 int route_passengers(
@@ -53,7 +52,7 @@ int route_passengers(
 		auto goal_vertex = passenger.getExitId();
 
 		auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
-			[&](const STGA::vertex_descriptor& vd) -> unsigned {
+			[&](const STGA::vertex_descriptor& vd) -> TrackNetwork::Weight {
 				(void)vd;
 				return 1;
 			}
@@ -63,11 +62,7 @@ int route_passengers(
 		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '\n';
 
 		auto pred_map = baseGraph.make_pred_map();
-		typedef boost::associative_property_map< ::util::default_map<STGA::vertex_descriptor,unsigned> > DistanceMap;
-		typedef ::util::default_map<STGA::vertex_descriptor,unsigned> WrappedDistanceMap;
-		WrappedDistanceMap wrappedMap = WrappedDistanceMap(std::numeric_limits<unsigned>::max());
-		wrappedMap[start_vertex_and_time] = 0;
-		DistanceMap d = DistanceMap(wrappedMap);
+		auto backing_distance_map = baseGraph.make_backing_distance_map(start_vertex_and_time);
 		auto backing_rank_map = baseGraph.make_backing_rank_map(heuristic);
 		auto backing_colour_map = baseGraph.make_backing_colour_map();
 
@@ -78,12 +73,10 @@ int route_passengers(
 				start_vertex_and_time,
 				heuristic
 				, visitor(astar_goal_visitor(goal_vertex))
-				. distance_map(d)
+				. distance_map(baseGraph.make_distance_map(backing_distance_map))
 				. predecessor_map(std::ref(pred_map)) // don't want to pass by value
 				. rank_map(baseGraph.make_rank_map(backing_rank_map))
 				. color_map(baseGraph.make_colour_map(backing_colour_map))
-				. distance_compare(std::less<unsigned>())
-				. distance_combine(std::plus<unsigned>())
 			);
 		} catch(found_goal const& fg) { // found a path to the goal
 			end_vertex_and_time = fg.vd;
