@@ -104,7 +104,7 @@ int route_passengers(
 			continue;
 		}
 
-		pretty_print(dout(DL::PR_D1) << "Didn't find a path from ",start_vertex_and_time,tn) << '\n';
+		pretty_print(dout(DL::WARN) << "Didn't find a path from ",start_vertex_and_time,tn) << '\n';
 	}
 
 	return 0;
