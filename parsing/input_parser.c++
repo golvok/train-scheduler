@@ -168,6 +168,7 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 		} else {
 			passengers.emplace_back(
 				std::get<0>(passenger),
+				passengers.size(),
 				tn.getVertex(std::get<1>(passenger)),
 				tn.getVertex(std::get<2>(passenger)),
 				std::get<3>(passenger)

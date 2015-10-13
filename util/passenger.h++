@@ -9,7 +9,7 @@ public:
 	using ID = uint;
 private:
 	std::string name;
-	ID passenger_id;
+	ID id;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
 	uint start_time;
@@ -17,25 +17,26 @@ private:
 public:
 	Passenger(
 		const std::string& name,
+		ID id,
 		TrackNetwork::ID entry_id,
 		TrackNetwork::ID exit_id,
 		uint start_time
 	)
 		: name(name)
-		, passenger_id(0)
+		, id(id)
 		, entry_id(entry_id)
 		, exit_id(exit_id)
 		, start_time(start_time)
 	{}
 
-	ID getId() const { return passenger_id; }
+	ID getId() const { return id; }
 	const std::string& getName() const { return name; }
 	TrackNetwork::ID getEntryId() const { return entry_id; }
 	TrackNetwork::ID getExitId() const { return exit_id; }
 	uint getStartTime() const { return start_time; }
 
 	bool operator==(const Passenger& rhs) const {
-		return passenger_id == rhs.passenger_id;
+		return id == rhs.id;
 	}
 };
 
