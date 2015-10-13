@@ -73,7 +73,7 @@ int program_main() {
 		graphics::get().waitForPress();
 
 		// route passengers
-		::algo::route_passengers(*tn,*schedule,*passengers);
+		::algo::PassengerRoutes p_routes = ::algo::route_passengers(*tn,*schedule,*passengers);
 
 		graphics::get().waitForPress();
 	}

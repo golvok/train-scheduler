@@ -33,7 +33,7 @@ namespace {
 	};
 } // end anonymous namespace
 
-int route_passengers(
+PassengerRoutes route_passengers(
 	const TrackNetwork& tn,
 	const Schedule& sch,
 	const std::vector<Passenger>& passgrs
@@ -41,6 +41,8 @@ int route_passengers(
 	// { boost::concepts::IncidenceGraphConcept<ScheduleToGraphAdapter> c; (void)c; }
 
 	auto rp_indent = dout(DL::PR_D1).indentWithTitle("Passenger Routing");
+
+	PassengerRoutes results;
 
 	const ScheduleToGraphAdapter baseGraph(tn,sch);
 
@@ -66,8 +68,6 @@ int route_passengers(
 		auto backing_rank_map = baseGraph.make_backing_rank_map(heuristic);
 		auto backing_colour_map = baseGraph.make_backing_colour_map();
 
-		STGA::vertex_descriptor end_vertex_and_time;
-
 		try {
 			astar_search_no_init(baseGraph,
 				start_vertex_and_time,
@@ -79,28 +79,36 @@ int route_passengers(
 				. color_map(baseGraph.make_colour_map(backing_colour_map))
 			);
 		} catch(found_goal const& fg) { // found a path to the goal
-			end_vertex_and_time = fg.vd;
 
-			std::list<STGA::vertex_descriptor> shortest_path;
-			for(STGA::vertex_descriptor vd = end_vertex_and_time;; vd = get(pred_map,vd)) {
-				shortest_path.push_front(vd);
-				if(get(pred_map,vd) == vd)
+			STGA::vertex_descriptor prev = fg.vd; // start at the end
+
+			std::vector<TrackNetwork::ID> path { prev.getVertex() };
+
+			pretty_print(dout(DL::PR_D1) << "path found: ",prev,tn);
+
+			while (true) {
+				STGA::vertex_descriptor vd = get(pred_map,prev);
+				if(!path.empty() && prev == vd) {
 					break;
+				}
+				path.push_back(vd.getVertex());
+				pretty_print(dout(DL::PR_D1) << " <- ",vd,tn);
+				prev = vd;
 			}
-			pretty_print(dout(DL::PR_D1) << "Shortest path from ",start_vertex_and_time,tn) << " to "
-				<< tn.getVertexName(goal_vertex) << ": ";
-			std::list<STGA::vertex_descriptor>::iterator spi = shortest_path.begin();
-			pretty_print(dout(DL::PR_D1),start_vertex_and_time,tn);
-			for(++spi; spi != shortest_path.end(); ++spi)
-				pretty_print(dout(DL::PR_D1) << " -> ",*spi,tn);
+
+			std::reverse(path.begin(),path.end()); // was backwards
+
 			dout(DL::PR_D1) << '\n';
+
+			results.addRoute(passenger, std::move(path));
+
 			continue;
 		}
 
 		pretty_print(dout(DL::WARN) << "Didn't find a path from ",start_vertex_and_time,tn) << '\n';
 	}
 
-	return 0;
+	return results;
 }
 
 } // end namespace algo

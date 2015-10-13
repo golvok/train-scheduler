@@ -4,11 +4,42 @@
 
 #include <util/passenger.h++>
 
-class Schedule;
+#include <unordered_map>
+#include <vector>
 
 namespace algo {
 
-int route_passengers(
+class Schedule;
+
+class PassengerRoutes {
+private:
+	using InternalRouteType = std::vector<TrackNetwork::ID>;
+	std::unordered_map<Passenger::ID,InternalRouteType> routes;
+public:
+	using RouteType = InternalRouteType; // for now...
+
+	PassengerRoutes() : routes() { }
+
+	template<typename ROUTE>
+	void addRoute(const Passenger& p, ROUTE&& route) {
+		auto emplace_results = routes.emplace(p.getId(), std::forward<ROUTE>(route));
+		if (emplace_results.second == false) {
+			emplace_results.first->second = std::forward<ROUTE>(route);
+		}
+	}
+
+	const RouteType& getRoute(const Passenger& p) const {
+		auto find_results = routes.find(p.getId());
+		if (find_results == routes.end()) {
+			throw std::invalid_argument(
+				std::string(__PRETTY_FUNCTION__) + ": do not have route for passenger " + p.getName()
+			);
+		}
+		return find_results->second;
+	}
+};
+
+PassengerRoutes route_passengers(
 	const TrackNetwork& tn,
 	const Schedule& sch,
 	const std::vector<Passenger>& passgrs
