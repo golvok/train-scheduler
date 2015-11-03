@@ -31,7 +31,7 @@ std::vector<TrackNetwork::ID> get_shortest_route(
  * return the shortest route from start to end using the default
  * weight mapping.
  */
-std::vector<TrackNetwork::ID> get_shortest_route(
+inline std::vector<TrackNetwork::ID> get_shortest_route(
 	TrackNetwork::ID start,
 	TrackNetwork::ID end,
 	const TrackNetwork& network
@@ -47,7 +47,7 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 /**
  * determines the shortest route for each passenger, and stores it in a map keyed by the passenger
  */
-std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
+inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
 	TrackNetwork& network, std::vector<Passenger>& passengers
 ) {
 	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
