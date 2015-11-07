@@ -167,7 +167,6 @@ auto project(Point<PRECISION> source, Point<PRECISION2> wall) {
 }
 template<typename PRECISION, typename POINT_LIST>
 auto& farthestPoint(Point<PRECISION> p, const POINT_LIST& test_points) {
-	int farthestIndex = 0;
 	auto farthestDistance = distancef(p, *std::begin(test_points));
 	auto farthest_point = &(*std::begin(test_points));
 	for (auto& test_point : test_points) {
@@ -217,6 +216,11 @@ template<typename PRECISION>
 std::ostream& operator<<(std::ostream& os, const Point<PRECISION>& p) {
 	os << '{' << p.x << ',' << p.y << '}';
 	return os;
+}
+
+template<typename PRECISION1, typename PRECISION2>
+bool operator==(const Point<PRECISION1>& p1, const Point<PRECISION2>& p2) {
+	return p1.x == p2.x && p1.y == p2.y;
 }
 
 /**
@@ -369,6 +373,11 @@ public:
 		return *this;
 	}
 };
+
+template<typename PRECISION1, typename PRECISION2>
+bool operator==(const BoundBox<PRECISION1>& b1, const BoundBox<PRECISION2>& b2) {
+	return b1.min_point() == b2.min_point() && b1.max_point() == b2.max_point();
+}
 
 } // end namespace geom
 
