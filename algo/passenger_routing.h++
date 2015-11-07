@@ -12,11 +12,12 @@ namespace algo {
 class Schedule;
 
 class PassengerRoutes {
-private:
+public:
 	using InternalRouteType = std::vector<TrackNetwork::ID>;
+	using RouteType = InternalRouteType; // for now...
+private:
 	std::unordered_map<Passenger::ID,InternalRouteType> routes;
 public:
-	using RouteType = InternalRouteType; // for now...
 
 	PassengerRoutes() : routes() { }
 

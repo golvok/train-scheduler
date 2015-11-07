@@ -31,6 +31,14 @@ namespace {
 			}
 		}
 	};
+
+	template<typename PRED_MAP>
+	PassengerRoutes::InternalRouteType extract_coalesced_path(
+		const STGA::vertex_descriptor& start,
+		const STGA::vertex_descriptor& end,
+		const PRED_MAP& pred_map,
+		const TrackNetwork& tn
+	);
 } // end anonymous namespace
 
 PassengerRoutes route_passengers(
@@ -80,27 +88,7 @@ PassengerRoutes route_passengers(
 			);
 		} catch(found_goal const& fg) { // found a path to the goal
 
-			STGA::vertex_descriptor prev = fg.vd; // start at the end
-
-			std::vector<TrackNetwork::ID> path { prev.getVertex() };
-
-			pretty_print(dout(DL::PR_D1) << "path found: ",prev,tn);
-
-			while (true) {
-				STGA::vertex_descriptor vd = get(pred_map,prev);
-				if(!path.empty() && prev == vd) {
-					break;
-				}
-				path.push_back(vd.getVertex());
-				pretty_print(dout(DL::PR_D1) << " <- ",vd,tn);
-				prev = vd;
-			}
-
-			std::reverse(path.begin(),path.end()); // was backwards
-
-			dout(DL::PR_D1) << '\n';
-
-			results.addRoute(passenger, std::move(path));
+			results.addRoute(passenger, extract_coalesced_path(start_vertex_and_time, fg.vd, pred_map, tn));
 
 			continue;
 		}
@@ -110,5 +98,42 @@ PassengerRoutes route_passengers(
 
 	return results;
 }
+
+namespace {
+
+template<typename PRED_MAP>
+PassengerRoutes::InternalRouteType extract_coalesced_path(
+	const STGA::vertex_descriptor& start,
+	const STGA::vertex_descriptor& end,
+	const PRED_MAP& pred_map,
+	const TrackNetwork& tn
+) {
+	STGA::vertex_descriptor prev = end;
+
+	std::vector<TrackNetwork::ID> path { prev.getVertex() };
+
+	pretty_print(dout(DL::PR_D1) << "path found: ",prev,tn);
+
+	while (true) {
+		STGA::vertex_descriptor vd = get(pred_map,prev);
+		if(!path.empty() && prev == vd) {
+			break;
+		}
+		path.push_back(vd.getVertex());
+		pretty_print(dout(DL::PR_D1) << " <- ",vd,tn);
+		prev = vd;
+	}
+	dout(DL::PR_D1) << '\n';
+
+	std::reverse(path.begin(),path.end()); // was backwards
+
+	if (path.front() != start.getVertex()) {
+		dout(DL::WARN) << "begin vertex is not the start!\n";
+	}
+
+	return path;
+}
+
+} // end anonymous namespace
 
 } // end namespace algo
