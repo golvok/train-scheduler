@@ -113,7 +113,7 @@ Schedule Scheduler::do_schedule() {
 	std::vector<Train> trains;
 
 	for(auto route_iai_iter : index_assoc_iterate(train_routes)) {
-		trains.emplace_back(route_iai_iter.i(),std::move(*route_iai_iter),0);
+		trains.emplace_back(::algo::Train::TrainId(route_iai_iter.i()),std::move(*route_iai_iter),0);
 	}
 
 	return Schedule("abc",std::move(trains));

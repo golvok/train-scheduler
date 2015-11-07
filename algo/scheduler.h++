@@ -3,15 +3,20 @@
 
 #include <util/passenger.h++>
 #include <util/track_network.h++>
+#include <util/utils.h++>
 
 namespace algo {
 
 class Train {
+	struct TrainIdTagType {
+		const static uint DEFAULT_VALUE = -1;
+	};
 public:
 	using Speed = float;
+	using TrainId = ID<uint,TrainIdTagType>;
 
 	Train(
-		const uint train_id,
+		const TrainId train_id,
 		std::vector<TrackNetwork::ID>&& route_,
 		uint departure_time
 	)
@@ -27,7 +32,7 @@ public:
 	Train& operator=(Train&&) = default;
 
 	// getters
-	uint getId() const { return train_id; }
+	TrainId getId() const { return train_id; }
 	auto& getRoute() { return route; }
 	const auto& getRoute() const { return route; }
 	TrackNetwork::ID getEntryId() const { return route.front(); }
@@ -36,7 +41,7 @@ public:
 	Speed getSpeed() const { return speed; }
 
 private:
-	uint train_id;
+	TrainId train_id;
 	std::vector<TrackNetwork::ID> route;
 	uint departure_time;
 	Speed speed;

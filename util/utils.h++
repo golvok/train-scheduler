@@ -113,4 +113,13 @@ struct StaticCaster {
 	}
 };
 
+template<typename id_type, typename TAG>
+class ID {
+    id_type value;
+public:
+	ID() : value(TAG::DEFAULT_VALUE) { }
+    explicit ID(const id_type& value) : value(value) { }
+    operator id_type() const { return value; }
+};
+
 #endif /* UTIL_H */
