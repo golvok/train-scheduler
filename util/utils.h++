@@ -117,9 +117,33 @@ template<typename id_type, typename TAG>
 class ID {
     id_type value;
 public:
+	using IdType = id_type;
+	const static id_type DEFAULT_VALUE = TAG::DEFAULT_VALUE;
+
 	ID() : value(TAG::DEFAULT_VALUE) { }
     explicit ID(const id_type& value) : value(value) { }
-    operator id_type() const { return value; }
+    explicit operator id_type() const { return value; }
+    id_type getValue() const { return value; }
+    void print(std::ostream& os) { os << value; }
 };
+
+template<typename id_type, typename TAG>
+bool operator==(const ID<id_type,TAG>& lhs, const ID<id_type,TAG>& rhs) {
+	return (id_type)lhs == (id_type)rhs;
+}
+
+template<typename id_type, typename TAG>
+bool operator!=(const ID<id_type,TAG>& lhs, const ID<id_type,TAG>& rhs) {
+	return !(lhs == rhs);
+}
+
+// namespace std {
+// 	template<typename id_type, typename TAG>
+// 	struct hash<ID<id_type,TAG>> {
+// 		size_t operator()(const ID<id_type,TAG>& id) const {
+// 			return std::hash<decltype(id.getValue())>()(id.getValue());
+// 		}
+// 	};
+// }
 
 #endif /* UTIL_H */
