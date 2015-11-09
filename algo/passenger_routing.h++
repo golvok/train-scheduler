@@ -2,6 +2,7 @@
 #ifndef ALGO__PASSENGER_ROUTING_HPP
 #define ALGO__PASSENGER_ROUTING_HPP
 
+#include <util/location_id.h++>
 #include <util/passenger.h++>
 
 #include <unordered_map>
@@ -13,7 +14,24 @@ class Schedule;
 
 class PassengerRoutes {
 public:
-	using InternalRouteType = std::vector<TrackNetwork::ID>;
+	class RouteElement {
+		LocationId location;
+		TrackNetwork::Time time;
+	public:
+		RouteElement(LocationId location, TrackNetwork::Time time)
+			: location(location), time(time)
+		{ }
+
+		RouteElement() : location(), time(0) { }
+		RouteElement(const RouteElement&) = default;
+		RouteElement(RouteElement&&) = default;
+		RouteElement& operator=(const RouteElement&) = default;
+		RouteElement& operator=(RouteElement&&) = default;
+
+		auto getLocation() const { return location; }
+		auto getTime() const { return time; }
+	};
+	using InternalRouteType = std::vector<RouteElement>;
 	using RouteType = InternalRouteType; // for now...
 private:
 	std::unordered_map<Passenger::ID,InternalRouteType> routes;

@@ -4,6 +4,7 @@
 #include <algo/scheduler.h++>
 #include <util/graph_utils.h++>
 #include <util/logging.h++>
+#include <util/routing_utils.h++>
 
 #include <list>
 
@@ -110,26 +111,54 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 ) {
 	STGA::vertex_descriptor prev = end;
 
-	std::vector<TrackNetwork::ID> path { prev.getVertex() };
+	PassengerRoutes::InternalRouteType path;
+	path.emplace_back(prev.getLocation(), prev.getTime());
 
-	pretty_print(dout(DL::PR_D1) << "path found: ",prev,tn);
+	dout(DL::PR_D1) << "path found: ";
 
 	while (true) {
 		STGA::vertex_descriptor vd = get(pred_map,prev);
-		if(!path.empty() && prev == vd) {
+		if(prev == vd) { // we have reached the beginning
+			prev = vd;
 			break;
 		}
-		path.push_back(vd.getVertex());
-		pretty_print(dout(DL::PR_D1) << " <- ",vd,tn);
+
+		if (vd.getLocation().isStation() && prev.getLocation().isStation()) {
+			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
+				str << "going from a Station to a Station: " << prev << " <- " << vd;
+			});
+		}
+		if (
+			   (vd.getLocation().isTrain() && prev.getLocation().isTrain())
+			&& (vd.getLocation().asTrainId() != prev.getLocation().asTrainId())
+		) {
+			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
+				str << "going from a Train to a different Train: " << prev << " <- " << vd;
+			});
+		}
+		if (vd.getTime() > prev.getTime()) {
+			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
+				str << "time went backwards!: " << prev << " <- " << vd;
+			});
+		}
+
+		if (vd.getLocation() != path.back().getLocation()) {
+			path.emplace_back(vd.getLocation(), vd.getTime());
+		}
+		pretty_print(dout(DL::PR_D3) << " <- ",vd,tn);
 		prev = vd;
 	}
-	dout(DL::PR_D1) << '\n';
+	dout(DL::PR_D3) << "\n\t = ";
+
+	if (prev != start) {
+		dout(DL::WARN) << "begin vertex is not the start!\n";
+	}
 
 	std::reverse(path.begin(),path.end()); // was backwards
 
-	if (path.front() != start.getVertex()) {
-		dout(DL::WARN) << "begin vertex is not the start!\n";
-	}
+	::util::print_route(path, dout(DL::PR_D1), [&](auto&& str, auto&& elem) {
+		str << "l=" << elem.getLocation() << "@t=" << elem.getTime();
+	});
 
 	return path;
 }
