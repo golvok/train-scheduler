@@ -26,7 +26,7 @@ namespace {
 
 		void examine_vertex(STGA::vertex_descriptor vd, ScheduleToGraphAdapter const& g) {
 			(void)g;
-			dout(DL::PR_D3) << "Exploring " << vd << "..." << '\n';
+			dout(DL::PR_D3) << "Exploring " << std::make_pair(vd,g.getTrackNetwork()) << "..." << '\n';
 			if(vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
 				throw found_goal{vd};
 			}
@@ -69,7 +69,7 @@ PassengerRoutes route_passengers(
 			}
 		);
 
-		pretty_print(dout(DL::PR_D2) << "Start vertex and time: ",start_vertex_and_time,tn) << '\n';
+		dout(DL::PR_D2) << "Start vertex and time: " << std::make_pair(start_vertex_and_time,tn) << '\n';
 		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '(' << goal_vertex << ")\n";
 
 		auto pred_map = baseGraph.make_pred_map();
@@ -94,7 +94,7 @@ PassengerRoutes route_passengers(
 			continue;
 		}
 
-		pretty_print(dout(DL::WARN) << "Didn't find a path from ",start_vertex_and_time,tn) << '\n';
+		dout(DL::WARN) << "Didn't find a path from " << std::make_pair(start_vertex_and_time,tn) << '\n';
 	}
 
 	return results;
@@ -125,7 +125,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 
 		if (vd.getLocation().isStation() && prev.getLocation().isStation()) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "going from a Station to a Station: " << prev << " <- " << vd;
+				str << "going from a Station to a Station: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
 			});
 		}
 		if (
@@ -133,19 +133,19 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 			&& (vd.getLocation().asTrainId() != prev.getLocation().asTrainId())
 		) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "going from a Train to a different Train: " << prev << " <- " << vd;
+				str << "going from a Train to a different Train: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
 			});
 		}
 		if (vd.getTime() > prev.getTime()) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "time went backwards!: " << prev << " <- " << vd;
+				str << "time went backwards!: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
 			});
 		}
 
 		if (vd.getLocation() != path.back().getLocation()) {
 			path.emplace_back(vd.getLocation(), vd.getTime());
 		}
-		pretty_print(dout(DL::PR_D3) << " <- ",vd,tn);
+		dout(DL::PR_D3) << " <- " << std::make_pair(vd,tn);
 		prev = vd;
 	}
 	dout(DL::PR_D3) << "\n\t = ";
@@ -157,7 +157,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 	std::reverse(path.begin(),path.end()); // was backwards
 
 	::util::print_route(path, dout(DL::PR_D1), [&](auto&& str, auto&& elem) {
-		str << "l=" << elem.getLocation() << "@t=" << elem.getTime();
+		str << "{l=" << elem.getLocation() << "@t=" << elem.getTime() << '}';
 	});
 
 	return path;

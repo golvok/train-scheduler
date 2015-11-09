@@ -54,7 +54,8 @@ public:
 
 };
 
-std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
+// std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
+std::ostream& operator<<(std::ostream& os, std::pair<const vertex_descriptor&, const TrackNetwork&> pair);
 
 using degree_size_type = size_t;
 
@@ -261,6 +262,8 @@ public:
 		return distance_map(bdm);
 	}
 
+	auto& getTrackNetwork() const { return tn; }
+	auto& getSchedule() const { return sch; }
 private:
 	vertex_descriptor getConnectingVertex(
 		vertex_descriptor src,

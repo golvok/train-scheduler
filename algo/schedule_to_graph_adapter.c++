@@ -8,8 +8,15 @@ namespace algo {
 
 namespace detail {
 	namespace STGA {
-		std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd) {
-			os << '{' << vd.getVertex() << "@t=" << vd.getTime() << ",l=" << vd.getLocation() << '}';
+		// std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd) {
+		// 	os << '{' << vd.getVertex() << "@t=" << vd.getTime() << ", l=" << vd.getLocation() << '}';
+		// 	return os;
+		// }
+
+		std::ostream& operator<<(std::ostream& os, std::pair<const vertex_descriptor&, const TrackNetwork&> pair) {
+			auto& tn = pair.second;
+			auto& vd = pair.first;
+			os << '{' << tn.getVertexName(vd.getVertex()) << "@t=" << vd.getTime() << ",l=" << vd.getLocation() << '}';
 			return os;
 		}
 
@@ -28,13 +35,13 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 	STGA::vertex_descriptor src,
 	STGA::degree_size_type out_edge_index
 ) const {
-	// NOTE: this function defaults
-	// to returning the a default constructed vertex descriptor,
-	// so every path must return an actual vertex unless so that
-	// the iterator will not just end after that path fails to
-	// return a vertex
+	// NOTE: this function defaults to returning the a default
+	// constructed vertex descriptor, which is used as the
+	// past-end value so every path must return an actual vertex
+	// so that the iteration will not just end after that path
+	// fails to return a vertex
 
-	dout(DL::PR_D3) << "constructing " << src << "'s " << out_edge_index << " out edge\n";
+	dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << "'s " << out_edge_index << " out edge\n";
 	if (out_edge_index == STGA::out_edge_iterator::END_VAL) {
 		dout(DL::PR_D3) << "\twas end edge\n";
 		return STGA::vertex_descriptor();
@@ -51,7 +58,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 				src.getTime() + 1, // TODO get delay as a function of station & train
 				tn.getStationIdByVertexId(src.getVertex())
 			);
-			dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+			dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
 			return next_vd;
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
 			// return the next place the train is going (or not if it isn't)
@@ -59,7 +66,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			auto current_it = std::find(train.getRoute().begin(), train.getRoute().end(), src.getVertex());
 			if (current_it == train.getRoute().end()) {
 				std::ostringstream err;
-				err << "vertex " << src << " is invalid. It's train doesn't go to it's vertex!\n";
+				err << "vertex " << std::make_pair(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
 				dout(DL::ERROR) << err.str();
 				throw std::invalid_argument(err.str());
 			}
@@ -74,7 +81,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 					) / train.getSpeed(),
 					train.getId()
 				);
-				dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+				dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
 				return next_vd;
 			}
 		}
@@ -102,7 +109,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 							) / train.getSpeed(),
 							train.getId()
 						);
-						dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+						dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
 						return next_vd;
 					}
 
