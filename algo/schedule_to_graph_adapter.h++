@@ -2,9 +2,10 @@
 #ifndef ALGO__SCHEDULE_TO_GRAPH_ADAPTER_HPP
 #define ALGO__SCHEDULE_TO_GRAPH_ADAPTER_HPP
 
-#include <util/track_network.h++>
-#include <util/graph_utils.h++>
 #include <algo/scheduler.h++>
+#include <util/location_id.h++>
+#include <util/graph_utils.h++>
+#include <util/track_network.h++>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/astar_search.hpp>
@@ -15,49 +16,6 @@
 namespace algo {
 
 class ScheduleToGraphAdapter;
-
-struct LocationIdTag { static const uint DEFAULT_VALUE = -1; };
-struct LocationId : ID<
-	std::common_type_t<
-		Train::TrainId::IdType,
-		StationId::IdType
-	>,
-	LocationIdTag
-> {
-	static const IdType TRAIN_FLAG = ((IdType)(-1)) & ~(((IdType)(-1)) >> 1);
-
-	LocationId(Train::TrainId tid) : ID(tid.getValue() | TRAIN_FLAG) { }
-	LocationId(StationId sid) : ID(sid.getValue()) { }
-	LocationId(IdType val) : ID(val) { }
-	LocationId() : ID() { }
-
-	bool isTrain() { return (getValue() & TRAIN_FLAG) != 0; }
-	bool isStation() { return (getValue() & TRAIN_FLAG) == 0; }
-
-	Train::TrainId asTrainId() {
-		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
-		return Train::TrainId(getValue() & (~TRAIN_FLAG));
-	}
-	StationId asStationId() {
-		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }
-		return StationId(getValue());
-	}
-
-	void print(std::ostream& os) {
-		if (getValue() == DEFAULT_VALUE) {
-			os << "<DEFAULT>";
-		} else if (isTrain()) {
-			os << 't' << asTrainId().getValue();
-		} else if (isStation()) {
-			os << 's' << asStationId().getValue();
-		}
-	}
-};
-
-inline std::ostream& operator<<(std::ostream& os, LocationId loc) {
-	loc.print(os);
-	return os;
-}
 
 namespace detail {
 namespace STGA {
