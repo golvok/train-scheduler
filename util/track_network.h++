@@ -2,11 +2,17 @@
 #define GRAPH_H
 
 #include <graphics/geometry.h++>
+#include <util/utils.h++>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <unordered_map>
 #include <limits>
 #include <vector>
+
+struct StationIdTag {
+	static const uint DEFAULT_VALUE = -1;
+};
+using StationId = ID<uint, StationIdTag>;
 
 class TrackNetwork {
 public:
@@ -68,6 +74,8 @@ public:
 
 	EdgeIndex getEdgeIndex(EdgeID eid) const;
 	EdgeWeightMap makeEdgeWeightMapCopy() const;
+
+	StationId getStationIdByVertexId(ID id) const { return StationId(id); }
 };
 
 #endif /* GRAPH_H */

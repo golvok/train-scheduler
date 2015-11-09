@@ -72,6 +72,9 @@ public:
 	std::vector<Train>& getTrains() { return trains; }
 	const std::vector<Train>& getTrains() const { return trains; }
 
+	Train& getTrain(Train::TrainId id) { return getTrains()[id.getValue()]; }
+	const Train& getTrain(Train::TrainId id) const { return getTrains()[id.getValue()]; }
+
 private:
 	std::string name;
 	std::vector<Train> trains;

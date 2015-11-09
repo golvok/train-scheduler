@@ -26,7 +26,7 @@ namespace {
 		void examine_vertex(STGA::vertex_descriptor vd, ScheduleToGraphAdapter const& g) {
 			(void)g;
 			dout(DL::PR_D3) << "Exploring " << vd << "..." << '\n';
-			if(vd.getVertex() == goal_vertex) {
+			if(vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
 				throw found_goal{vd};
 			}
 		}
@@ -58,7 +58,7 @@ PassengerRoutes route_passengers(
 		auto pass_indent = dout(DL::PR_D1).indentWithTitle([&](auto&& s){ s << "Passenger " << passenger.getName(); });
 
 		// TODO: change next line to use actual leave time when TR and WC understand time...
-		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryId(),0);
+		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryId(),0,tn.getStationIdByVertexId(passenger.getEntryId()));
 		auto goal_vertex = passenger.getExitId();
 
 		auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
@@ -69,7 +69,7 @@ PassengerRoutes route_passengers(
 		);
 
 		pretty_print(dout(DL::PR_D2) << "Start vertex and time: ",start_vertex_and_time,tn) << '\n';
-		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '\n';
+		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '(' << goal_vertex << ")\n";
 
 		auto pred_map = baseGraph.make_pred_map();
 		auto backing_distance_map = baseGraph.make_backing_distance_map(start_vertex_and_time);

@@ -1,5 +1,7 @@
 #include "schedule_to_graph_adapter.h++"
 
+#include <sstream>
+
 #include <util/logging.h++>
 
 namespace algo {
@@ -7,7 +9,7 @@ namespace algo {
 namespace detail {
 	namespace STGA {
 		std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd) {
-			os << '{' << vd.getVertex() << "@t=" << vd.getTime() << '}';
+			os << '{' << vd.getVertex() << "@t=" << vd.getTime() << ",l=" << vd.getLocation() << '}';
 			return os;
 		}
 
@@ -26,36 +28,92 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 	STGA::vertex_descriptor src,
 	STGA::degree_size_type out_edge_index
 ) const {
-	STGA::degree_size_type current_out_edge_index = STGA::out_edge_iterator::BEGIN_VAL;
+	// NOTE: this function defaults
+	// to returning the a default constructed vertex descriptor,
+	// so every path must return an actual vertex unless so that
+	// the iterator will not just end after that path fails to
+	// return a vertex
 
-	for (auto& train : sch.getTrains()) {
-		for (
-			auto vertex_it = train.getRoute().begin();
-			vertex_it != train.getRoute().end();
-			++vertex_it
-		) {
-			// if train goes through here, and it doesn't end here
-			if (*vertex_it == src.getVertex() && (vertex_it + 1) != train.getRoute().end()) {
-				// if this is the right one, return it
-				TrackNetwork::ID next = *(vertex_it + 1);
-				if (out_edge_index == current_out_edge_index) {
-					STGA::vertex_descriptor next_vd (
-						next,
-						src.getTime() + boost::get(
-							&TrackNetwork::EdgeProperties::weight,
-							tn.g(),
-							boost::edge(*vertex_it,next,tn.g()).first
-						) / train.getSpeed()
-					);
-					dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
-					return next_vd;
+	dout(DL::PR_D3) << "constructing " << src << "'s " << out_edge_index << " out edge\n";
+	if (out_edge_index == STGA::out_edge_iterator::END_VAL) {
+		dout(DL::PR_D3) << "\twas end edge\n";
+		return STGA::vertex_descriptor();
+	}
+
+	if (src.getLocation().isTrain()) {
+		// if this vertex is a train, return the current station,
+		// the next place the train is going. it must be second because
+		// it might not have a vertex to return (if this is the train's end)
+		if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL) {
+			// return a station vertex
+			STGA::vertex_descriptor next_vd (
+				src.getVertex(),
+				src.getTime() + 1, // TODO get delay as a function of station & train
+				tn.getStationIdByVertexId(src.getVertex())
+			);
+			dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+			return next_vd;
+		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
+			// return the next place the train is going (or not if it isn't)
+			const auto& train = sch.getTrain(src.getLocation().asTrainId());
+			auto current_it = std::find(train.getRoute().begin(), train.getRoute().end(), src.getVertex());
+			if (current_it == train.getRoute().end()) {
+				std::ostringstream err;
+				err << "vertex " << src << " is invalid. It's train doesn't go to it's vertex!\n";
+				dout(DL::ERROR) << err.str();
+				throw std::invalid_argument(err.str());
+			}
+			if (current_it + 1 != train.getRoute().end()) {
+				auto next = *(current_it + 1);
+				STGA::vertex_descriptor next_vd (
+					next,
+					src.getTime() + boost::get(
+						&TrackNetwork::EdgeProperties::weight,
+						tn.g(),
+						boost::edge(*current_it,next,tn.g()).first
+					) / train.getSpeed(),
+					train.getId()
+				);
+				dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+				return next_vd;
+			}
+		}
+	} else if (src.getLocation().isStation()) {
+
+		STGA::degree_size_type current_out_edge_index = STGA::out_edge_iterator::BEGIN_VAL;
+
+		for (auto& train : sch.getTrains()) {
+			for (
+				auto vertex_it = train.getRoute().begin();
+				vertex_it != train.getRoute().end();
+				++vertex_it
+			) {
+				// if train goes through here, and it doesn't end here
+				if (*vertex_it == src.getVertex() && (vertex_it + 1) != train.getRoute().end()) {
+					TrackNetwork::ID next = *(vertex_it + 1);
+					if (out_edge_index == current_out_edge_index) {
+						// if this is the right one, return a vertex corresponding to it
+						STGA::vertex_descriptor next_vd (
+							next,
+							src.getTime() + boost::get(
+								&TrackNetwork::EdgeProperties::weight,
+								tn.g(),
+								boost::edge(*vertex_it,next,tn.g()).first
+							) / train.getSpeed(),
+							train.getId()
+						);
+						dout(DL::PR_D3) << "constructing " << src << " --(#" << out_edge_index << ")-> " << next_vd << '\n';
+						return next_vd;
+					}
+
+					// otherwise, increment for the next one
+					current_out_edge_index += 1;
 				}
-
-				// otherwise, increment for the next one
-				current_out_edge_index += 1;
 			}
 		}
 	}
+
+	dout(DL::PR_D3) << "\twas end edge\n";
 	return STGA::vertex_descriptor(); // return end node if nothing found.
 }
 
