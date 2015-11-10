@@ -1,9 +1,5 @@
 #include "track_network.h++"
 
-#include <util/graph_utils.h++>
-
-#include <cassert>
-
 TrackNetwork::ID TrackNetwork::createVertex(const std::string& name, geom::Point<float> xy) {
 	decltype(name2id)::iterator pos;
 	bool inserted;

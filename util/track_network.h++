@@ -9,6 +9,8 @@
 #include <limits>
 #include <vector>
 
+#include <util/graph_utils.h++> // needs to be after the graph definition
+
 struct StationIdTag {
 	static const uint DEFAULT_VALUE = -1;
 };
@@ -77,6 +79,12 @@ public:
 
 	StationId getStationIdByVertexId(ID id) const { return ::util::make_id<StationId>(id); }
 	ID getVertexIdByStationId(StationId sid) const { return sid.getValue(); }
+
+	template<typename MAPPED_TYPE, typename... ARGS>
+	auto makeStationMap(ARGS&&... args) {
+		return ::util::makeVertexMap<MAPPED_TYPE>(g(),args...);
+	}
+
 };
 
 #endif /* GRAPH_H */

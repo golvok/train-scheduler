@@ -75,6 +75,11 @@ public:
 	Train& getTrain(Train::TrainId id) { return getTrains()[id.getValue()]; }
 	const Train& getTrain(Train::TrainId id) const { return getTrains()[id.getValue()]; }
 
+	template<typename MAPPED_TYPE, typename... ARGS>
+	auto makeTrainMap(ARGS&&... args) {
+		return std::vector<MAPPED_TYPE>(trains.size(), args...);
+	}
+
 private:
 	std::string name;
 	std::vector<Train> trains;
