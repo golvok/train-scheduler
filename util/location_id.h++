@@ -6,7 +6,7 @@
 #include <util/track_network.h++>
 
 struct LocationIdTag { static const uint DEFAULT_VALUE = -1; };
-struct LocationId : ID<
+struct LocationId : ::util::ID<
 	std::common_type_t<
 		::algo::Train::TrainId::IdType,
 		StationId::IdType
@@ -25,11 +25,11 @@ struct LocationId : ID<
 
 	::algo::Train::TrainId asTrainId() {
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
-		return ::algo::Train::TrainId(getValue() & (~TRAIN_FLAG));
+		return ::util::make_id<::algo::Train::TrainId>(getValue() & (~TRAIN_FLAG));
 	}
 	StationId asStationId() {
 		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }
-		return StationId(getValue());
+		return ::util::make_id<StationId>(getValue());
 	}
 
 	void print(std::ostream& os) {

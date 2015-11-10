@@ -13,7 +13,7 @@ class Train {
 	};
 public:
 	using Speed = float;
-	using TrainId = ID<uint,TrainIdTagType>;
+	using TrainId = ::util::ID<uint,TrainIdTagType>;
 
 	Train(
 		const TrainId train_id,

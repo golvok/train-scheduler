@@ -12,7 +12,7 @@
 struct StationIdTag {
 	static const uint DEFAULT_VALUE = -1;
 };
-using StationId = ID<uint, StationIdTag>;
+using StationId = ::util::ID<uint, StationIdTag>;
 
 class TrackNetwork {
 public:
@@ -75,7 +75,7 @@ public:
 	EdgeIndex getEdgeIndex(EdgeID eid) const;
 	EdgeWeightMap makeEdgeWeightMapCopy() const;
 
-	StationId getStationIdByVertexId(ID id) const { return StationId(id); }
+	StationId getStationIdByVertexId(ID id) const { return ::util::make_id<StationId>(id); }
 };
 
 #endif /* GRAPH_H */
