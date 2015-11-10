@@ -8,22 +8,24 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <unordered_map>
+#include <vector>
 
 namespace util {
 
-template<typename MAPPED_TO, typename GRAPH, typename PARAM>
-auto makeEdgeMap(const GRAPH& g, const PARAM& init) {
+template<typename MAPPED_TO, typename GRAPH, typename... ARGS>
+auto makeEdgeMap(const GRAPH& g, ARGS&&... init) {
 	return std::vector<MAPPED_TO>(
 		num_edges(g),
-		init
+		init...
 	);
 }
 
-template<typename MAPPED_TO, typename GRAPH, typename PARAM>
-auto makeVertexMap(const GRAPH& g, const PARAM& init) {
+template<typename MAPPED_TO, typename GRAPH, typename... ARGS>
+auto makeVertexMap(const GRAPH& g, ARGS&&... init) {
 	return std::vector<MAPPED_TO>(
 		num_vertices(g),
-		init
+		init...
 	);
 }
 
