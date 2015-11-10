@@ -4,6 +4,8 @@
 
 #include <util/track_network.h++>
 
+#include <iosfwd>
+
 class Passenger {
 public:
 	using ID = uint;
@@ -39,6 +41,9 @@ public:
 		return id == rhs.id;
 	}
 };
+
+// std::ostream& operator<<(std::ostresam& os, const Passenger& p);
+std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair);
 
 namespace std {
 	template<>
