@@ -125,6 +125,11 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 	auto ewc_indent = dout(DL::WC_D1).indentWithTitle("Computing Edge Wanted Capacities");
 	for (const Passenger& p : passengers) {
 		auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
+		if (p.getStartTime() != 0) {
+			::util::print_and_throw<std::invalid_argument>([&](auto&& stream) {
+				stream << "don't support passengers with entry time != 0 (" << std::make_pair(p,network) << ')';
+			});
+		}
 		auto next_iteration_weights = network.makeEdgeWeightMapCopy();
 		for (uint iteration_num = 1; true; ++iteration_num) {
 			auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Iteration " << iteration_num; });

@@ -171,7 +171,8 @@ std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& i
 				passengers.size(),
 				tn.getVertex(std::get<1>(passenger)),
 				tn.getVertex(std::get<2>(passenger)),
-				std::get<3>(passenger)
+				// WC doesn't usderstand passengers that don't start at 0 yet
+				0 // std::get<3>(passenger)
 			);
 		}
 	}
