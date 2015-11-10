@@ -4,10 +4,13 @@
 #include <graphics/graphics.h++>
 #include <parsing/input_parser.h++>
 #include <parsing/cmdargs_parser.h++>
+#include <stats/report_config.h++>
+#include <stats/report_engine.h++>
 #include <util/logging.h++>
 
 #include <memory>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -74,6 +77,11 @@ int program_main() {
 
 		// route passengers
 		::algo::PassengerRoutes p_routes = ::algo::route_passengers(*tn,*schedule,*passengers);
+
+		::stats::ReportEngine report_engine(*tn,*passengers,*schedule,p_routes);
+		::stats::ReportConfig conf(::stats::ReportConfig::ReportType::PASSENGER_ROUTE_STATS);
+		std::ofstream report_file("reports.txt");
+		report_engine.report(conf,report_file);
 
 		graphics::get().waitForPress();
 	}
