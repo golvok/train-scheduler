@@ -6,18 +6,20 @@
 #include <util/track_network.h++>
 
 struct LocationIdTag { static const uint DEFAULT_VALUE = -1; };
-struct LocationId : ::util::ID<
+class LocationId : public ::util::ID<
 	std::common_type_t<
 		::algo::Train::TrainId::IdType,
 		StationId::IdType
 	>,
 	LocationIdTag
 > {
+private:
+	LocationId(IdType val) : ID(val) { }
+public:
 	static const IdType TRAIN_FLAG = ((IdType)(-1)) & ~(((IdType)(-1)) >> 1);
 
 	LocationId(::algo::Train::TrainId tid) : ID(tid.getValue() | TRAIN_FLAG) { }
 	LocationId(StationId sid) : ID(sid.getValue()) { }
-	LocationId(IdType val) : ID(val) { }
 	LocationId() : ID() { }
 
 	bool isTrain() { return (getValue() & TRAIN_FLAG) != 0; }
