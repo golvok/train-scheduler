@@ -76,6 +76,7 @@ public:
 	EdgeWeightMap makeEdgeWeightMapCopy() const;
 
 	StationId getStationIdByVertexId(ID id) const { return ::util::make_id<StationId>(id); }
+	ID getVertexIdByStationId(StationId sid) const { return sid.getValue(); }
 };
 
 #endif /* GRAPH_H */

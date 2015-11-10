@@ -66,7 +66,7 @@ inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_
 /**
  * iterates the route, calls func(os,elem) and uses operator<< to print the result of
  * a const char[x] to os, in the format
- * vSTART -> V2 -> V3 -> V4 -> vEND -> |
+ * vSTART -> V2 -> V3 -> V4 -> vEND
  */
 template<typename CONTAINER, typename FUNC, typename OSTREAM>
 void print_route(
@@ -74,17 +74,22 @@ void print_route(
 	OSTREAM&& os,
 	FUNC func
 ) {
-	std::for_each(std::begin(route), std::end(route), [&](auto& v){
-		func(os,v);
-		os << " -> ";
-	});
-	os << "|\n";
+	auto begin = std::begin(route);
+	auto end = std::end(route);
+	if (begin != end) {
+		std::for_each(begin + 1, end, [&](auto& v){
+			func(os,v);
+			os << " -> ";
+		});
+		func(os,*begin);
+	}
+	os << '\n';
 }
 
 /**
  * iterates the route and uses operator<< to print the result of
  * network.getVertexName(...) to os, in the format
- * vSTART -> V2 -> V3 -> V4 -> vEND -> |
+ * vSTART -> V2 -> V3 -> V4 -> vEND
  */
 template<typename CONTAINER, typename OSTREAM>
 void print_route(
