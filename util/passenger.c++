@@ -4,7 +4,7 @@
 
 namespace {
 	void print_first_part(std::ostream& os, const Passenger& p) {
-		os << p.getName() << " (" << p.getId() << ") : ";
+		os << p.getName() << " (" << p.getId().getValue() << ") : ";
 	}
 }
 
