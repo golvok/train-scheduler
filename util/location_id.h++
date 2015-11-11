@@ -22,19 +22,19 @@ public:
 	LocationId(StationId sid) : ID(sid.getValue()) { }
 	LocationId() : ID() { }
 
-	bool isTrain() { return (getValue() & TRAIN_FLAG) != 0; }
-	bool isStation() { return (getValue() & TRAIN_FLAG) == 0; }
+	bool isTrain() const { return (getValue() & TRAIN_FLAG) != 0; }
+	bool isStation() const { return (getValue() & TRAIN_FLAG) == 0; }
 
-	::algo::Train::TrainId asTrainId() {
+	::algo::Train::TrainId asTrainId() const {
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
 		return ::util::make_id<::algo::Train::TrainId>(getValue() & (~TRAIN_FLAG));
 	}
-	StationId asStationId() {
+	StationId asStationId() const {
 		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }
 		return ::util::make_id<StationId>(getValue());
 	}
 
-	void print(std::ostream& os) {
+	void print(std::ostream& os) const {
 		if (getValue() == DEFAULT_VALUE) {
 			os << "<DEFAULT>";
 		} else if (isTrain()) {
