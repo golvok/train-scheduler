@@ -90,23 +90,35 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 		STGA::degree_size_type current_out_edge_index = STGA::out_edge_iterator::BEGIN_VAL;
 
 		for (auto& train : sch.getTrains()) {
+			TrackNetwork::Time time_to_here = 0;
 			for (
 				auto vertex_it = train.getRoute().begin();
 				vertex_it != train.getRoute().end();
 				++vertex_it
 			) {
+				if (vertex_it == train.getRoute().end()) {
+					break; // skip last one
+				}
+
+				if (vertex_it == train.getRoute().begin()) {
+					time_to_here = train.getDepartureTime();
+				} else {
+					// add time to src vertex, so we know when the train gets to the next vertex
+					TrackNetwork::ID prev = *(vertex_it - 1);
+					time_to_here += boost::get(
+						&TrackNetwork::EdgeProperties::weight,
+						tn.g(),
+						boost::edge(prev,*vertex_it,tn.g()).first
+					) / train.getSpeed();
+				}
+
 				// if train goes through here, and it doesn't end here
-				if (*vertex_it == src.getVertex() && (vertex_it + 1) != train.getRoute().end()) {
-					TrackNetwork::ID next = *(vertex_it + 1);
+				if (*vertex_it == src.getVertex()) {
 					if (out_edge_index == current_out_edge_index) {
 						// if this is the right one, return a vertex corresponding to it
 						STGA::vertex_descriptor next_vd (
-							next,
-							src.getTime() + boost::get(
-								&TrackNetwork::EdgeProperties::weight,
-								tn.g(),
-								boost::edge(*vertex_it,next,tn.g()).first
-							) / train.getSpeed(),
+							*vertex_it,
+							time_to_here,
 							train.getId()
 						);
 						dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
