@@ -77,11 +77,11 @@ void print_route(
 	auto begin = std::begin(route);
 	auto end = std::end(route);
 	if (begin != end) {
-		std::for_each(begin + 1, end, [&](auto& v){
-			func(os,v);
-			os << " -> ";
-		});
 		func(os,*begin);
+		std::for_each(begin + 1, end, [&](auto& v){
+			os << " -> ";
+			func(os,v);
+		});
 	}
 	os << '\n';
 }
