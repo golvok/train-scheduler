@@ -115,6 +115,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 	path.emplace_back(prev.getLocation(), prev.getTime());
 
 	dout(DL::PR_D1) << "path found: ";
+	dout(DL::PR_D3) << std::make_pair(prev,tn);
 
 	while (true) {
 		STGA::vertex_descriptor vd = get(pred_map,prev);
@@ -142,7 +143,11 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 			});
 		}
 
-		if (vd.getLocation() != path.back().getLocation()) {
+		// we want to keep the first one (time-wise), so keep the last one we see
+		// (keep replacing until the location changes);
+		if (vd.getLocation() == path.back().getLocation()) {
+			path.back() = PassengerRoutes::RouteElement(vd.getLocation(), vd.getTime());
+		} else {
 			path.emplace_back(vd.getLocation(), vd.getTime());
 		}
 		dout(DL::PR_D3) << " <- " << std::make_pair(vd,tn);
