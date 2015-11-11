@@ -89,4 +89,7 @@ public:
 
 };
 
+template<typename MAPPED_TYPE>
+using StationMap = decltype(TrackNetwork().makeStationMap<MAPPED_TYPE>());
+
 #endif /* GRAPH_H */
