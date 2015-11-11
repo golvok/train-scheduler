@@ -53,15 +53,16 @@ class index_associative_iteratior_value {
 	const IA_ITERATOR* src;
 public:
 
-	typename IA_ITERATOR::iterator_type it() const { return src->it(); }
-	typename IA_ITERATOR::size_type i() const { return src->i(); }
+	auto it() const { return src->it(); }
+	auto i() const { return src->i(); }
+	auto& v() const { return *it(); }
 
 	index_associative_iteratior_value(const IA_ITERATOR& src) : src(&src) {}
 	index_associative_iteratior_value(const index_associative_iteratior_value& src) = default;
 
 	index_associative_iteratior_value& operator=(const index_associative_iteratior_value&) = delete;
 
-	auto& operator*() { return *(it()); }
+	auto& operator*() { return v(); }
 };
 
 template<typename ITERATOR, typename INDEX>
