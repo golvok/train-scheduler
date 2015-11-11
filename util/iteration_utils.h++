@@ -93,12 +93,15 @@ public:
 	size_type i() const { return index; }
 };
 
-template<typename CONTAINER>
+template<typename CONTAINER, typename ITERATOR>
 class index_associative_iteratior_adapter {
 	CONTAINER& c;
 public:
-	typedef typename CONTAINER::size_type size_type;
-	typedef index_associative_iteratior<typename CONTAINER::iterator, size_type> iterator_type;
+	using size_type = typename CONTAINER::size_type;
+	using iterator_type = index_associative_iteratior<
+		ITERATOR,
+		size_type
+	>;
 
 	index_associative_iteratior_adapter(CONTAINER& c) : c(c) {}
 	index_associative_iteratior_adapter(const index_associative_iteratior_adapter& src) = default;
@@ -116,7 +119,7 @@ public:
  * Example:
  * std::vector<int> some_ints { 1, 5, 7, 8, 1, };
  * for (auto iter : index_assoc_iterate(some_ints)) {
- *     std::cout << "There's a " *iter.it() << " at " << iter.i << '\n';
+ *     std::cout << "There's a " *iter.it() << " at " << iter.i() << '\n';
  * }
  *
  * Example's Output:
@@ -131,8 +134,12 @@ public:
  * we need it() ? Won't work well for std::list, though.
  */
 template<typename CONTAINER>
-index_associative_iteratior_adapter<CONTAINER> index_assoc_iterate(CONTAINER& c) {
-	return index_associative_iteratior_adapter<CONTAINER>(c);
+auto index_assoc_iterate(CONTAINER& c) {
+	return index_associative_iteratior_adapter<CONTAINER,typename CONTAINER::iterator>(c);
+}
+template<typename CONTAINER>
+auto index_assoc_iterate(const CONTAINER& c) {
+	return index_associative_iteratior_adapter<const CONTAINER,typename CONTAINER::const_iterator>(c);
 }
 
 /*************
