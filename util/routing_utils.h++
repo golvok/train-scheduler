@@ -48,7 +48,7 @@ inline std::vector<TrackNetwork::ID> get_shortest_route(
  * determines the shortest route for each passenger, and stores it in a map keyed by the passenger
  */
 inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
-	TrackNetwork& network, std::vector<Passenger>& passengers
+	TrackNetwork& network, PassengerList& passengers
 ) {
 	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
 

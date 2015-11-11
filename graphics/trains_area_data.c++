@@ -61,7 +61,7 @@ void TrainsAreaData::displayTrackNetwork(
 
 void TrainsAreaData::displayTNAndPassengers(
 	std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<std::vector<Passenger>> new_passgrs
+	std::weak_ptr<PassengerList> new_passgrs
 ) {
 	auto sdl = getScopedDataLock();
 	clear();
@@ -89,7 +89,7 @@ void TrainsAreaData::displayTNAndWantedCapacities(
 
 void TrainsAreaData::presentResults(
 	std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<std::vector<Passenger>> new_passgrs,
+	std::weak_ptr<PassengerList> new_passgrs,
 	std::weak_ptr<algo::Schedule> new_schedule
 ) {
 	auto sdl = getScopedDataLock();
@@ -118,7 +118,7 @@ std::shared_ptr<TrackNetwork> TrainsAreaData::getTN() {
 	return data.tn.lock();
 }
 
-std::shared_ptr<std::vector<Passenger>> TrainsAreaData::getPassengers() {
+std::shared_ptr<PassengerList> TrainsAreaData::getPassengers() {
 	auto sdl = getScopedDataLock();
 	return data.passengers.lock();
 }

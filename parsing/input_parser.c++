@@ -121,13 +121,13 @@ namespace fake_data {
 	};
 }
 
-std::tuple<TrackNetwork,std::vector<Passenger>, bool> parse_data(std::istream& is) {
+std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 	static size_t call_num = 0;
 	call_num += 1;
 	(void)is;
 
 	TrackNetwork tn;
-	std::vector<Passenger> passengers;
+	PassengerList passengers;
 
 	if (call_num > fake_data::passengers.size()) {
 		return std::make_tuple(tn,passengers,false);

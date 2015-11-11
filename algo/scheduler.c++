@@ -19,12 +19,12 @@ class Scheduler {
 
 	const TrackNetwork& network;
 	const TrackNetwork::BackingGraphType& g;
-	const std::vector<Passenger>& passengers;
+	const PassengerList& passengers;
 
 public:
 	Scheduler(
 		const TrackNetwork& network,
-		const std::vector<Passenger>& passengers
+		const PassengerList& passengers
 	)
 	: network(network)
 	, g(network.g())
@@ -89,7 +89,7 @@ public:
  */
 Schedule schedule(
 	const TrackNetwork& network,
-	const std::vector<Passenger>& passengers
+	const PassengerList& passengers
 ) {
 	return Scheduler (
 		network,

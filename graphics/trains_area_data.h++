@@ -27,7 +27,7 @@ private:
 
 		// stored using weak_ptr so that lifetime corresponds to external lifetime
 		std::weak_ptr<TrackNetwork> tn;
-		std::weak_ptr<std::vector<Passenger>> passengers;
+		std::weak_ptr<PassengerList> passengers;
 		std::weak_ptr<WantedCapacityMap> wanted_edge_capacities;
 	};
 	struct Results {
@@ -63,7 +63,7 @@ public:
 	 */
 	void displayTNAndPassengers(
 		std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<std::vector<Passenger>> new_passgrs
+		std::weak_ptr<PassengerList> new_passgrs
 	);
 
 	void displayTNAndWantedCapacities(
@@ -76,7 +76,7 @@ public:
 	 */
 	void presentResults(
 		std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<std::vector<Passenger>> new_passgrs,
+		std::weak_ptr<PassengerList> new_passgrs,
 		std::weak_ptr<algo::Schedule> new_schedule
 	);
 
@@ -104,7 +104,7 @@ private:
 	// Note: the returned value may not point to a valid object, and that should be checked
 	//     before use!
 	std::shared_ptr<TrackNetwork> getTN();
-	std::shared_ptr<std::vector<Passenger>> getPassengers();
+	std::shared_ptr<PassengerList> getPassengers();
 	std::shared_ptr<algo::Schedule> getSchedule();
 	std::shared_ptr<Data::WantedCapacityMap> getWantedEdgeCapacities();
 

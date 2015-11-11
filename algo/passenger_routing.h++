@@ -61,7 +61,7 @@ public:
 PassengerRoutes route_passengers(
 	const TrackNetwork& tn,
 	const Schedule& sch,
-	const std::vector<Passenger>& passgrs
+	const PassengerList& passgrs
 );
 
 } // end namespace algo

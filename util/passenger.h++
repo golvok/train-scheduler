@@ -44,6 +44,9 @@ public:
 	}
 };
 
+using PassengerIdList = std::vector<PassengerId>;
+using PassengerList = std::vector<Passenger>;
+
 // std::ostream& operator<<(std::ostresam& os, const Passenger& p);
 std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair);
 

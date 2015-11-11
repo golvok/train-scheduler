@@ -43,7 +43,7 @@ int program_main() {
 
 		// these will be shared with the graphics
 		std::shared_ptr<TrackNetwork> tn = std::make_shared<TrackNetwork>();
-		std::shared_ptr<std::vector<Passenger>> passengers = std::make_shared<std::vector<Passenger>>();
+		std::shared_ptr<PassengerList> passengers = std::make_shared<PassengerList>();
 
 		bool data_is_good;
 

@@ -15,7 +15,7 @@ class ReportEngine {
 public:
 	ReportEngine(
 		const ::TrackNetwork& track_network,
-		const std::vector<Passenger>& passengers,
+		const PassengerList& passengers,
 		const ::algo::Schedule&	schedule,
 		const ::algo::PassengerRoutes& passenger_routes
 	)
@@ -30,7 +30,7 @@ private:
 	void reportPassengerRouteStats(const ReportConfig& config, std::ostream& os);
 
 	const ::TrackNetwork& track_network;
-	const std::vector<Passenger>& passengers;
+	const PassengerList& passengers;
 	const ::algo::Schedule&	schedule;
 	const ::algo::PassengerRoutes& passenger_routes;
 };

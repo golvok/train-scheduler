@@ -92,7 +92,7 @@ private:
  */
 Schedule schedule(
 	const TrackNetwork& network,
-	const std::vector<Passenger>& passengers
+	const PassengerList& passengers
 );
 
 } // end namespace algo
