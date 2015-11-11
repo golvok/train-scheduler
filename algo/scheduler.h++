@@ -77,7 +77,7 @@ public:
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeTrainMap(ARGS&&... args) {
-		return std::vector<MAPPED_TYPE>(trains.size(), args...);
+		return std::vector<MAPPED_TYPE>(trains.size(), std::forward<ARGS>(args)...);
 	}
 
 private:

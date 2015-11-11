@@ -17,7 +17,7 @@ template<typename MAPPED_TO, typename GRAPH, typename... ARGS>
 auto makeEdgeMap(const GRAPH& g, ARGS&&... init) {
 	return std::vector<MAPPED_TO>(
 		num_edges(g),
-		init...
+		std::forward<ARGS>(init)...
 	);
 }
 
@@ -25,7 +25,7 @@ template<typename MAPPED_TO, typename GRAPH, typename... ARGS>
 auto makeVertexMap(const GRAPH& g, ARGS&&... init) {
 	return std::vector<MAPPED_TO>(
 		num_vertices(g),
-		init...
+		std::forward<ARGS>(init)...
 	);
 }
 

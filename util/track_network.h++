@@ -82,7 +82,9 @@ public:
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeStationMap(ARGS&&... args) {
-		return ::util::makeVertexMap<MAPPED_TYPE>(g(),args...);
+		// maybe add a wrapper that forces operator [] to only accept StationId
+		// inherit from vector, use templae vararg function to call base?
+		return ::util::makeVertexMap<MAPPED_TYPE>(g(), std::forward<ARGS>(args)...);
 	}
 
 };

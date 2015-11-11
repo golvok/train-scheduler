@@ -122,7 +122,7 @@ protected:
 	explicit ID(const id_type& value) : value(value) { }
 
 	template<typename ID_TYPE, typename... ARGS>
-	friend auto make_id(ARGS... args) -> std::enable_if_t<
+	friend auto make_id(ARGS&&... args) -> std::enable_if_t<
 		std::is_base_of<typename ID_TYPE::ThisIdType,ID_TYPE>::value,
 		ID_TYPE
 	>;
@@ -138,11 +138,11 @@ public:
 };
 
 template<typename ID_TYPE, typename... ARGS>
-auto make_id(ARGS... args) -> std::enable_if_t<
+auto make_id(ARGS&&... args) -> std::enable_if_t<
 	std::is_base_of<typename ID_TYPE::ThisIdType,ID_TYPE>::value,
 	ID_TYPE
 > {
-	return ID_TYPE(args...);
+	return ID_TYPE(std::forward<ARGS>(args)...);
 }
 
 template<typename id_type, typename TAG>
