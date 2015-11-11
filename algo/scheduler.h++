@@ -85,6 +85,9 @@ private:
 	std::vector<Train> trains;
 };
 
+template<typename MAPPED_TYPE>
+using TrainMap = decltype(Schedule().makeTrainMap<MAPPED_TYPE>());
+
 /**
  * Main entry point into the scheduler
  *
