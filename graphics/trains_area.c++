@@ -5,10 +5,12 @@
 #include <util/graph_utils.h++>
 #include <util/iteration_utils.h++>
 #include <util/logging.h++>
+#include <util/passenger.h++>
 #include <util/utils.h++>
 
 #include <cmath>
 #include <string>
+#include <vector>
 
 namespace graphics {
 
@@ -18,7 +20,7 @@ namespace {
 
 const uint INVALID_TIME = -1;
 
-} // end anononymous namespace
+} // end anonymous namespace
 
 TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
@@ -35,10 +37,11 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	// guarantee that state information will not change between drawing calls
 	auto sdrl = getScopedDrawingLock();
 
+	auto passenger_locations = findPassengerLocaions();
+
 	centerOnTrackNework(cc);
-	drawTrackNetwork(cc);
-	drawTrains(cc);
-	drawPassengers(cc);
+	drawTrackNetwork(passenger_locations.passengers_at_stations, cc);
+	drawTrains(passenger_locations.passengers_on_trains, cc);
 	drawWantedEdgeCapacities(cc);
 
 	return true;
@@ -97,7 +100,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 	}
 }
 
-void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrackNetwork(const StationMap<PassengerIdList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
 
@@ -107,6 +110,8 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 		// draw vertex
 		Point<float> v = tn->getVertexPosition(vi);
 		const std::string& name = tn->getVertexName(vi);
+
+		cc->set_source_rgb(0.0,0.0,0.0); // black
 
 		// draw a circle there
 		cc->move_to(v.x,v.y);
@@ -121,12 +126,13 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 			auto outv_point = tn->getVertexPosition(boost::target(outv,tn->g()));
 			graphics::util::draw_arrow(cc,v,outv_point);
 		}
-	}
 
-	cc->stroke();
+		cc->stroke();
+		drawPassengersAt(v,passengers_at_stations[tn->getStationIdByVertexId(vi).getValue()],cc);
+	}
 }
 
-void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIdList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto schedule = data.getSchedule();
@@ -139,9 +145,12 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 	auto& g = tn->g();
 
-	cc->set_source_rgb(0.0,0.0,1.0); // blue
 
 	for (auto& train : schedule->getTrains()) {
+		if (train.getDepartureTime() > time) {
+			continue; // train hasn't left yet
+		}
+
 		auto& route = train.getRoute();
 
 		TrainsArea::Time time_in_nework = time - train.getDepartureTime();
@@ -171,8 +180,10 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 				auto p = prev_pt + offset_to_next;
 
 				// draw
+				cc->set_source_rgb(0.0,0.0,1.0); // blue
 				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
 				cc->stroke();
+				drawPassengersAt(p,passengers_on_trains[train.getId().getValue()],cc);
 				break;
 			}
 
@@ -181,41 +192,6 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 		}
 	}
 
-}
-
-void TrainsArea::drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc) {
-	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
-	auto is_animating = getIsAnimatingAndLock();
-	auto tn = data.getTN();
-	auto psgrs = data.getPassengers();
-
-	if (!is_animating) { return; }
-	if (!tn) { return; }
-	if (!psgrs) { return; }
-
-	auto passenger_counts = ::util::makeVertexMap<uint>(tn->g(),0);
-
-	// draw a dot for each passenger, at the vertex it starts at
-	for (auto& p : *psgrs) {
-		if (time == p.getStartTime()) {
-			cc->set_source_rgb(0.0,1.0,0.0); // green
-		} else if (time > p.getStartTime()) {
-			cc->set_source_rgb(1.0,1.0,0.0); // yellow
-		} else {
-			continue; // skip it
-		}
-
-		// update count at vertex, and this one a bit farther away than the last
-		auto entry_id = p.getEntryId();
-		auto& count_at_etry = passenger_counts[entry_id];
-		count_at_etry += 1;
-		auto draw_point = tn->getVertexPosition(entry_id);
-		draw_point += count_at_etry * make_point(0,-2);
-
-		cc->move_to(draw_point.x,draw_point.y);
-		cc->arc(draw_point.x,draw_point.y, 0.5, 0, 2 * M_PI);
-		cc->stroke();
-	}
 }
 
 void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& cc) {
@@ -245,6 +221,90 @@ void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& c
 		cc->show_text(std::to_string((*wecs)[edge_index]).c_str());
 		cc->restore(); // restore to unrotated matrix
 	}
+}
+
+TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
+	auto tn = data.getTN();
+	auto passengers = data.getPassengers();
+	auto schedule = data.getSchedule();
+	auto p_rotues = data.getPassengerRoutes();
+
+	PassengerLocations retval;
+
+	if (!tn) { return retval; }
+	if (!passengers) { return retval; }
+
+	retval.passengers_at_stations = tn->makeStationMap<PassengerIdList>();
+	if (schedule) {
+		retval.passengers_on_trains = schedule->makeTrainMap<PassengerIdList>();
+	}
+
+	if (schedule && p_rotues) {
+
+		for (const auto& p : *passengers) {
+
+			const auto& route = p_rotues->getRoute(p);
+			const auto next_route_element_it = std::find_if(route.begin(), route.end(), [&](const auto& re) {
+				return re.getTime() > time;
+			});
+
+			if (next_route_element_it == route.begin()) {
+				// this passenger hasn't started yet
+				// also handles a empty route
+				continue;
+			}
+
+			const auto& current_route_element = *(next_route_element_it - 1);
+			const auto& current_location = current_route_element.getLocation();
+
+			if (next_route_element_it == route.end() && current_route_element.getTime() < time) {
+				// this passenger has exited the system
+				continue;
+			}
+
+			if (current_location.isStation()) {
+				retval.passengers_at_stations[current_location.asStationId().getValue()].push_back(p.getId());
+			} else if (current_location.isTrain()) {
+				retval.passengers_on_trains[current_location.asTrainId().getValue()].push_back(p.getId());
+			}
+		}
+	} else {
+		for (const auto& p : *passengers) {
+			retval.passengers_at_stations[p.getEntryId()].push_back(p.getId());
+		}
+	}
+
+	return retval;
+}
+
+void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerIdList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
+	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
+	auto is_animating = getIsAnimatingAndLock();
+	auto tn = data.getTN();
+	auto all_passengers = data.getPassengers();
+
+	if (!is_animating) { return; }
+	if (!tn) { return; }
+	if (!all_passengers) { return; }
+
+	// draw a dot for each passenger
+	for (const auto& pid_and_i : index_assoc_iterate(passengers)) {
+		const Passenger& p = (*all_passengers)[pid_and_i.v().getValue()];
+		if (time == p.getStartTime()) {
+			cc->set_source_rgb(0.0,1.0,0.0); // green
+		} else if (time > p.getStartTime()) {
+			cc->set_source_rgb(1.0,1.0,0.0); // yellow
+		} else {
+			cc->set_source_rgb(1.0,0.0,0.0); // red
+		}
+
+		// draw this one a bit farther away than the last
+		auto draw_point = point + (pid_and_i.i() + 1)* make_point(0,-2);
+
+		cc->move_to(draw_point.x,draw_point.y);
+		cc->arc(draw_point.x,draw_point.y, 0.5, 0, 2 * M_PI);
+	}
+	cc->stroke();
 }
 
 bool TrainsArea::causeAnimationFrame() {

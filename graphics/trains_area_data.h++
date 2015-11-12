@@ -2,9 +2,10 @@
 #ifndef UTIL__TRAINS_AREA_DATA_H
 #define UTIL__TRAINS_AREA_DATA_H
 
+#include <algo/passenger_routing.h++>
+#include <algo/scheduler.h++>
 #include <util/passenger.h++>
 #include <util/track_network.h++>
-#include <algo/scheduler.h++>
 
 #include <memory>
 #include <mutex>
@@ -33,6 +34,7 @@ private:
 	struct Results {
 		// stored using weak_ptr so that lifetime corresponds to external lifetime
 		std::weak_ptr<algo::Schedule> schedule;
+		std::weak_ptr<::algo::PassengerRoutes> passenger_routes;
 	};
 	struct Cache {
 		// PIMPL because Impl may contain windowing/drawing dependencies
@@ -80,6 +82,16 @@ public:
 		std::weak_ptr<algo::Schedule> new_schedule
 	);
 
+	/**
+	 * Display and Animate the results passed in
+	 */
+	void presentResultsWithRoutedPassengers(
+		std::weak_ptr<TrackNetwork> new_tn,
+		std::weak_ptr<PassengerList> new_passgrs,
+		std::weak_ptr<algo::Schedule> new_schedule,
+		std::weak_ptr<::algo::PassengerRoutes> new_passenger_routes
+	);
+
 private:
 	void setTrainsArea(TrainsArea* ta);
 	bool hasTrainsArea();
@@ -107,6 +119,7 @@ private:
 	std::shared_ptr<PassengerList> getPassengers();
 	std::shared_ptr<algo::Schedule> getSchedule();
 	std::shared_ptr<Data::WantedCapacityMap> getWantedEdgeCapacities();
+	std::shared_ptr<::algo::PassengerRoutes> getPassengerRoutes();
 
 	TrainsArea* trains_area;
 	Data data;

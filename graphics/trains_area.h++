@@ -19,6 +19,13 @@ public:
 	virtual ~TrainsArea() { }
 
 protected:
+	struct PassengerLocations {
+		::algo::TrainMap<PassengerIdList> passengers_on_trains;
+		StationMap<PassengerIdList> passengers_at_stations;
+
+		PassengerLocations() : passengers_on_trains(), passengers_at_stations() { }
+	};
+
 	virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cc) override;
 
 	// The various drawing functions. Each does nothing if the data it needs isn't available
@@ -27,10 +34,15 @@ protected:
 	// a caller must also lock data & state info to have guaranteed consistency
 	// between individual calls
 	void centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc);
-	void drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc);
-	void drawTrains(const Cairo::RefPtr<Cairo::Context>& cc);
-	void drawPassengers(const Cairo::RefPtr<Cairo::Context>& cc);
+	void drawTrackNetwork(const StationMap<PassengerIdList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc);
+	void drawTrains(const ::algo::TrainMap<PassengerIdList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc);
 	void drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& cc);
+
+	/// find out where the passengers are right now
+	PassengerLocations findPassengerLocaions();
+
+	/// draw all of passengers at that point
+	void drawPassengersAt(const geom::Point<float> point, const PassengerIdList& passengers, const Cairo::RefPtr<Cairo::Context>& cc);
 
 	/// step time forward and force a redraw
 	bool causeAnimationFrame();

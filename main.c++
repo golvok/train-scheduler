@@ -18,6 +18,8 @@
 int program_main();
 
 int main(int argc, char const** argv) {
+
+
 	dout.setHighestTitleRank(7);
 
 	auto parsed_args = parsing::cmdargs::parse(argc,argv);
@@ -76,14 +78,18 @@ int program_main() {
 		graphics::get().waitForPress();
 
 		// route passengers
-		::algo::PassengerRoutes p_routes = ::algo::route_passengers(*tn,*schedule,*passengers);
+		auto p_routes = std::make_shared<::algo::PassengerRoutes>();
+		*p_routes = ::algo::route_passengers(*tn,*schedule,*passengers);
 
-		::stats::ReportEngine report_engine(*tn,*passengers,*schedule,p_routes);
+		// display routed passengers
+		graphics::get().trainsArea().presentResultsWithRoutedPassengers(tn,passengers,schedule,p_routes);
+		graphics::get().waitForPress();
+
+		::stats::ReportEngine report_engine(*tn,*passengers,*schedule,*p_routes);
+
 		::stats::ReportConfig conf(::stats::ReportConfig::ReportType::PASSENGER_ROUTE_STATS);
 		std::ofstream report_file("reports.txt");
 		report_engine.report(conf,report_file);
-
-		graphics::get().waitForPress();
 	}
 
 	return 0;

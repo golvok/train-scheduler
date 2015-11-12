@@ -1,5 +1,7 @@
 #include "trains_area_data.h++"
 
+
+#include <algo/passenger_routing.h++>
 #include <graphics/trains_area.h++>
 #include <util/utils.h++>
 
@@ -99,6 +101,20 @@ void TrainsAreaData::presentResults(
 	results.schedule = new_schedule;
 }
 
+void TrainsAreaData::presentResultsWithRoutedPassengers(
+	std::weak_ptr<TrackNetwork> new_tn,
+	std::weak_ptr<PassengerList> new_passgrs,
+	std::weak_ptr<algo::Schedule> new_schedule,
+	std::weak_ptr<::algo::PassengerRoutes> new_passenger_routes
+) {
+	auto sdl = getScopedDataLock();
+	clear();
+
+	displayTNAndPassengers(new_tn, new_passgrs);
+	results.schedule = new_schedule;
+	results.passenger_routes = new_passenger_routes;
+}
+
 void TrainsAreaData::setTrainsArea(TrainsArea* ta) {
 	assert(ta != nullptr || !hasTrainsArea());
 	trains_area = ta;
@@ -131,6 +147,11 @@ std::shared_ptr<algo::Schedule> TrainsAreaData::getSchedule() {
 std::shared_ptr<TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWantedEdgeCapacities() {
 	auto sdl = getScopedDataLock();
 	return data.wanted_edge_capacities.lock();
+}
+
+std::shared_ptr<::algo::PassengerRoutes> TrainsAreaData::getPassengerRoutes() {
+	auto sdl = getScopedDataLock();
+	return results.passenger_routes.lock();
 }
 
 } // end namespace graphics
