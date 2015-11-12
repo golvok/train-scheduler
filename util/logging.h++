@@ -31,7 +31,8 @@ namespace DebugLevel {
 		TR_D3, // Train Routing lowest level debug
 		PR_D1, // Passenger Routing debug
 		PR_D2, // Passenger Routing debug level 2
-		PR_D3, // Passenger Routing lowest level debug
+		PR_D3, // Passenger Routing debug level 3
+		PR_D4, // Passenger Routing lowest level debug
 
 		LEVEL_COUNT, // please make sure this is at the end
 	};

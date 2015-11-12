@@ -16,7 +16,7 @@ namespace DebugLevel {
 		return {
 			WC_D1, WC_D2, WC_D3,
 			TR_D1, TR_D2, TR_D3,
-			PR_D1, PR_D2, PR_D3,
+			PR_D1, PR_D2, PR_D3, PR_D4
 		};
 	}
 
@@ -29,7 +29,7 @@ namespace DebugLevel {
 	std::vector<std::vector<Level>> enable_chains {
 		{ WC_D3, WC_D2, WC_D1, },
 		{ TR_D3, TR_D2, TR_D1, },
-		{ PR_D3, PR_D2, PR_D1, },
+		{ PR_D4, PR_D3, PR_D2, PR_D1, },
 	};
 
 	std::vector<Level> getAllShouldBeEnabled(Level l) {
@@ -57,6 +57,7 @@ namespace DebugLevel {
 		{ PR_D1, "PR_D1" },
 		{ PR_D2, "PR_D2" },
 		{ PR_D3, "PR_D3" },
+		{ PR_D4, "PR_D4" },
 	};
 
 	std::pair<Level,bool> getFromString(std::string str) {

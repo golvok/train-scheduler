@@ -41,11 +41,16 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 	// so that the iteration will not just end after that path
 	// fails to return a vertex
 
-	dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << "'s " << out_edge_index << " out edge\n";
+	dout(DL::PR_D4) << "constructing " << std::make_pair(src,tn) << "'s " << out_edge_index << " out edge\n";
 	if (out_edge_index == STGA::out_edge_iterator::END_VAL) {
-		dout(DL::PR_D3) << "\twas end edge\n";
+		dout(DL::PR_D4) << "\twas end edge\n";
 		return STGA::vertex_descriptor();
 	}
+
+	auto print_edge_first = [&](auto&& next_vd) {
+		dout(DL::PR_D4) << "\tedge is " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
+		return next_vd;
+	};
 
 	if (src.getLocation().isTrain()) {
 		// if this vertex is a train, return the current station,
@@ -58,8 +63,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 				src.getTime() + 1, // TODO get delay as a function of station & train
 				tn.getStationIdByVertexId(src.getVertex())
 			);
-			dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
-			return next_vd;
+			return print_edge_first(next_vd);
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
 			// return the next place the train is going (or not if it isn't)
 			const auto& train = sch.getTrain(src.getLocation().asTrainId());
@@ -81,8 +85,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 					) / train.getSpeed(),
 					train.getId()
 				);
-				dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
-				return next_vd;
+				return print_edge_first(next_vd);
 			}
 		}
 	} else if (src.getLocation().isStation()) {
@@ -121,8 +124,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 							time_to_here,
 							train.getId()
 						);
-						dout(DL::PR_D3) << "constructing " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
-						return next_vd;
+						return print_edge_first(next_vd);
 					}
 
 					// otherwise, increment for the next one
@@ -132,7 +134,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 		}
 	}
 
-	dout(DL::PR_D3) << "\twas end edge\n";
+	dout(DL::PR_D4) << "\twas end edge\n";
 	return STGA::vertex_descriptor(); // return end node if nothing found.
 }
 
