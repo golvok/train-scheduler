@@ -44,6 +44,17 @@ namespace fake_data {
 			{"G0",{240,-40}},
 			{"G1",{240,+40}},
 		},
+		{
+			{"C", {  0,  0}},
+			{"A1",{-80,  0}},
+			{"B1",{-40,  0}},
+			{"D1",{ 40,  0}},
+			{"E1",{ 80,  0}},
+			{"A2",{  0,-80}},
+			{"B2",{  0,-40}},
+			{"D2",{  0, 40}},
+			{"E2",{  0, 80}},
+		},
 	};
 
 	std::vector<std::vector<std::tuple<std::string, std::string, uint>>> graphs {
@@ -83,6 +94,18 @@ namespace fake_data {
 			std::make_tuple("F", "G0",1),
 			std::make_tuple("F", "G1",1),
 		},
+		{
+			std::make_tuple("A1"," ", 0),
+			std::make_tuple("A1","A2",1),
+			std::make_tuple("A1","B1",1),
+			std::make_tuple("B1","C" ,1),
+			std::make_tuple("C", "D1",1),
+			std::make_tuple("D1","E1",1),
+			std::make_tuple("A2","B2",1),
+			std::make_tuple("B2","C" ,1),
+			std::make_tuple("C", "D2",1),
+			std::make_tuple("D2","E2",1),
+		},
 	};
 
 	std::vector<std::vector<std::tuple<std::string, std::string, std::string, uint>>> passengers {
@@ -117,6 +140,14 @@ namespace fake_data {
 			std::make_tuple("pA-G1_1","A" ,"G1", 1),
 			std::make_tuple("pC0-G0", "C0","G0", 1),
 			std::make_tuple("pC1-G0", "C0","G0", 1),
+		},
+		{
+			std::make_tuple(" "       , " ",  " ",  3),
+			std::make_tuple("pA1-E1_0", "A1", "E1", 1),
+			std::make_tuple("pA1-E1_1", "A1", "E1", 1),
+			std::make_tuple("pA1-E1_2", "A1", "E1", 1),
+			std::make_tuple("pA2-E2",   "A2", "E2", 1),
+			std::make_tuple("pB1-E2",   "B1", "E2", 1),
 		},
 	};
 }
