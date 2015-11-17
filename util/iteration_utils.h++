@@ -24,8 +24,8 @@ public:
 	iterator_pair_adapter& operator=(const iterator_pair_adapter& src) { t = src.t; }
 	iterator_pair_adapter& operator=(iterator_pair_adapter&& src) { t = std::move(src.t); }
 
-	auto begin() -> decltype(t.first) { return t.first; }
-	auto end() -> decltype(t.second) { return t.second; }
+	auto begin() { return t.first; }
+	auto end() { return t.second; }
 };
 
 /**
@@ -34,8 +34,8 @@ public:
  * Example:
  *
  * std::pair<iterator_type> it_pair = get_begin_and_end()
- * for (auto it : make_iterable(it_pair)) {
- *     std::cout << *it << '\n';
+ * for (auto elem : make_iterable(it_pair)) {
+ *     std::cout << elem << '\n';
  * }
  */
 template<typename PAIR_TYPE>
@@ -55,7 +55,7 @@ public:
 
 	auto it() const { return src->it(); }
 	auto i() const { return src->i(); }
-	auto& v() const { return *it(); }
+	auto& v() const { return src->v(); }
 
 	index_associative_iteratior_value(const IA_ITERATOR& src) : src(&src) {}
 	index_associative_iteratior_value(const index_associative_iteratior_value& src) = default;
@@ -68,9 +68,9 @@ public:
 template<typename ITERATOR, typename INDEX>
 class index_associative_iteratior {
 public:
-	typedef ITERATOR iterator_type;
-	typedef INDEX size_type;
-	typedef index_associative_iteratior_value<index_associative_iteratior> value_type;
+	using iterator_type = ITERATOR;
+	using size_type     = INDEX;
+	using value_type    = index_associative_iteratior_value<index_associative_iteratior>;
 private:
 	iterator_type iter;
 	size_type index;
@@ -92,6 +92,7 @@ public:
 
 	iterator_type it() const { return iter; }
 	size_type i() const { return index; }
+	auto& v() const { return *iter; }
 };
 
 template<typename CONTAINER, typename ITERATOR>
@@ -120,7 +121,7 @@ public:
  * Example:
  * std::vector<int> some_ints { 1, 5, 7, 8, 1, };
  * for (auto iter : index_assoc_iterate(some_ints)) {
- *     std::cout << "There's a " *iter.it() << " at " << iter.i() << '\n';
+ *     std::cout << "There's a " iter.v() << " at " << iter.i() << '\n';
  * }
  *
  * Example's Output:
@@ -152,10 +153,10 @@ class container_concat_adapter_iterator {
 public:
 	ADAPTER& adapter;
 
-	typedef typename std::remove_reference<decltype(adapter.get_containers().begin())>::type container_iter_type;
+	using container_iter_type = typename std::remove_reference<decltype(adapter.get_containers().begin())>::type;
 	container_iter_type container_iter;
 
-	typedef typename std::remove_reference<decltype((*adapter.get_containers().begin())->begin())>::type iterator_type;
+	using iterator_type = typename std::remove_reference<decltype((*adapter.get_containers().begin())->begin())>::type;
 	iterator_type iter;
 
 	container_concat_adapter_iterator(ADAPTER& a, container_iter_type ci, iterator_type i)
@@ -196,11 +197,11 @@ template<typename CONTAINER, size_t SIZE_MINUS_ONE>
 class container_concat_adapter {
 public:
 	std::array<CONTAINER*,SIZE_MINUS_ONE + 1> containers;
-	typedef CONTAINER container_type;
-	typedef typename CONTAINER::size_type size_type;
-	typedef container_concat_adapter_iterator<container_concat_adapter> iterator_type;
+	using container_type = CONTAINER;
+	using size_type      = typename CONTAINER::size_type;
+	using iterator_type  = container_concat_adapter_iterator<container_concat_adapter>;
 
-	container_concat_adapter(const decltype(containers)& cs)
+	container_concat_adapter(const decltype(containers)&& cs)
 		: containers(cs)
 	{ }
 
@@ -222,7 +223,7 @@ public:
 /**
  * Allows runtime "concatination" of containers, from the perspective of iteration.
  * Ie. iterate over a set of containers as if the were one, but without actually
- * combining or copying them. All containers must be convertable to the type of the first.\
+ * combining or copying them. All containers must be convertable to the type of the first.
  * Any number of containers may be empty.
  * Example:
  *
