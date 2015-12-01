@@ -21,3 +21,6 @@ EXE/train-sch
 
 # YCM compiled config
 .ycm_extra_conf.pyc
+
+# misc
+train-sch.sublime-workspace
