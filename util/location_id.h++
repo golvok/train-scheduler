@@ -8,7 +8,7 @@
 struct LocationIdTag { static const uint DEFAULT_VALUE = -1; };
 class LocationId : public ::util::ID<
 	std::common_type_t<
-		::algo::Train::TrainId::IdType,
+		::algo::TrainID::IdType,
 		StationId::IdType
 	>,
 	LocationIdTag
@@ -18,16 +18,16 @@ private:
 public:
 	static const IdType TRAIN_FLAG = ((IdType)(-1)) & ~(((IdType)(-1)) >> 1);
 
-	LocationId(::algo::Train::TrainId tid) : ID(tid.getValue() | TRAIN_FLAG) { }
+	LocationId(::algo::TrainID tid) : ID(tid.getValue() | TRAIN_FLAG) { }
 	LocationId(StationId sid) : ID(sid.getValue()) { }
 	LocationId() : ID() { }
 
 	bool isTrain() const { return (getValue() & TRAIN_FLAG) != 0; }
 	bool isStation() const { return (getValue() & TRAIN_FLAG) == 0; }
 
-	::algo::Train::TrainId asTrainId() const {
+	::algo::TrainID asTrainId() const {
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
-		return ::util::make_id<::algo::Train::TrainId>(getValue() & (~TRAIN_FLAG));
+		return ::util::make_id<::algo::TrainID>(getValue() & (~TRAIN_FLAG));
 	}
 	StationId asStationId() const {
 		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }

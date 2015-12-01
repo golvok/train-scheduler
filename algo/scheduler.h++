@@ -7,16 +7,17 @@
 
 namespace algo {
 
+struct TrainIDTagType {
+	const static uint DEFAULT_VALUE = -1;
+};
+using TrainID = ::util::ID<uint,TrainIDTagType>;
+
 class Train {
-	struct TrainIdTagType {
-		const static uint DEFAULT_VALUE = -1;
-	};
 public:
 	using Speed = float;
-	using TrainId = ::util::ID<uint,TrainIdTagType>;
 
 	Train(
-		const TrainId train_id,
+		const TrainID train_id,
 		std::vector<TrackNetwork::ID>&& route_,
 		uint departure_time
 	)
@@ -32,7 +33,7 @@ public:
 	Train& operator=(Train&&) = default;
 
 	// getters
-	TrainId getId() const { return train_id; }
+	TrainID getId() const { return train_id; }
 	auto& getRoute() { return route; }
 	const auto& getRoute() const { return route; }
 	TrackNetwork::ID getEntryId() const { return route.front(); }
@@ -41,7 +42,7 @@ public:
 	Speed getSpeed() const { return speed; }
 
 private:
-	TrainId train_id;
+	TrainID train_id;
 	std::vector<TrackNetwork::ID> route;
 	uint departure_time;
 	Speed speed;
@@ -72,8 +73,8 @@ public:
 	std::vector<Train>& getTrains() { return trains; }
 	const std::vector<Train>& getTrains() const { return trains; }
 
-	Train& getTrain(Train::TrainId id) { return getTrains()[id.getValue()]; }
-	const Train& getTrain(Train::TrainId id) const { return getTrains()[id.getValue()]; }
+	Train& getTrain(TrainID id) { return getTrains()[id.getValue()]; }
+	const Train& getTrain(TrainID id) const { return getTrains()[id.getValue()]; }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeTrainMap(ARGS&&... args) {
