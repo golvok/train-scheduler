@@ -25,7 +25,7 @@ public:
 	bool isTrain() const { return (getValue() & TRAIN_FLAG) != 0; }
 	bool isStation() const { return (getValue() & TRAIN_FLAG) == 0; }
 
-	::algo::TrainID asTrainId() const {
+	::algo::TrainID asTrainID() const {
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
 		return ::util::make_id<::algo::TrainID>(getValue() & (~TRAIN_FLAG));
 	}
@@ -38,7 +38,7 @@ public:
 		if (getValue() == DEFAULT_VALUE) {
 			os << "<DEFAULT>";
 		} else if (isTrain()) {
-			os << 't' << asTrainId().getValue();
+			os << 't' << asTrainID().getValue();
 		} else if (isStation()) {
 			os << 's' << asStationId().getValue();
 		}

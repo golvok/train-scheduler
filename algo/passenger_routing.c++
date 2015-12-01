@@ -131,7 +131,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 		}
 		if (
 			   (vd.getLocation().isTrain() && prev.getLocation().isTrain())
-			&& (vd.getLocation().asTrainId() != prev.getLocation().asTrainId())
+			&& (vd.getLocation().asTrainID() != prev.getLocation().asTrainID())
 		) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
 				str << "going from a Train to a different Train: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);

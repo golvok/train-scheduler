@@ -66,7 +66,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			return print_edge_first(next_vd);
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
 			// return the next place the train is going (or not if it isn't)
-			const auto& train = sch.getTrain(src.getLocation().asTrainId());
+			const auto& train = sch.getTrain(src.getLocation().asTrainID());
 			auto current_it = std::find(train.getRoute().begin(), train.getRoute().end(), src.getVertex());
 			if (current_it == train.getRoute().end()) {
 				std::ostringstream err;
