@@ -15,10 +15,10 @@ class Schedule;
 class PassengerRoutes {
 public:
 	class RouteElement {
-		LocationId location;
+		LocationID location;
 		TrackNetwork::Time time;
 	public:
-		RouteElement(LocationId location, TrackNetwork::Time time)
+		RouteElement(LocationID location, TrackNetwork::Time time)
 			: location(location), time(time)
 		{ }
 
@@ -34,21 +34,21 @@ public:
 	using InternalRouteType = std::vector<RouteElement>;
 	using RouteType = InternalRouteType; // for now...
 private:
-	std::unordered_map<PassengerId,InternalRouteType> routes;
+	std::unordered_map<PassengerID,InternalRouteType> routes;
 public:
 
 	PassengerRoutes() : routes() { }
 
 	template<typename ROUTE>
 	void addRoute(const Passenger& p, ROUTE&& route) {
-		auto emplace_results = routes.emplace(p.getId(), std::forward<ROUTE>(route));
+		auto emplace_results = routes.emplace(p.getID(), std::forward<ROUTE>(route));
 		if (emplace_results.second == false) {
 			emplace_results.first->second = std::forward<ROUTE>(route);
 		}
 	}
 
 	const RouteType& getRoute(const Passenger& p) const {
-		auto find_results = routes.find(p.getId());
+		auto find_results = routes.find(p.getID());
 		if (find_results == routes.end()) {
 			throw std::invalid_argument(
 				std::string(__PRETTY_FUNCTION__) + ": do not have route for passenger " + p.getName()

@@ -123,12 +123,12 @@ protected:
 
 	template<typename ID_TYPE, typename... ARGS>
 	friend auto make_id(ARGS&&... args) -> std::enable_if_t<
-		std::is_base_of<typename ID_TYPE::ThisIdType,ID_TYPE>::value,
+		std::is_base_of<typename ID_TYPE::ThisIDType,ID_TYPE>::value,
 		ID_TYPE
 	>;
 public:
-	using IdType = id_type;
-	using ThisIdType = ID<id_type,TAG>;
+	using IDType = id_type;
+	using ThisIDType = ID<id_type,TAG>;
 	const static id_type DEFAULT_VALUE = TAG::DEFAULT_VALUE;
 
 	ID() : value(TAG::DEFAULT_VALUE) { }
@@ -139,7 +139,7 @@ public:
 
 template<typename ID_TYPE, typename... ARGS>
 auto make_id(ARGS&&... args) -> std::enable_if_t<
-	std::is_base_of<typename ID_TYPE::ThisIdType,ID_TYPE>::value,
+	std::is_base_of<typename ID_TYPE::ThisIDType,ID_TYPE>::value,
 	ID_TYPE
 > {
 	return ID_TYPE(std::forward<ARGS>(args)...);

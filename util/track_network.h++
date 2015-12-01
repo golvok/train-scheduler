@@ -11,10 +11,10 @@
 
 #include <util/graph_utils.h++> // needs to be after the graph definition
 
-struct StationIdTag {
+struct StationIDTag {
 	static const uint DEFAULT_VALUE = -1;
 };
-using StationId = ::util::ID<uint, StationIdTag>;
+using StationID = ::util::ID<uint, StationIDTag>;
 
 class TrackNetwork {
 public:
@@ -77,12 +77,12 @@ public:
 	EdgeIndex getEdgeIndex(EdgeID eid) const;
 	EdgeWeightMap makeEdgeWeightMapCopy() const;
 
-	StationId getStationIdByVertexId(ID id) const { return ::util::make_id<StationId>(id); }
-	ID getVertexIdByStationId(StationId sid) const { return sid.getValue(); }
+	StationID getStationIDByVertexID(ID id) const { return ::util::make_id<StationID>(id); }
+	ID getVertexIDByStationID(StationID sid) const { return sid.getValue(); }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeStationMap(ARGS&&... args) {
-		// maybe add a wrapper that forces operator [] to only accept StationId
+		// maybe add a wrapper that forces operator [] to only accept StationID
 		// inherit from vector, use templae vararg function to call base?
 		return ::util::makeVertexMap<MAPPED_TYPE>(g(), std::forward<ARGS>(args)...);
 	}

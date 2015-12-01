@@ -11,7 +11,7 @@ namespace util {
 
 /**
  * return the shortest route according to WEIGHT_MAP
- * from p.getEntryId() to p.getExitId()
+ * from p.getEntryID() to p.getExitID()
  */
 template<typename WEIGHT_MAP>
 std::vector<TrackNetwork::ID> get_shortest_route(
@@ -20,8 +20,8 @@ std::vector<TrackNetwork::ID> get_shortest_route(
 	const WEIGHT_MAP& weight_map
 ) {
 	return get_shortest_route(
-		p.getEntryId(),
-		p.getExitId(),
+		p.getEntryID(),
+		p.getExitID(),
 		tn.g(),
 		weight_map
 	);
@@ -55,7 +55,7 @@ inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_
 	for (auto passenger : passengers) {
 		dout(DL::INFO) << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
 
-		auto route = get_shortest_route(passenger.getEntryId(),passenger.getExitId(),network);
+		auto route = get_shortest_route(passenger.getEntryID(),passenger.getExitID(),network);
 
 		passenger2route.emplace(passenger,std::move(route));
 

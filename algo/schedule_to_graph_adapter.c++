@@ -61,7 +61,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			STGA::vertex_descriptor next_vd (
 				src.getVertex(),
 				src.getTime() + 1, // TODO get delay as a function of station & train
-				tn.getStationIdByVertexId(src.getVertex())
+				tn.getStationIDByVertexID(src.getVertex())
 			);
 			return print_edge_first(next_vd);
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
@@ -83,7 +83,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 						tn.g(),
 						boost::edge(*current_it,next,tn.g()).first
 					) / train.getSpeed(),
-					train.getId()
+					train.getID()
 				);
 				return print_edge_first(next_vd);
 			}
@@ -122,7 +122,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 						STGA::vertex_descriptor next_vd (
 							*vertex_it,
 							time_to_here,
-							train.getId()
+							train.getID()
 						);
 						return print_edge_first(next_vd);
 					}

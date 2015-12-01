@@ -33,11 +33,11 @@ public:
 	Train& operator=(Train&&) = default;
 
 	// getters
-	TrainID getId() const { return train_id; }
+	TrainID getID() const { return train_id; }
 	auto& getRoute() { return route; }
 	const auto& getRoute() const { return route; }
-	TrackNetwork::ID getEntryId() const { return route.front(); }
-	TrackNetwork::ID getExitId() const { return route.back(); }
+	TrackNetwork::ID getEntryID() const { return route.front(); }
+	TrackNetwork::ID getExitID() const { return route.back(); }
 	uint getDepartureTime() const { return departure_time; }
 	Speed getSpeed() const { return speed; }
 

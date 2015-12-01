@@ -25,14 +25,14 @@ class vertex_descriptor {
 
 	TrackNetwork::ID vertex;
 	TrackNetwork::Time time;
-	LocationId location;
+	LocationID location;
 
-	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, LocationId location)
+	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, LocationID location)
 		: vertex(v), time(t), location(location)
 	{ }
 public:
 	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, const TrackNetwork& tn)
-		: vertex(v), time(t), location(tn.getStationIdByVertexId(v))
+		: vertex(v), time(t), location(tn.getStationIDByVertexID(v))
 	{ }
 	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, TrainID train_id)
 		: vertex(v), time(t), location(train_id)

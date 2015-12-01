@@ -100,7 +100,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 	}
 }
 
-void TrainsArea::drawTrackNetwork(const StationMap<PassengerIdList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrackNetwork(const StationMap<PassengerIDList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
 
@@ -128,11 +128,11 @@ void TrainsArea::drawTrackNetwork(const StationMap<PassengerIdList>& passengers_
 		}
 
 		cc->stroke();
-		drawPassengersAt(v,passengers_at_stations[tn->getStationIdByVertexId(vi).getValue()],cc);
+		drawPassengersAt(v,passengers_at_stations[tn->getStationIDByVertexID(vi).getValue()],cc);
 	}
 }
 
-void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIdList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto schedule = data.getSchedule();
@@ -183,7 +183,7 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIdList>& passengers_
 				cc->set_source_rgb(0.0,0.0,1.0); // blue
 				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
 				cc->stroke();
-				drawPassengersAt(p,passengers_on_trains[train.getId().getValue()],cc);
+				drawPassengersAt(p,passengers_on_trains[train.getID().getValue()],cc);
 				break;
 			}
 
@@ -234,9 +234,9 @@ TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
 	if (!tn) { return retval; }
 	if (!passengers) { return retval; }
 
-	retval.passengers_at_stations = tn->makeStationMap<PassengerIdList>();
+	retval.passengers_at_stations = tn->makeStationMap<PassengerIDList>();
 	if (schedule) {
-		retval.passengers_on_trains = schedule->makeTrainMap<PassengerIdList>();
+		retval.passengers_on_trains = schedule->makeTrainMap<PassengerIDList>();
 	}
 
 	if (schedule && p_rotues) {
@@ -263,21 +263,21 @@ TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
 			}
 
 			if (current_location.isStation()) {
-				retval.passengers_at_stations[current_location.asStationId().getValue()].push_back(p.getId());
+				retval.passengers_at_stations[current_location.asStationID().getValue()].push_back(p.getID());
 			} else if (current_location.isTrain()) {
-				retval.passengers_on_trains[current_location.asTrainID().getValue()].push_back(p.getId());
+				retval.passengers_on_trains[current_location.asTrainID().getValue()].push_back(p.getID());
 			}
 		}
 	} else {
 		for (const auto& p : *passengers) {
-			retval.passengers_at_stations[p.getEntryId()].push_back(p.getId());
+			retval.passengers_at_stations[p.getEntryID()].push_back(p.getID());
 		}
 	}
 
 	return retval;
 }
 
-void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerIdList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerIDList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();

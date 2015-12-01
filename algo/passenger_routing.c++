@@ -59,8 +59,8 @@ PassengerRoutes route_passengers(
 		auto pass_indent = dout(DL::PR_D1).indentWithTitle([&](auto&& s){ s << "Passenger " << passenger.getName(); });
 
 		// TODO: change next line to use actual leave time when TR and WC understand time...
-		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryId(),0,tn);
-		auto goal_vertex = passenger.getExitId();
+		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryID(),0,tn);
+		auto goal_vertex = passenger.getExitID();
 
 		auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
 			[&](const STGA::vertex_descriptor& vd) -> TrackNetwork::Weight {
@@ -163,7 +163,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 
 	::util::print_route(path, dout(DL::PR_D1), [&](auto&& str, auto&& elem) {
 		if (elem.getLocation().isStation()) {
-			str << '{' << tn.getVertexName(tn.getVertexIdByStationId(elem.getLocation().asStationId()));
+			str << '{' << tn.getVertexName(tn.getVertexIDByStationID(elem.getLocation().asStationID()));
 		} else {
 			str << "{l=" << elem.getLocation();
 		}

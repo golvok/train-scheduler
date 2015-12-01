@@ -5,22 +5,22 @@
 #include <algo/scheduler.h++>
 #include <util/track_network.h++>
 
-struct LocationIdTag { static const uint DEFAULT_VALUE = -1; };
-class LocationId : public ::util::ID<
+struct LocationIDTag { static const uint DEFAULT_VALUE = -1; };
+class LocationID : public ::util::ID<
 	std::common_type_t<
-		::algo::TrainID::IdType,
-		StationId::IdType
+		::algo::TrainID::IDType,
+		StationID::IDType
 	>,
-	LocationIdTag
+	LocationIDTag
 > {
 private:
-	LocationId(IdType val) : ID(val) { }
+	LocationID(IDType val) : ID(val) { }
 public:
-	static const IdType TRAIN_FLAG = ((IdType)(-1)) & ~(((IdType)(-1)) >> 1);
+	static const IDType TRAIN_FLAG = ((IDType)(-1)) & ~(((IDType)(-1)) >> 1);
 
-	LocationId(::algo::TrainID tid) : ID(tid.getValue() | TRAIN_FLAG) { }
-	LocationId(StationId sid) : ID(sid.getValue()) { }
-	LocationId() : ID() { }
+	LocationID(::algo::TrainID tid) : ID(tid.getValue() | TRAIN_FLAG) { }
+	LocationID(StationID sid) : ID(sid.getValue()) { }
+	LocationID() : ID() { }
 
 	bool isTrain() const { return (getValue() & TRAIN_FLAG) != 0; }
 	bool isStation() const { return (getValue() & TRAIN_FLAG) == 0; }
@@ -29,9 +29,9 @@ public:
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
 		return ::util::make_id<::algo::TrainID>(getValue() & (~TRAIN_FLAG));
 	}
-	StationId asStationId() const {
+	StationID asStationID() const {
 		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }
-		return ::util::make_id<StationId>(getValue());
+		return ::util::make_id<StationID>(getValue());
 	}
 
 	void print(std::ostream& os) const {
@@ -40,12 +40,12 @@ public:
 		} else if (isTrain()) {
 			os << 't' << asTrainID().getValue();
 		} else if (isStation()) {
-			os << 's' << asStationId().getValue();
+			os << 's' << asStationID().getValue();
 		}
 	}
 };
 
-inline std::ostream& operator<<(std::ostream& os, LocationId loc) {
+inline std::ostream& operator<<(std::ostream& os, LocationID loc) {
 	loc.print(os);
 	return os;
 }
