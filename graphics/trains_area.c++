@@ -146,10 +146,8 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 	auto& g = tn->g();
 
 
-	for (auto& train : schedule->getTrains()) {
-		if (train.getDepartureTime() > time) {
-			continue; // train hasn't left yet
-		}
+	for (auto& train_ref : schedule->getAllTrainsVisibleAt(time)) {
+		auto& train = train_ref.get();
 
 		auto& route = train.getRoute();
 

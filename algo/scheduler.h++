@@ -74,6 +74,8 @@ public:
 	Train& getTrain(RouteId id) { return getTrains()[id.getValue()]; }
 	const Train& getTrain(RouteId id) const { return getTrains()[id.getValue()]; }
 
+	std::vector<std::reference_wrapper<Train>> getAllTrainsVisibleAt(TrackNetwork::Time time);
+
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeTrainMap(ARGS&&... args) {
 		return std::vector<MAPPED_TYPE>(trains.size(), std::forward<ARGS>(args)...);

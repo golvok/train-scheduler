@@ -12,6 +12,18 @@
 
 namespace algo {
 
+std::vector<std::reference_wrapper<Train>> Schedule::getAllTrainsVisibleAt(TrackNetwork::Time time) {
+	std::vector<std::reference_wrapper<Train>> retval;
+	std::copy_if(trains.begin(), trains.end(), std::back_inserter(retval), [&](auto& train) {
+		if (train.getDepartureTime() > time) {
+			return false;
+		} else {
+			return true;
+		}
+	});
+	return retval;
+}
+
 class Scheduler {
 	using EdgeWantedCapacities = std::vector<float>;
 	using TrainsGoToVertex = std::vector<bool>;
