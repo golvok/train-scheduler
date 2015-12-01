@@ -59,7 +59,7 @@ PassengerRoutes route_passengers(
 		auto pass_indent = dout(DL::PR_D1).indentWithTitle([&](auto&& s){ s << "Passenger " << passenger.getName(); });
 
 		// TODO: change next line to use actual leave time when TR and WC understand time...
-		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryId(),0,tn.getStationIdByVertexId(passenger.getEntryId()));
+		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryId(),0,tn);
 		auto goal_vertex = passenger.getExitId();
 
 		auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(

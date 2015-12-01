@@ -26,11 +26,18 @@ class vertex_descriptor {
 	TrackNetwork::ID vertex;
 	TrackNetwork::Time time;
 	LocationId location;
-public:
-	vertex_descriptor() : vertex(-1), time(-1), location() { }
+
 	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, LocationId location)
 		: vertex(v), time(t), location(location)
 	{ }
+public:
+	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, const TrackNetwork& tn)
+		: vertex(v), time(t), location(tn.getStationIdByVertexId(v))
+	{ }
+	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, Train::TrainId train_id)
+		: vertex(v), time(t), location(train_id)
+	{ }
+	vertex_descriptor() : vertex(-1), time(-1), location() { }
 
 	vertex_descriptor(const vertex_descriptor&) = default;
 	vertex_descriptor(vertex_descriptor&&) = default;
