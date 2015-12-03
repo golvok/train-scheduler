@@ -143,8 +143,6 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 	if (!tn) { return; }
 	if (!schedule) { return; }
 
-	auto& g = tn->g();
-
 
 	for (auto& train_ref : schedule->getAllTrainsVisibleAt(time)) {
 		auto& train = train_ref.get();
@@ -162,10 +160,7 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 				continue; // skip first one.
 			}
 
-			auto edge_desc = boost::edge(prev_vertex,id,g).first;
-
-			float additional_time_to_next_vertex =
-				boost::get(&TrackNetwork::EdgeProperties::weight,g,edge_desc) / train.getSpeed();
+			float additional_time_to_next_vertex = train.getTravelTime(std::make_pair(prev_vertex,id), *tn);
 
 			// the next vertex would be too far, so it's currently on this edge
 			if ((time_until_prev_vertex + additional_time_to_next_vertex) >= time_in_nework) {

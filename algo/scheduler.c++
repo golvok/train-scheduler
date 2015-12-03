@@ -12,6 +12,21 @@
 
 namespace algo {
 
+TrackNetwork::Time Train::getTravelTime(
+	std::pair<TrackNetwork::ID, TrackNetwork::ID> edge,
+	const TrackNetwork& tn
+) const {
+	return (
+		boost::get(
+			&TrackNetwork::EdgeProperties::weight,
+			tn.g(),
+			boost::edge(edge.first, edge.second, tn.g()).first
+		)
+	) / (
+		getSpeed()
+	);
+}
+
 std::vector<std::reference_wrapper<Train>> Schedule::getAllTrainsVisibleAt(TrackNetwork::Time time) {
 	std::vector<std::reference_wrapper<Train>> retval;
 	std::copy_if(trains.begin(), trains.end(), std::back_inserter(retval), [&](auto& train) {

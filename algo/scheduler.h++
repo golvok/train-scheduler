@@ -39,6 +39,11 @@ public:
 	uint getDepartureTime() const { return departure_time; }
 	Speed getSpeed() const { return speed; }
 
+	TrackNetwork::Time getTravelTime(
+		std::pair<TrackNetwork::ID, TrackNetwork::ID> edge,
+		const TrackNetwork& tn
+	) const;
+
 private:
 	RouteId train_id;
 	std::vector<TrackNetwork::ID> route;

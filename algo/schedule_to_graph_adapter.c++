@@ -78,11 +78,10 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 				auto next = *(current_it + 1);
 				STGA::vertex_descriptor next_vd (
 					next,
-					src.getTime() + boost::get(
-						&TrackNetwork::EdgeProperties::weight,
-						tn.g(),
-						boost::edge(*current_it,next,tn.g()).first
-					) / train.getSpeed(),
+					src.getTime() + train.getTravelTime(
+						std::make_pair(*current_it,next),
+						tn
+					),
 					train.getID()
 				);
 				return print_edge_first(next_vd);
@@ -108,11 +107,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 				} else {
 					// add time to src vertex, so we know when the train gets to the next vertex
 					TrackNetwork::ID prev = *(vertex_it - 1);
-					time_to_here += boost::get(
-						&TrackNetwork::EdgeProperties::weight,
-						tn.g(),
-						boost::edge(prev,*vertex_it,tn.g()).first
-					) / train.getSpeed();
+					time_to_here += train.getTravelTime(std::make_pair(prev,*vertex_it),tn);
 				}
 
 				// if train goes through here, and it doesn't end here
