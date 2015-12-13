@@ -134,6 +134,10 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 				}
 			}
 		}
+	} else {
+		::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
+			str << "unexpected location type\n";
+		});
 	}
 
 	dout(DL::PR_D4) << "\twas end edge\n";
