@@ -12,33 +12,6 @@
 
 namespace algo {
 
-TrackNetwork::Time Train::getTravelTime(
-	std::pair<TrackNetwork::ID, TrackNetwork::ID> edge,
-	const TrackNetwork& tn
-) const {
-	return (
-		boost::get(
-			&TrackNetwork::EdgeProperties::weight,
-			tn.g(),
-			boost::edge(edge.first, edge.second, tn.g()).first
-		)
-	) / (
-		getSpeed()
-	);
-}
-
-std::vector<std::reference_wrapper<Train>> Schedule::getAllTrainsVisibleAt(TrackNetwork::Time time) {
-	std::vector<std::reference_wrapper<Train>> retval;
-	std::copy_if(trains.begin(), trains.end(), std::back_inserter(retval), [&](auto& train) {
-		if (train.getDepartureTime() > time) {
-			return false;
-		} else {
-			return true;
-		}
-	});
-	return retval;
-}
-
 class Scheduler {
 	using EdgeWantedCapacities = std::vector<float>;
 	using TrainsGoToVertex = std::vector<bool>;
@@ -137,10 +110,16 @@ Schedule Scheduler::do_schedule() {
 
 	auto train_routes = make_rotues(edge_wanted_capacities);
 
-	std::vector<Train> trains;
+	std::vector<TrainRoute> trains;
 
 	for(auto route_iai_iter : index_assoc_iterate(train_routes)) {
-		trains.emplace_back(::util::make_id<::algo::RouteId>(route_iai_iter.i()),std::move(*route_iai_iter),1);
+		trains.emplace_back(
+			::util::make_id<::algo::RouteId>(route_iai_iter.i()),
+			std::move(*route_iai_iter),
+			std::vector<TrackNetwork::Time>{ 0 }, // assumes all routes start at time 0
+			(*route_iai_iter).size(), // make it repeat after it's done for now
+			network
+		);
 	}
 
 	return Schedule("abc",std::move(trains));

@@ -145,9 +145,9 @@ namespace fake_data {
 			std::make_tuple(" "       , " ",  " ",  3),
 			std::make_tuple("pA1-E1_0", "A1", "E1", 1),
 			std::make_tuple("pA1-E1_1", "A1", "E1", 1),
-			std::make_tuple("pA1-E1_2", "A1", "E1", 1),
-			std::make_tuple("pA2-E2",   "A2", "E2", 1),
-			std::make_tuple("pB1-E2",   "B1", "E2", 1),
+			std::make_tuple("pA2-E2"  , "A2", "E2", 1),
+			std::make_tuple("pB1-E2_0", "B1", "E2", 1),
+			std::make_tuple("pB1-E2_1", "B1", "E2", 1),
 		},
 	};
 }

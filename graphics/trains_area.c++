@@ -143,9 +143,8 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 	if (!tn) { return; }
 	if (!schedule) { return; }
 
-
-	for (auto& train_ref : schedule->getAllTrainsVisibleAt(time)) {
-		auto& train = train_ref.get();
+	std::vector<::algo::Train> trains_in_network; // TODO move this to a "simulation" class/data member & fill it out
+	for (auto& train : trains_in_network) {
 
 		auto& route = train.getRoute();
 
@@ -160,7 +159,7 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 				continue; // skip first one.
 			}
 
-			float additional_time_to_next_vertex = train.getTravelTime(std::make_pair(prev_vertex,id), *tn);
+			float additional_time_to_next_vertex = train.getExpectedTravelTime(std::make_pair(prev_vertex,id), *tn);
 
 			// the next vertex would be too far, so it's currently on this edge
 			if ((time_until_prev_vertex + additional_time_to_next_vertex) >= time_in_nework) {
@@ -176,7 +175,7 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 				cc->set_source_rgb(0.0,0.0,1.0); // blue
 				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
 				cc->stroke();
-				drawPassengersAt(p,passengers_on_trains[train.getID().getValue()],cc);
+				drawPassengersAt(p,passengers_on_trains[train.getRouteID().getValue()],cc);
 				break;
 			}
 

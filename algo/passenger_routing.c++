@@ -53,7 +53,7 @@ PassengerRoutes route_passengers(
 
 	PassengerRoutes results;
 
-	const ScheduleToGraphAdapter baseGraph(tn,sch);
+	const ScheduleToGraphAdapter baseGraph(tn,sch,5); // TODO calculate station_lookahead_quanta from... something
 
 	for (auto passenger : passgrs) {
 		auto pass_indent = dout(DL::PR_D1).indentWithTitle([&](auto&& s){ s << "Passenger " << passenger.getName(); });

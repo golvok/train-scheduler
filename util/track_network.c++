@@ -1,5 +1,7 @@
 #include "track_network.h++"
 
+const TrackNetwork::ID TrackNetwork::INVALID_ID = -1;
+
 TrackNetwork::ID TrackNetwork::createVertex(const std::string& name, geom::Point<float> xy) {
 	decltype(name2id)::iterator pos;
 	bool inserted;
@@ -51,4 +53,12 @@ TrackNetwork::EdgeIndex TrackNetwork::getEdgeIndex(EdgeID eid) const {
 
 std::vector<TrackNetwork::Weight> TrackNetwork::makeEdgeWeightMapCopy() const {
 	return ::util::getEdgePropertyMapCopy<Weight>(g(),&EdgeProperties::index, &EdgeProperties::weight);
+}
+
+TrackNetwork::Weight TrackNetwork::getDistanceBetween(std::pair<ID,ID> edge) const {
+	return boost::get(
+		&TrackNetwork::EdgeProperties::weight,
+		g(),
+		boost::edge(edge.first, edge.second, g()).first
+	);
 }

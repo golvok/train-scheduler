@@ -65,6 +65,7 @@ $(EXE_DIR)train-sch: \
 	$(OBJ_DIR)algo/scheduler.o \
 	$(OBJ_DIR)algo/passenger_routing.o \
 	$(OBJ_DIR)algo/schedule_to_graph_adapter.o \
+	$(OBJ_DIR)algo/train_route.o \
 	$(OBJ_DIR)graphics/graphics.o \
 	$(OBJ_DIR)graphics/trains_area.o \
 	$(OBJ_DIR)graphics/trains_area_data.o \

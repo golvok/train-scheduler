@@ -5,6 +5,7 @@
 #include <util/utils.h++>
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <unordered_map>
 #include <limits>
 #include <vector>
@@ -19,6 +20,7 @@ using StationID = ::util::ID<uint, StationIDTag>;
 class TrackNetwork {
 public:
 	using Time = uint;
+	using TimeInterval = std::pair<Time,Time>;
 
 	using Weight = float;
 	using EdgeIndex = uint;
@@ -44,7 +46,7 @@ public:
 
 	using EdgeWeightMap = std::vector<Weight>;
 
-	static const ID INVALID_ID = -1;
+	static const ID INVALID_ID;
 private:
 	BackingGraphType backing_graph;
 	std::unordered_map<std::string,ID> name2id;
@@ -87,9 +89,35 @@ public:
 		return ::util::makeVertexMap<MAPPED_TYPE>(g(), std::forward<ARGS>(args)...);
 	}
 
+	Weight getDistanceBetween(std::pair<ID,ID> edge) const;
+
+	template<typename ITER, typename SPEED_FUNC>
+	Time sumTimeTakenWithCustomSpeed(::boost::iterator_range<ITER> range, SPEED_FUNC sf) const;
+
 };
 
 template<typename MAPPED_TYPE>
 using StationMap = decltype(TrackNetwork().makeStationMap<MAPPED_TYPE>());
+
+//// BEGIN ILINE & TEMPLATE FUNCTIONS ////
+
+template<typename ITER, typename SPEED_FUNC>
+TrackNetwork::Time TrackNetwork::sumTimeTakenWithCustomSpeed(::boost::iterator_range<ITER> range, SPEED_FUNC sf) const {
+	TrackNetwork::Time result;
+	auto current_edge = std::make_pair(TrackNetwork::INVALID_ID,TrackNetwork::INVALID_ID);
+	for (const auto& vid : range) {
+		current_edge.first = current_edge.second;
+		current_edge.second = vid;
+		if (current_edge.first != TrackNetwork::INVALID_ID) {
+			result += this->getDistanceBetween(
+				current_edge
+			) / (
+				sf(current_edge)
+			);
+		}
+	}
+	return result;
+}
+
 
 #endif /* GRAPH_H */

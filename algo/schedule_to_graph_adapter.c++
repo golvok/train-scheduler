@@ -1,7 +1,5 @@
 #include "schedule_to_graph_adapter.h++"
 
-#include <sstream>
-
 #include <util/logging.h++>
 
 namespace algo {
@@ -66,23 +64,23 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			return print_edge_first(next_vd);
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
 			// return the next place the train is going (or not if it isn't)
-			const auto& train = sch.getTrain(src.getLocation().asRouteId());
-			auto current_it = std::find(train.getRoute().begin(), train.getRoute().end(), src.getVertex());
-			if (current_it == train.getRoute().end()) {
-				std::ostringstream err;
-				err << "vertex " << std::make_pair(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
-				dout(DL::ERROR) << err.str();
-				throw std::invalid_argument(err.str());
+			const auto& train_route = sch.getTrainRoute(src.getLocation().asRouteId());
+			auto current_it = std::find(train_route.getRoute().begin(), train_route.getRoute().end(), src.getVertex());
+			if (current_it == train_route.getRoute().end()) {
+				::util::print_and_throw<std::invalid_argument>([&](auto&& err) {
+					err << "vertex " << std::make_pair(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
+				});
 			}
-			if (current_it + 1 != train.getRoute().end()) {
+			if (current_it + 1 != train_route.getRoute().end()) {
 				auto next = *(current_it + 1);
 				STGA::vertex_descriptor next_vd (
 					next,
-					src.getTime() + train.getTravelTime(
-						std::make_pair(*current_it,next),
+					src.getTime() + train_route.getExpectedTravelTime(
+						src.getTime(),
+						::boost::make_iterator_range(current_it, current_it + 2),
 						tn
 					),
-					train.getID()
+					train_route.getID()
 				);
 				return print_edge_first(next_vd);
 			}
@@ -91,39 +89,48 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 
 		STGA::degree_size_type current_out_edge_index = STGA::out_edge_iterator::BEGIN_VAL;
 
-		for (auto& train : sch.getTrains()) {
-			TrackNetwork::Time time_to_here = 0;
-			for (
-				auto vertex_it = train.getRoute().begin();
-				vertex_it != train.getRoute().end();
-				++vertex_it
-			) {
-				if (vertex_it == train.getRoute().end()) {
-					break; // skip last one
-				}
+		for (const auto& train_route : sch.getTrainRoutes()) {
 
-				if (vertex_it == train.getRoute().begin()) {
-					time_to_here = train.getDepartureTime();
-				} else {
-					// add time to src vertex, so we know when the train gets to the next vertex
-					TrackNetwork::ID prev = *(vertex_it - 1);
-					time_to_here += train.getTravelTime(std::make_pair(prev,*vertex_it),tn);
-				}
+			auto here_route_iter = std::find(train_route.getRoute().begin(), train_route.getRoute().end(), src.getVertex());
 
-				// if train goes through here, and it doesn't end here
-				if (*vertex_it == src.getVertex()) {
+			// does this route goes through here?
+			if (here_route_iter != train_route.getRoute().end()) {
+
+				// now find each train that does,
+				// and return the out_edge_index'th one
+
+				auto trains_in_interval = train_route.getTrainsAtVertexInInterval(
+					src.getVertex(),
+					std::make_pair(src.getTime(), src.getTime() + station_lookahead_quantum),
+					tn
+				);
+
+				for (const auto& train : trains_in_interval) {
 					if (out_edge_index == current_out_edge_index) {
-						// if this is the right one, return a vertex corresponding to it
-						STGA::vertex_descriptor next_vd (
-							*vertex_it,
-							time_to_here,
-							train.getID()
+						STGA::vertex_descriptor train_vd (
+							src.getVertex(),
+							train.getExpectedArrivalTime(
+								src.getVertex(),
+								tn
+							),
+							train.getRouteID()
 						);
-						return print_edge_first(next_vd);
+						return print_edge_first(train_vd);
+					} else {
+						current_out_edge_index += 1;
 					}
+				}
 
-					// otherwise, increment for the next one
-					current_out_edge_index += 1;
+				if (current_out_edge_index + 1 == out_edge_index) {
+					// if we get here, there are no more trains in this quantum
+					// so return a station vertex, with t+=quantum
+
+					STGA::vertex_descriptor here_again_vd (
+						src.getVertex(),
+						src.getTime() + station_lookahead_quantum,
+						src.getLocation()
+					);
+					return print_edge_first(here_again_vd);
 				}
 			}
 		}

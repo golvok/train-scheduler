@@ -160,10 +160,13 @@ private:
 
 	const TrackNetwork& tn;
 	const Schedule& sch;
+
+	TrackNetwork::Time station_lookahead_quantum;
 public:
-	ScheduleToGraphAdapter(const TrackNetwork& tn, const Schedule& sch)
+	ScheduleToGraphAdapter(const TrackNetwork& tn, const Schedule& sch, TrackNetwork::Time station_lookahead_quantum)
 		: tn(tn)
 		, sch(sch)
+		, station_lookahead_quantum(station_lookahead_quantum)
 	{ }
 
 	ScheduleToGraphAdapter(const ScheduleToGraphAdapter&) = default;

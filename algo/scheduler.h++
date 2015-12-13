@@ -1,94 +1,48 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include <algo/train_route.h++>
 #include <util/passenger.h++>
 #include <util/track_network.h++>
 #include <util/utils.h++>
 
 namespace algo {
 
-struct RouteIdTagType {
-	const static uint DEFAULT_VALUE = -1;
-};
-using RouteId = ::util::ID<uint,RouteIdTagType>;
-
-class Train {
-public:
-	using Speed = float;
-
-	Train(
-		const RouteId train_id,
-		std::vector<TrackNetwork::ID>&& route_,
-		uint departure_time
-	)
-		: train_id(train_id)
-		, route(std::move(route_))
-		, departure_time(departure_time)
-		, speed(0.5)
-	{ }
-
-	Train(const Train&) = default;
-	Train(Train&&) = default;
-	Train& operator=(const Train&) = default;
-	Train& operator=(Train&&) = default;
-
-	// getters
-	RouteId getID() const { return train_id; }
-	auto& getRoute() { return route; }
-	const auto& getRoute() const { return route; }
-	uint getDepartureTime() const { return departure_time; }
-	Speed getSpeed() const { return speed; }
-
-	TrackNetwork::Time getTravelTime(
-		std::pair<TrackNetwork::ID, TrackNetwork::ID> edge,
-		const TrackNetwork& tn
-	) const;
-
-private:
-	RouteId train_id;
-	std::vector<TrackNetwork::ID> route;
-	uint departure_time;
-	Speed speed;
-};
-
 class Schedule {
 public:
 	Schedule()
 		: name("")
-		, trains()
+		, train_routes()
 	{ }
 
 	Schedule(
 		const std::string& name,
-		std::vector<Train>&& trains
+		std::vector<TrainRoute>&& train_routes
 	)
 		: name(name)
-		, trains(std::move(trains))
+		, train_routes(std::move(train_routes))
 	{ }
 
-	Schedule(const Schedule&) = default;
+	Schedule(const Schedule&) = delete;
 	Schedule(Schedule&&) = default;
-	Schedule& operator=(const Schedule&) = default;
+	Schedule& operator=(const Schedule&) = delete;
 	Schedule& operator=(Schedule&&) = default;
 
 	// getters
 	const std::string& getName() const { return name; }
-	std::vector<Train>& getTrains() { return trains; }
-	const std::vector<Train>& getTrains() const { return trains; }
 
-	Train& getTrain(RouteId id) { return getTrains()[id.getValue()]; }
-	const Train& getTrain(RouteId id) const { return getTrains()[id.getValue()]; }
-
-	std::vector<std::reference_wrapper<Train>> getAllTrainsVisibleAt(TrackNetwork::Time time);
+	TrainRoute& getTrainRoute(RouteId id) { return train_routes[id.getValue()]; }
+	const TrainRoute& getTrainRoute(RouteId id) const { return train_routes[id.getValue()]; }
+	const auto& getTrainRoutes() const { return train_routes; }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeTrainMap(ARGS&&... args) {
-		return std::vector<MAPPED_TYPE>(trains.size(), std::forward<ARGS>(args)...);
+		return std::vector<MAPPED_TYPE>(train_routes.size(), std::forward<ARGS>(args)...);
 	}
 
 private:
 	std::string name;
-	std::vector<Train> trains;
+	std::vector<TrainRoute> train_routes;
 };
 
 template<typename MAPPED_TYPE>
