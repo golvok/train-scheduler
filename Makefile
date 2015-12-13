@@ -28,6 +28,11 @@ ifeq ($(BUILD_MODE),debug)
 	EXTRA_FLAGS += -ggdb -D DEBUG
 endif
 
+# add flags for release
+ifeq ($(BUILD_MODE),release)
+	EXTRA_FLAGS += -flto -O3
+endif
+
 LIBRARY_LINK_FLAGS += \
 	$(shell pkg-config --libs gtkmm-3.0) \
 	-lpthread
