@@ -31,6 +31,7 @@ endif
 # add flags for release
 ifeq ($(BUILD_MODE),release)
 	EXTRA_FLAGS += -flto -O3
+	EXTRA_FLAGS += -Wno-maybe-uninitialized # silence g++
 endif
 
 LIBRARY_LINK_FLAGS += \
