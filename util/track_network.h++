@@ -103,7 +103,7 @@ using StationMap = decltype(TrackNetwork().makeStationMap<MAPPED_TYPE>());
 
 template<typename ITER, typename SPEED_FUNC>
 TrackNetwork::Time TrackNetwork::sumTimeTakenWithCustomSpeed(::boost::iterator_range<ITER> range, SPEED_FUNC sf) const {
-	TrackNetwork::Time result;
+	TrackNetwork::Time result = 0;
 	auto current_edge = std::make_pair(TrackNetwork::INVALID_ID,TrackNetwork::INVALID_ID);
 	for (const auto& vid : range) {
 		current_edge.first = current_edge.second;
