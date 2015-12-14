@@ -120,19 +120,19 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 						current_out_edge_index += 1;
 					}
 				}
-
-				if (current_out_edge_index + 1 == out_edge_index) {
-					// if we get here, there are no more trains in this quantum
-					// so return a station vertex, with t+=quantum
-
-					STGA::vertex_descriptor here_again_vd (
-						src.getVertex(),
-						src.getTime() + station_lookahead_quantum,
-						src.getLocation()
-					);
-					return print_edge_first(here_again_vd);
-				}
 			}
+		}
+
+		if (current_out_edge_index + 1 == out_edge_index) {
+			// if we get here, there are no more trains in this quantum
+			// so return a station vertex, with t+=quantum
+
+			STGA::vertex_descriptor here_again_vd (
+				src.getVertex(),
+				src.getTime() + station_lookahead_quantum,
+				src.getLocation()
+			);
+			return print_edge_first(here_again_vd);
 		}
 	} else {
 		::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
