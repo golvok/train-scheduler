@@ -7,13 +7,13 @@
 
 #include <iosfwd>
 
-struct PassengerIDTag { const static uint DEFAULT_VALUE = -1; };
-using PassengerID = ::util::ID<uint,PassengerIDTag>;
+struct PassengerIdTag { const static uint DEFAULT_VALUE = -1; };
+using PassengerId = ::util::ID<uint,PassengerIdTag>;
 
 class Passenger {
 private:
 	std::string name;
-	PassengerID id;
+	PassengerId id;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
 	uint start_time;
@@ -21,7 +21,7 @@ private:
 public:
 	Passenger(
 		const std::string& name,
-		PassengerID id,
+		PassengerId id,
 		TrackNetwork::ID entry_id,
 		TrackNetwork::ID exit_id,
 		uint start_time
@@ -33,7 +33,7 @@ public:
 		, start_time(start_time)
 	{}
 
-	PassengerID getID() const { return id; }
+	PassengerId getID() const { return id; }
 	const std::string& getName() const { return name; }
 	TrackNetwork::ID getEntryID() const { return entry_id; }
 	TrackNetwork::ID getExitID() const { return exit_id; }
@@ -44,7 +44,7 @@ public:
 	}
 };
 
-using PassengerIDList = std::vector<PassengerID>;
+using PassengerIdList = std::vector<PassengerId>;
 using PassengerList = std::vector<Passenger>;
 
 // std::ostream& operator<<(std::ostresam& os, const Passenger& p);
@@ -52,9 +52,9 @@ std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const Trac
 
 namespace std {
 	template<>
-	struct hash<PassengerID> {
-		size_t operator()(const PassengerID& pid) const {
-			return std::hash<PassengerID::IDType>()(pid.getValue());
+	struct hash<PassengerId> {
+		size_t operator()(const PassengerId& pid) const {
+			return std::hash<PassengerId::IDType>()(pid.getValue());
 		}
 	};
 }
@@ -63,7 +63,7 @@ namespace std {
 	template<>
 	struct hash<Passenger> {
 		size_t operator()(const Passenger& p) const {
-			return std::hash<PassengerID>()(p.getID());
+			return std::hash<PassengerId>()(p.getID());
 		}
 	};
 }

@@ -199,7 +199,7 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 		} else {
 			passengers.emplace_back(
 				std::get<0>(passenger),
-				::util::make_id<PassengerID>(passengers.size()),
+				::util::make_id<PassengerId>(passengers.size()),
 				tn.getVertex(std::get<1>(passenger)),
 				tn.getVertex(std::get<2>(passenger)),
 				// WC doesn't usderstand passengers that don't start at 0 yet
