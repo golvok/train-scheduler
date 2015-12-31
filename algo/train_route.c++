@@ -19,7 +19,7 @@ auto findFirstStartOffsetAfterOrAt(const TrackNetwork::Time& time_in_day, const 
 
 } // end anonymous namespace
 
-const RouteType& Train::getRoute() const { return train_route.getRoute(); }
+const TrainRoute& Train::getRoute() const { return train_route; }
 RouteId Train::getRouteID() const { return train_route.getID(); }
 
 TrainRoute::TrainRoute(
@@ -64,7 +64,7 @@ TrackNetwork::Time Train::getExpectedArrivalTime(
 	const TrackNetwork& tn
 ) const {
 	return getDepartureTime() + getExpectedTravelTime(
-		std::make_pair(getRoute().front(), to_here),
+		std::make_pair(getRoute().getPath().front(), to_here),
 		tn
 	);
 }
@@ -122,8 +122,8 @@ std::pair<size_t,size_t> TrainRoute::getTrainsAtVertexInInterval_impl(
 		interval.first / repeat_time, interval.second / repeat_time
 	);
 
-	const auto vid_in_route = std::find(getRoute().begin(), getRoute().end(), vid);
-	if (vid_in_route == getRoute().end()) {
+	const auto vid_in_route = std::find(getPath().begin(), getPath().end(), vid);
+	if (vid_in_route == getPath().end()) {
 		::util::print_and_throw<std::invalid_argument>([&](auto& msg) {
 			msg << vid << " isn't in route";
 		});
@@ -131,7 +131,7 @@ std::pair<size_t,size_t> TrainRoute::getTrainsAtVertexInInterval_impl(
 
 	const auto time_in_route_to_vid = getExpectedTravelTime(
 		*start_offsets.begin(),
-		{getRoute().begin(), vid_in_route},
+		{getPath().begin(), vid_in_route},
 		tn
 	);
 

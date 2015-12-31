@@ -51,7 +51,7 @@ public:
 		const TrackNetwork& tn
 	) const;
 
-	const RouteType& getRoute() const;
+	const TrainRoute& getRoute() const;
 	TrackNetwork::Time getDepartureTime() const { return departure_time; }
 	Speed getSpeed() const;
 	RouteId getRouteID() const;
@@ -101,7 +101,7 @@ public:
 	) const;
 
 	RouteId getID() const { return route_id; }
-	const auto& getRoute() const { return route; }
+	const auto& getPath() const { return route; }
 	Train::Speed getSpeed() const { return speed; }
 
 private:

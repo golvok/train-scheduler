@@ -65,13 +65,13 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
 			// return the next place the train is going (or not if it isn't)
 			const auto& train_route = sch.getTrainRoute(src.getLocation().asRouteId());
-			auto current_it = std::find(train_route.getRoute().begin(), train_route.getRoute().end(), src.getVertex());
-			if (current_it == train_route.getRoute().end()) {
+			auto current_it = std::find(train_route.getPath().begin(), train_route.getPath().end(), src.getVertex());
+			if (current_it == train_route.getPath().end()) {
 				::util::print_and_throw<std::invalid_argument>([&](auto&& err) {
 					err << "vertex " << std::make_pair(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
 				});
 			}
-			if (current_it + 1 != train_route.getRoute().end()) {
+			if (current_it + 1 != train_route.getPath().end()) {
 				auto next = *(current_it + 1);
 				STGA::vertex_descriptor next_vd (
 					next,
@@ -91,10 +91,10 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 
 		for (const auto& train_route : sch.getTrainRoutes()) {
 
-			auto here_route_iter = std::find(train_route.getRoute().begin(), train_route.getRoute().end(), src.getVertex());
+			auto here_route_iter = std::find(train_route.getPath().begin(), train_route.getPath().end(), src.getVertex());
 
 			// does this route goes through here?
-			if (here_route_iter != train_route.getRoute().end()) {
+			if (here_route_iter != train_route.getPath().end()) {
 
 				// now find each train that does,
 				// and return the out_edge_index'th one

@@ -146,7 +146,7 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIdList>& passengers_
 	std::vector<::algo::Train> trains_in_network; // TODO move this to a "simulation" class/data member & fill it out
 	for (auto& train : trains_in_network) {
 
-		auto& route = train.getRoute();
+		auto& route = train.getRoute().getPath();
 
 		TrainsArea::Time time_in_nework = time - train.getDepartureTime();
 		float time_until_prev_vertex = 0;
