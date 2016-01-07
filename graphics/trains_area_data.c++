@@ -19,7 +19,6 @@ public:
 TrainsAreaData::TrainsAreaData()
 	: trains_area(nullptr)
 	, data{}
-	, results{}
 	, cache{}
 	, data_mutex()
 {
@@ -40,7 +39,7 @@ void TrainsAreaData::clear() {
 	data.tn.reset();
 	data.passengers.reset();
 
-	results.schedule.reset();
+	data.schedule.reset();
 
 	if (hasTrainsArea()) {
 		trains_area->stopAnimating();
@@ -98,7 +97,7 @@ void TrainsAreaData::presentResults(
 	clear();
 
 	displayTNAndPassengers(new_tn, new_passgrs);
-	results.schedule = new_schedule;
+	data.schedule = new_schedule;
 }
 
 void TrainsAreaData::presentResultsWithRoutedPassengers(
@@ -111,8 +110,8 @@ void TrainsAreaData::presentResultsWithRoutedPassengers(
 	clear();
 
 	displayTNAndPassengers(new_tn, new_passgrs);
-	results.schedule = new_schedule;
-	results.passenger_routes = new_passenger_routes;
+	data.schedule = new_schedule;
+	data.passenger_routes = new_passenger_routes;
 }
 
 void TrainsAreaData::setTrainsArea(TrainsArea* ta) {
@@ -141,7 +140,7 @@ std::shared_ptr<PassengerList> TrainsAreaData::getPassengers() {
 
 std::shared_ptr<algo::Schedule> TrainsAreaData::getSchedule() {
 	auto sdl = getScopedDataLock();
-	return results.schedule.lock();
+	return data.schedule.lock();
 }
 
 std::shared_ptr<TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWantedEdgeCapacities() {
@@ -151,7 +150,7 @@ std::shared_ptr<TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWant
 
 std::shared_ptr<::algo::PassengerRoutes> TrainsAreaData::getPassengerRoutes() {
 	auto sdl = getScopedDataLock();
-	return results.passenger_routes.lock();
+	return data.passenger_routes.lock();
 }
 
 } // end namespace graphics

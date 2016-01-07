@@ -30,9 +30,6 @@ private:
 		std::weak_ptr<TrackNetwork> tn;
 		std::weak_ptr<PassengerList> passengers;
 		std::weak_ptr<WantedCapacityMap> wanted_edge_capacities;
-	};
-	struct Results {
-		// stored using weak_ptr so that lifetime corresponds to external lifetime
 		std::weak_ptr<algo::Schedule> schedule;
 		std::weak_ptr<::algo::PassengerRoutes> passenger_routes;
 	};
@@ -123,7 +120,6 @@ private:
 
 	TrainsArea* trains_area;
 	Data data;
-	Results results;
 	Cache cache;
 
 	std::recursive_mutex data_mutex;
