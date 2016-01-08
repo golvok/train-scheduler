@@ -86,6 +86,8 @@ public:
 	auto makeStationMap(ARGS&&... args) {
 		// maybe add a wrapper that forces operator [] to only accept StationID
 		// inherit from vector, use templae vararg function to call base?
+		// inheriting is probably a bad idea... anything that expects a vector
+		// will upcast and nullify restrictions... wait... is that fine?
 		return ::util::makeVertexMap<MAPPED_TYPE>(g(), std::forward<ARGS>(args)...);
 	}
 

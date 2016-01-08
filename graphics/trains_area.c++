@@ -100,7 +100,7 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 	}
 }
 
-void TrainsArea::drawTrackNetwork(const StationMap<PassengerIdList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrackNetwork(const StationMap<PassengerIDList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
 
@@ -132,7 +132,7 @@ void TrainsArea::drawTrackNetwork(const StationMap<PassengerIdList>& passengers_
 	}
 }
 
-void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIdList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto schedule = data.getSchedule();
@@ -226,9 +226,9 @@ TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
 	if (!tn) { return retval; }
 	if (!passengers) { return retval; }
 
-	retval.passengers_at_stations = tn->makeStationMap<PassengerIdList>();
+	retval.passengers_at_stations = tn->makeStationMap<PassengerIDList>();
 	if (schedule) {
-		retval.passengers_on_trains = schedule->makeTrainMap<PassengerIdList>();
+		retval.passengers_on_trains = schedule->makeTrainMap<PassengerIDList>();
 	}
 
 	if (schedule && p_rotues) {
@@ -269,7 +269,7 @@ TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
 	return retval;
 }
 
-void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerIdList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerIDList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();
