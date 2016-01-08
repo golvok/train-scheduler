@@ -50,4 +50,13 @@ inline std::ostream& operator<<(std::ostream& os, LocationID loc) {
 	return os;
 }
 
+namespace std {
+	template<>
+	struct hash<LocationID> {
+		size_t operator()(const LocationID& id) const {
+			return std::hash<decltype(id.getValue())>()(id.getValue());
+		}
+	};
+}
+
 #endif /* UTIL__LOCATION_ID_HPP */

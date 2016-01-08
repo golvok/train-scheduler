@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <climits>
 #include <memory>
 #include <type_traits>
 
@@ -130,6 +131,7 @@ public:
 	using IDType = id_type;
 	using ThisIDType = ID<id_type,TAG>;
 	const static id_type DEFAULT_VALUE = TAG::DEFAULT_VALUE;
+	const static size_t bit_size = sizeof(IDType)*CHAR_BIT;
 
 	ID() : value(TAG::DEFAULT_VALUE) { }
 	explicit operator id_type() const { return value; }
@@ -157,12 +159,17 @@ bool operator!=(const ID<id_type,TAG>& lhs, const ID<id_type,TAG>& rhs) {
 
 } // end namespace util
 
-// namespace std {
-// 	template<typename id_type, typename TAG>
-// 	struct hash<ID<id_type,TAG>> {
-// 		size_t operator()(const ID<id_type,TAG>& id) const {
-// 			return std::hash<decltype(id.getValue())>()(id.getValue());
-// 		}
-// 	};
-// }
+namespace std {
+	template<
+		typename ID_TYPE
+	>
+	struct hash : std::enable_if_t<
+		std::is_base_of<typename ID_TYPE::ThisIDType,ID_TYPE>::value,
+		ID_TYPE
+	> {
+		size_t operator()(const ID_TYPE& id) const {
+			return std::hash<decltype(id.getValue())>()(id.getValue());
+		}
+	};
+}
 #endif /* UTIL_H */
