@@ -34,8 +34,8 @@ public:
 	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, const TrackNetwork& tn)
 		: vertex(v), time(t), location(tn.getStationIDByVertexID(v))
 	{ }
-	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, RouteID train_id)
-		: vertex(v), time(t), location(train_id)
+	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, RouteID route_id, TrainIndex train_index)
+		: vertex(v), time(t), location(::util::make_id<TrainID>(route_id,train_index))
 	{ }
 	vertex_descriptor() : vertex(-1), time(-1), location() { }
 

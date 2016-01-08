@@ -8,6 +8,8 @@
 #include <boost/range/iterator_range.hpp>
 #include <cstdint>
 
+class LocationID;
+
 namespace algo {
 
 struct RouteIDTagType {
@@ -17,6 +19,35 @@ using RouteID = ::util::ID<uint32_t,RouteIDTagType>;
 
 class TrainRoute;
 using RouteType = std::vector<TrackNetwork::ID>;
+using TrainIndex = uint32_t;
+
+struct TrainIDTagType {
+	const static uint64_t DEFAULT_VALUE = -1;
+};
+class TrainID : public ::util::ID<uint64_t,TrainIDTagType> {
+	friend class ::LocationID;
+	TrainID(IDType val) : ID(val) { }
+public:
+
+	TrainID(RouteID rid, TrainIndex train_index)
+		: ID((rid.getValue() << sizeof(TrainIndex)*CHAR_BIT) | train_index) { }
+	TrainID() : ID() { }
+
+	RouteID getRouteID() const {
+		return ::util::make_id<RouteID>(getValue() >> sizeof(TrainIndex)*CHAR_BIT);
+	}
+	TrainIndex getTrainIndex() const {
+		return static_cast<TrainIndex>(getValue() & static_cast<TrainIndex>(-1));
+	}
+
+	void print(std::ostream& os) const {
+		if (getValue() == DEFAULT_VALUE) {
+			os << "<DEFAULT_TRAIN>";
+		} else {
+			os << 'r' << getRouteID().getValue() << 't' << getTrainIndex();
+		}
+	}
+};
 
 class Train {
 public:
@@ -25,10 +56,12 @@ public:
 
 	Train(
 		const TrainRoute& train_route,
-		TrackNetwork::Time departure_time
+		TrackNetwork::Time departure_time,
+		TrainIndex index_number
 	)
 		: train_route(&train_route)
 		, departure_time(departure_time)
+		, index_number(index_number)
 	{ }
 
 	Train(const Train&) = default;
@@ -55,10 +88,14 @@ public:
 	TrackNetwork::Time getDepartureTime() const { return departure_time; }
 	Speed getSpeed() const;
 	RouteID getRouteID() const;
+	TrainID getTrainID() const {
+		return ::util::make_id<TrainID>(getRouteID(), index_number);
+	}
 
 private:
 	const TrainRoute* train_route;
 	TrackNetwork::Time departure_time;
+	TrainIndex index_number;
 };
 
 class TrainRoute {
@@ -104,6 +141,8 @@ public:
 	const auto& getPath() const { return route; }
 	Train::Speed getSpeed() const { return speed; }
 
+	Train makeTrainFromIndex(size_t index) const;
+
 private:
 	std::pair<size_t,size_t> getTrainsAtVertexInInterval_impl(
 		TrackNetwork::ID vid,
@@ -111,7 +150,6 @@ private:
 		const TrackNetwork& tn
 	) const;
 
-	Train makeTrainFromIndex(size_t index) const;
 	const RouteID route_id;
 	const RouteType route;
 	const std::vector<TrackNetwork::Time> start_offsets;

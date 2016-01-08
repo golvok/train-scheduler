@@ -36,17 +36,25 @@ public:
 	const auto& getTrainRoutes() const { return train_routes; }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
-	auto makeTrainMap(ARGS&&... args) {
+	auto makeRouteMap(ARGS&&... args) {
 		return std::vector<MAPPED_TYPE>(train_routes.size(), std::forward<ARGS>(args)...);
 	}
 
+	template<typename MAPPED_TYPE, typename... ARGS>
+	auto makeTrainMap(ARGS&&... args) {
+		return std::unordered_map<TrainID,MAPPED_TYPE>(std::forward<ARGS>(args)...);
+	}
 private:
 	std::string name;
 	std::vector<TrainRoute> train_routes;
 };
 
 template<typename MAPPED_TYPE>
+using RouteMap = decltype(Schedule().makeRouteMap<MAPPED_TYPE>());
+
+template<typename MAPPED_TYPE>
 using TrainMap = decltype(Schedule().makeTrainMap<MAPPED_TYPE>());
+
 
 /**
  * Main entry point into the scheduler

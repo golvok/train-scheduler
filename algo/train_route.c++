@@ -151,7 +151,8 @@ Train TrainRoute::makeTrainFromIndex(size_t index) const {
 	return Train(
 		*this,
 		repeat_time*(index / start_offsets.size())
-			+ start_offsets[index % start_offsets.size()]
+			+ start_offsets[index % start_offsets.size()],
+		index
 	);
 }
 

@@ -2,13 +2,13 @@
 #ifndef UTIL__LOCATION_ID_HPP
 #define UTIL__LOCATION_ID_HPP
 
-#include <algo/scheduler.h++>
+#include <algo/train_route.h++>
 #include <util/track_network.h++>
 
 struct LocationIDTag { static const uint DEFAULT_VALUE = -1; };
 class LocationID : public ::util::ID<
 	std::common_type_t<
-		::algo::RouteID::IDType,
+		::algo::TrainID::IDType,
 		StationID::IDType
 	>,
 	LocationIDTag
@@ -18,16 +18,16 @@ private:
 public:
 	static const IDType TRAIN_FLAG = ((IDType)(-1)) & ~(((IDType)(-1)) >> 1);
 
-	LocationID(::algo::RouteID tid) : ID(tid.getValue() | TRAIN_FLAG) { }
+	LocationID(::algo::TrainID tid) : ID(tid.getValue() | TRAIN_FLAG) { }
 	LocationID(StationID sid) : ID(sid.getValue()) { }
 	LocationID() : ID() { }
 
 	bool isTrain() const { return (getValue() & TRAIN_FLAG) != 0; }
 	bool isStation() const { return (getValue() & TRAIN_FLAG) == 0; }
 
-	::algo::RouteID asRouteID() const {
+	::algo::TrainID asTrainID() const {
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
-		return ::util::make_id<::algo::RouteID>(getValue() & (~TRAIN_FLAG));
+		return ::algo::TrainID(getValue() & (~TRAIN_FLAG));
 	}
 	StationID asStationID() const {
 		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }
@@ -36,9 +36,9 @@ public:
 
 	void print(std::ostream& os) const {
 		if (getValue() == DEFAULT_VALUE) {
-			os << "<DEFAULT>";
+			os << "<DEFAULT_LOCATION>";
 		} else if (isTrain()) {
-			os << 't' << asRouteID().getValue();
+			asTrainID().print(os);
 		} else if (isStation()) {
 			os << 's' << asStationID().getValue();
 		}

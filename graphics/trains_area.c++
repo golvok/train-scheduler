@@ -175,7 +175,7 @@ void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_
 				cc->set_source_rgb(0.0,0.0,1.0); // blue
 				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
 				cc->stroke();
-				drawPassengersAt(p,passengers_on_trains[train.getRouteID().getValue()],cc);
+				drawPassengersAt(p,passengers_on_trains.find(train.getTrainID())->second,cc);
 				break;
 			}
 
@@ -257,7 +257,7 @@ TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
 			if (current_location.isStation()) {
 				retval.passengers_at_stations[current_location.asStationID().getValue()].push_back(p.getID());
 			} else if (current_location.isTrain()) {
-				retval.passengers_on_trains[current_location.asRouteID().getValue()].push_back(p.getID());
+				retval.passengers_on_trains.emplace(current_location.asTrainID(), PassengerIDList()).first->second.push_back(p.getID());
 			}
 		}
 	} else {
