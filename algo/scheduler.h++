@@ -31,8 +31,8 @@ public:
 	// getters
 	const std::string& getName() const { return name; }
 
-	TrainRoute& getTrainRoute(RouteId id) { return train_routes[id.getValue()]; }
-	const TrainRoute& getTrainRoute(RouteId id) const { return train_routes[id.getValue()]; }
+	TrainRoute& getTrainRoute(RouteID id) { return train_routes[id.getValue()]; }
+	const TrainRoute& getTrainRoute(RouteID id) const { return train_routes[id.getValue()]; }
 	const auto& getTrainRoutes() const { return train_routes; }
 
 	template<typename MAPPED_TYPE, typename... ARGS>

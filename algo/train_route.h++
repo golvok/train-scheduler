@@ -10,10 +10,10 @@
 
 namespace algo {
 
-struct RouteIdTagType {
-	const static uint DEFAULT_VALUE = -1;
+struct RouteIDTagType {
+	const static uint32_t DEFAULT_VALUE = -1;
 };
-using RouteId = ::util::ID<uint,RouteIdTagType>;
+using RouteID = ::util::ID<uint32_t,RouteIDTagType>;
 
 class TrainRoute;
 using RouteType = std::vector<TrackNetwork::ID>;
@@ -54,7 +54,7 @@ public:
 	const TrainRoute& getRoute() const;
 	TrackNetwork::Time getDepartureTime() const { return departure_time; }
 	Speed getSpeed() const;
-	RouteId getRouteID() const;
+	RouteID getRouteID() const;
 
 private:
 	const TrainRoute* train_route;
@@ -65,7 +65,7 @@ class TrainRoute {
 public:
 
 	TrainRoute(
-		const RouteId route_id,
+		const RouteID route_id,
 		std::vector<TrackNetwork::ID>&& route_,
 		std::vector<TrackNetwork::Time>&& start_offsets,
 		TrackNetwork::Time repeat_time,
@@ -100,7 +100,7 @@ public:
 		const TrackNetwork& tn
 	) const;
 
-	RouteId getID() const { return route_id; }
+	RouteID getID() const { return route_id; }
 	const auto& getPath() const { return route; }
 	Train::Speed getSpeed() const { return speed; }
 
@@ -112,8 +112,7 @@ private:
 	) const;
 
 	Train makeTrainFromIndex(size_t index) const;
-
-	const RouteId route_id;
+	const RouteID route_id;
 	const RouteType route;
 	const std::vector<TrackNetwork::Time> start_offsets;
 	const TrackNetwork::Time repeat_time;

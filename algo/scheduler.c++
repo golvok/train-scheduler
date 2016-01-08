@@ -114,7 +114,7 @@ Schedule Scheduler::do_schedule() {
 
 	for(auto route_iai_iter : index_assoc_iterate(train_routes)) {
 		trains.emplace_back(
-			::util::make_id<::algo::RouteId>(route_iai_iter.i()),
+			::util::make_id<::algo::RouteID>(route_iai_iter.i()),
 			std::move(*route_iai_iter),
 			std::vector<TrackNetwork::Time>{ 0 }, // assumes all routes start at time 0
 			(*route_iai_iter).size(), // make it repeat after it's done for now

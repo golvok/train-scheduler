@@ -20,10 +20,10 @@ auto findFirstStartOffsetAfterOrAt(const TrackNetwork::Time& time_in_day, const 
 } // end anonymous namespace
 
 const TrainRoute& Train::getRoute() const { return *train_route; }
-RouteId Train::getRouteID() const { return train_route->getID(); }
+RouteID Train::getRouteID() const { return train_route->getID(); }
 
 TrainRoute::TrainRoute(
-	const RouteId route_id,
+	const RouteID route_id,
 	std::vector<TrackNetwork::ID>&& route_,
 	std::vector<TrackNetwork::Time>&& start_offsets,
 	TrackNetwork::Time repeat_time,

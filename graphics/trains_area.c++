@@ -257,7 +257,7 @@ TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
 			if (current_location.isStation()) {
 				retval.passengers_at_stations[current_location.asStationID().getValue()].push_back(p.getID());
 			} else if (current_location.isTrain()) {
-				retval.passengers_on_trains[current_location.asRouteId().getValue()].push_back(p.getID());
+				retval.passengers_on_trains[current_location.asRouteID().getValue()].push_back(p.getID());
 			}
 		}
 	} else {

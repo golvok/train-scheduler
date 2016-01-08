@@ -8,7 +8,7 @@
 struct LocationIDTag { static const uint DEFAULT_VALUE = -1; };
 class LocationID : public ::util::ID<
 	std::common_type_t<
-		::algo::RouteId::IDType,
+		::algo::RouteID::IDType,
 		StationID::IDType
 	>,
 	LocationIDTag
@@ -18,16 +18,16 @@ private:
 public:
 	static const IDType TRAIN_FLAG = ((IDType)(-1)) & ~(((IDType)(-1)) >> 1);
 
-	LocationID(::algo::RouteId tid) : ID(tid.getValue() | TRAIN_FLAG) { }
+	LocationID(::algo::RouteID tid) : ID(tid.getValue() | TRAIN_FLAG) { }
 	LocationID(StationID sid) : ID(sid.getValue()) { }
 	LocationID() : ID() { }
 
 	bool isTrain() const { return (getValue() & TRAIN_FLAG) != 0; }
 	bool isStation() const { return (getValue() & TRAIN_FLAG) == 0; }
 
-	::algo::RouteId asRouteId() const {
+	::algo::RouteID asRouteID() const {
 		if (!isTrain()) { throw std::invalid_argument("Invalid Train id" + std::to_string(getValue())); }
-		return ::util::make_id<::algo::RouteId>(getValue() & (~TRAIN_FLAG));
+		return ::util::make_id<::algo::RouteID>(getValue() & (~TRAIN_FLAG));
 	}
 	StationID asStationID() const {
 		if (!isStation()) { throw std::invalid_argument("Invalid Station id" + std::to_string(getValue())); }
@@ -38,7 +38,7 @@ public:
 		if (getValue() == DEFAULT_VALUE) {
 			os << "<DEFAULT>";
 		} else if (isTrain()) {
-			os << 't' << asRouteId().getValue();
+			os << 't' << asRouteID().getValue();
 		} else if (isStation()) {
 			os << 's' << asStationID().getValue();
 		}
