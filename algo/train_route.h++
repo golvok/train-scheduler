@@ -27,13 +27,13 @@ public:
 		const TrainRoute& train_route,
 		TrackNetwork::Time departure_time
 	)
-		: train_route(train_route)
+		: train_route(&train_route)
 		, departure_time(departure_time)
 	{ }
 
-	Train(const Train&) = delete;
+	Train(const Train&) = default;
 	Train(Train&&) = default;
-	Train& operator=(const Train&) = delete;
+	Train& operator=(const Train&) = default;
 	Train& operator=(Train&&) = default;
 
 	TrackNetwork::Time getExpectedTravelTime(
@@ -57,7 +57,7 @@ public:
 	RouteId getRouteID() const;
 
 private:
-	const TrainRoute& train_route;
+	const TrainRoute* train_route;
 	TrackNetwork::Time departure_time;
 };
 

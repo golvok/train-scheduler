@@ -19,8 +19,8 @@ auto findFirstStartOffsetAfterOrAt(const TrackNetwork::Time& time_in_day, const 
 
 } // end anonymous namespace
 
-const TrainRoute& Train::getRoute() const { return train_route; }
-RouteId Train::getRouteID() const { return train_route.getID(); }
+const TrainRoute& Train::getRoute() const { return *train_route; }
+RouteId Train::getRouteID() const { return train_route->getID(); }
 
 TrainRoute::TrainRoute(
 	const RouteId route_id,
@@ -49,14 +49,14 @@ TrackNetwork::Time Train::getExpectedTravelTime(
 	std::pair<TrackNetwork::ID, TrackNetwork::ID> first_and_last,
 	const TrackNetwork& tn
 ) const {
-	return train_route.getExpectedTravelTime(getDepartureTime(), first_and_last, tn);
+	return train_route->getExpectedTravelTime(getDepartureTime(), first_and_last, tn);
 }
 
 TrackNetwork::Time Train::getExpectedTravelTime(
 	::boost::iterator_range<RouteType::const_iterator> range,
 	const TrackNetwork& tn
 ) const {
-	return train_route.getExpectedTravelTime(getDepartureTime(), range, tn);
+	return train_route->getExpectedTravelTime(getDepartureTime(), range, tn);
 }
 
 TrackNetwork::Time Train::getExpectedArrivalTime(
