@@ -19,7 +19,7 @@ using StationID = ::util::ID<uint, StationIDTag>;
 
 class TrackNetwork {
 public:
-	using Time = uint;
+	using Time = int;
 	using TimeInterval = std::pair<Time,Time>;
 
 	using Weight = float;
