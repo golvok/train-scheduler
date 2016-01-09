@@ -141,6 +141,7 @@ public:
 	const auto& getPath() const { return route; }
 	Train::Speed getSpeed() const { return speed; }
 
+
 	Train makeTrainFromIndex(size_t index) const;
 
 private:
@@ -159,5 +160,15 @@ private:
 };
 
 } // ende namespace algo
+
+namespace std {
+	template<>
+	struct hash<::algo::Train> {
+		size_t operator()(const ::algo::Train& t) const {
+			const auto& v = t.getTrainID().getValue();
+			return std::hash<std::remove_cv<std::remove_reference<decltype(v)>::type>::type>()(v);
+		}
+	};
+}
 
 #endif /* ALGO__TRAIN_ROUTE_HPP */

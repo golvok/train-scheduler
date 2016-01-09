@@ -5,6 +5,7 @@
 #include <util/track_network.h++>
 #include <util/utils.h++>
 
+#include <functional>
 #include <iosfwd>
 
 struct PassengerIdTag { const static uint DEFAULT_VALUE = -1; };
@@ -46,6 +47,17 @@ public:
 
 using PassengerIDList = std::vector<PassengerId>;
 using PassengerList = std::vector<Passenger>;
+using PassengerConstRefList = std::vector<std::reference_wrapper<const Passenger>>;
+
+inline void passengerRefListAdd(PassengerConstRefList& list, const Passenger& p) {
+	list.push_back(p);
+}
+
+inline void passengerRefListRemove(PassengerConstRefList& list, const Passenger& p) {
+	list.erase(std::find_if(list.begin(), list.end(), [&](auto& test_p) {
+		return test_p.get() == p;
+	}));
+}
 
 // std::ostream& operator<<(std::ostresam& os, const Passenger& p);
 std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair);
