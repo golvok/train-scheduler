@@ -36,12 +36,12 @@ public:
 	const auto& getTrainRoutes() const { return train_routes; }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
-	auto makeRouteMap(ARGS&&... args) {
+	auto makeRouteMap(ARGS&&... args) const {
 		return std::vector<MAPPED_TYPE>(train_routes.size(), std::forward<ARGS>(args)...);
 	}
 
 	template<typename MAPPED_TYPE, typename... ARGS>
-	auto makeTrainMap(ARGS&&... args) {
+	auto makeTrainMap(ARGS&&... args) const {
 		return std::unordered_map<TrainID,MAPPED_TYPE>(std::forward<ARGS>(args)...);
 	}
 private:

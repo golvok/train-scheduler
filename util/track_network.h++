@@ -83,7 +83,7 @@ public:
 	ID getVertexIDByStationID(StationID sid) const { return sid.getValue(); }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
-	auto makeStationMap(ARGS&&... args) {
+	auto makeStationMap(ARGS&&... args) const {
 		// maybe add a wrapper that forces operator [] to only accept StationID
 		// inherit from vector, use templae vararg function to call base?
 		// inheriting is probably a bad idea... anything that expects a vector

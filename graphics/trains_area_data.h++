@@ -27,11 +27,11 @@ private:
 		using WantedCapacityMap = std::vector<float>;
 
 		// stored using weak_ptr so that lifetime corresponds to external lifetime
-		std::weak_ptr<TrackNetwork> tn;
-		std::weak_ptr<PassengerList> passengers;
-		std::weak_ptr<WantedCapacityMap> wanted_edge_capacities;
-		std::weak_ptr<algo::Schedule> schedule;
 		std::weak_ptr<::algo::PassengerRoutes> passenger_routes;
+		std::weak_ptr<const TrackNetwork> tn;
+		std::weak_ptr<const PassengerList> passengers;
+		std::weak_ptr<const WantedCapacityMap> wanted_edge_capacities;
+		std::weak_ptr<const algo::Schedule> schedule;
 	};
 	struct Cache {
 		// PIMPL because Impl may contain windowing/drawing dependencies
@@ -54,29 +54,29 @@ public:
 	 * Cause the passed TrackNetwork to be displayed, nothing else.
 	 */
 	void displayTrackNetwork(
-		std::weak_ptr<TrackNetwork> new_tn);
+		std::weak_ptr<const TrackNetwork> new_tn);
 
 	/**
 	 * Cause the passed TrackNetwork and Passengers to be displayed,
 	 * nothing else.
 	 */
 	void displayTNAndPassengers(
-		std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<PassengerList> new_passgrs
+		std::weak_ptr<const TrackNetwork> new_tn,
+		std::weak_ptr<const PassengerList> new_passgrs
 	);
 
 	void displayTNAndWantedCapacities(
-		// std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<Data::WantedCapacityMap> new_wanted_edge_capacities
+		// std::weak_ptr<const TrackNetwork> new_tn,
+		std::weak_ptr<const Data::WantedCapacityMap> new_wanted_edge_capacities
 	);
 
 	/**
 	 * Display and Animate the results passed in
 	 */
 	void presentResults(
-		std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<PassengerList> new_passgrs,
-		std::weak_ptr<algo::Schedule> new_schedule
+		std::weak_ptr<const TrackNetwork> new_tn,
+		std::weak_ptr<const PassengerList> new_passgrs,
+		std::weak_ptr<const algo::Schedule> new_schedule
 	);
 
 	/**
@@ -112,11 +112,11 @@ private:
 	//
 	// Note: the returned value may not point to a valid object, and that should be checked
 	//     before use!
-	std::shared_ptr<TrackNetwork> getTN();
-	std::shared_ptr<PassengerList> getPassengers();
-	std::shared_ptr<algo::Schedule> getSchedule();
-	std::shared_ptr<Data::WantedCapacityMap> getWantedEdgeCapacities();
-	std::shared_ptr<::algo::PassengerRoutes> getPassengerRoutes();
+	std::shared_ptr<const TrackNetwork> getTN();
+	std::shared_ptr<const PassengerList> getPassengers();
+	std::shared_ptr<const algo::Schedule> getSchedule();
+	std::shared_ptr<const Data::WantedCapacityMap> getWantedEdgeCapacities();
+	std::shared_ptr<const ::algo::PassengerRoutes> getPassengerRoutes();
 
 	TrainsArea* trains_area;
 	Data data;

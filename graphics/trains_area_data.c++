@@ -47,7 +47,7 @@ void TrainsAreaData::clear() {
 }
 
 void TrainsAreaData::displayTrackNetwork(
-	std::weak_ptr<TrackNetwork> new_tn
+	std::weak_ptr<const TrackNetwork> new_tn
 ) {
 	auto sdl = getScopedDataLock();
 	clear();
@@ -61,8 +61,8 @@ void TrainsAreaData::displayTrackNetwork(
 }
 
 void TrainsAreaData::displayTNAndPassengers(
-	std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<PassengerList> new_passgrs
+	std::weak_ptr<const TrackNetwork> new_tn,
+	std::weak_ptr<const PassengerList> new_passgrs
 ) {
 	auto sdl = getScopedDataLock();
 	clear();
@@ -78,8 +78,8 @@ void TrainsAreaData::displayTNAndPassengers(
 }
 
 void TrainsAreaData::displayTNAndWantedCapacities(
-	// std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<Data::WantedCapacityMap> new_wanted_edge_capacities
+	// std::weak_ptr<const TrackNetwork> new_tn,
+	std::weak_ptr<const Data::WantedCapacityMap> new_wanted_edge_capacities
 ) {
 	auto sdl = getScopedDataLock();
 	// clear();
@@ -89,9 +89,9 @@ void TrainsAreaData::displayTNAndWantedCapacities(
 }
 
 void TrainsAreaData::presentResults(
-	std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<PassengerList> new_passgrs,
-	std::weak_ptr<algo::Schedule> new_schedule
+	std::weak_ptr<const TrackNetwork> new_tn,
+	std::weak_ptr<const PassengerList> new_passgrs,
+	std::weak_ptr<const algo::Schedule> new_schedule
 ) {
 	auto sdl = getScopedDataLock();
 	clear();
@@ -128,27 +128,27 @@ std::unique_lock<std::recursive_mutex> TrainsAreaData::getScopedDataLock() {
 	return std::unique_lock<std::recursive_mutex> (data_mutex);
 }
 
-std::shared_ptr<TrackNetwork> TrainsAreaData::getTN() {
+std::shared_ptr<const TrackNetwork> TrainsAreaData::getTN() {
 	auto sdl = getScopedDataLock();
 	return data.tn.lock();
 }
 
-std::shared_ptr<PassengerList> TrainsAreaData::getPassengers() {
+std::shared_ptr<const PassengerList> TrainsAreaData::getPassengers() {
 	auto sdl = getScopedDataLock();
 	return data.passengers.lock();
 }
 
-std::shared_ptr<algo::Schedule> TrainsAreaData::getSchedule() {
+std::shared_ptr<const algo::Schedule> TrainsAreaData::getSchedule() {
 	auto sdl = getScopedDataLock();
 	return data.schedule.lock();
 }
 
-std::shared_ptr<TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWantedEdgeCapacities() {
+std::shared_ptr<const TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::getWantedEdgeCapacities() {
 	auto sdl = getScopedDataLock();
 	return data.wanted_edge_capacities.lock();
 }
 
-std::shared_ptr<::algo::PassengerRoutes> TrainsAreaData::getPassengerRoutes() {
+std::shared_ptr<const ::algo::PassengerRoutes> TrainsAreaData::getPassengerRoutes() {
 	auto sdl = getScopedDataLock();
 	return data.passenger_routes.lock();
 }
