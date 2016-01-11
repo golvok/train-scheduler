@@ -17,7 +17,7 @@ private:
 	PassengerId id;
 	TrackNetwork::ID entry_id;
 	TrackNetwork::ID exit_id;
-	uint start_time;
+	TrackNetwork::Time start_time;
 
 public:
 	Passenger(
@@ -25,7 +25,7 @@ public:
 		PassengerId id,
 		TrackNetwork::ID entry_id,
 		TrackNetwork::ID exit_id,
-		uint start_time
+		TrackNetwork::Time start_time
 	)
 		: name(name)
 		, id(id)
@@ -38,7 +38,7 @@ public:
 	const std::string& getName() const { return name; }
 	TrackNetwork::ID getEntryID() const { return entry_id; }
 	TrackNetwork::ID getExitID() const { return exit_id; }
-	uint getStartTime() const { return start_time; }
+	TrackNetwork::Time getStartTime() const { return start_time; }
 
 	bool operator==(const Passenger& rhs) const {
 		return id == rhs.id;
