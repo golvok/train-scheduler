@@ -17,18 +17,28 @@ namespace {
 		STGA::vertex_descriptor vd;
 	}; // exception for termination
 
+	// exception type in the case of a no-route
+	struct no_route {
+	};
+
 	// visitor that causes the algo to terminate when we find the goal vertex (ignores time)
 	class astar_goal_visitor : public boost::default_astar_visitor {
 	private:
+		TrackNetwork::Time start_time;
 		TrackNetwork::ID goal_vertex;
 	public:
-		astar_goal_visitor(TrackNetwork::ID goal) : goal_vertex(goal) {}
+		astar_goal_visitor(TrackNetwork::Time start, TrackNetwork::ID goal)
+			: start_time(start)
+			, goal_vertex(goal)
+		{ }
 
 		void examine_vertex(STGA::vertex_descriptor vd, ScheduleToGraphAdapter const& g) {
 			(void)g;
 			dout(DL::PR_D3) << "Exploring " << std::make_pair(vd,g.getTrackNetwork()) << "..." << '\n';
-			if(vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
+			if (vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
 				throw found_goal{vd};
+			} else if (vd.getTime() > (start_time + 1000)) {
+				throw no_route();
 			}
 		}
 	};
@@ -81,20 +91,22 @@ PassengerRoutes route_passengers(
 			astar_search_no_init(baseGraph,
 				start_vertex_and_time,
 				heuristic
-				, visitor(astar_goal_visitor(goal_vertex))
+				, visitor(astar_goal_visitor(start_vertex_and_time.getTime(), goal_vertex))
 				. distance_map(baseGraph.make_distance_map(backing_distance_map))
 				. predecessor_map(std::ref(pred_map)) // don't want to pass by value
 				. rank_map(baseGraph.make_rank_map(backing_rank_map))
 				. color_map(baseGraph.make_colour_map(backing_colour_map))
 			);
-		} catch(found_goal const& fg) { // found a path to the goal
+		} catch (const found_goal& fg) { // found a path to the goal
 
 			results.addRoute(passenger, extract_coalesced_path(start_vertex_and_time, fg.vd, pred_map, tn));
 
 			continue;
+		} catch (const no_route&) {
+			// do nothing
 		}
 
-		dout(DL::WARN) << "Didn't find a path from " << std::make_pair(start_vertex_and_time,tn) << '\n';
+		dout(DL::WARN) << "Didn't find a path from " << std::make_pair(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
 	}
 
 	return results;
