@@ -59,11 +59,11 @@ int program_main() {
 
 		// display the track network first
 		graphics::get().trainsArea().displayTrackNetwork(tn);
-		graphics::get().waitForPress();
+		// graphics::get().waitForPress();
 
 		// then display the passengers too
 		graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
-		graphics::get().waitForPress();
+		// graphics::get().waitForPress();
 
 		dout(DL::INFO) << '\n';
 		auto d_indent = dout(DL::INFO).indentWithTitle([&](auto&& s){s << "Input Data #" << tn_counter;});
@@ -75,14 +75,20 @@ int program_main() {
 
 		// display schedule
 		graphics::get().trainsArea().presentResults(tn,passengers,schedule);
-		graphics::get().waitForPress();
+		// graphics::get().waitForPress();
 
 		// route passengers
 		auto p_routes = std::make_shared<::algo::PassengerRoutes>();
 		*p_routes = ::algo::route_passengers(*tn,*schedule,*passengers);
 
+		auto sim_handle = ::sim::instantiate_simulator(
+			passengers,
+			schedule,
+			tn
+		);
+
 		// display routed passengers
-		graphics::get().trainsArea().presentResultsWithRoutedPassengers(tn,passengers,schedule,p_routes);
+		graphics::get().trainsArea().displaySimulator(sim_handle);
 		graphics::get().waitForPress();
 
 		::stats::ReportEngine report_engine(*tn,*passengers,*schedule,*p_routes);

@@ -2,8 +2,8 @@
 #ifndef UTIL__TRAINS_AREA_DATA_H
 #define UTIL__TRAINS_AREA_DATA_H
 
-#include <algo/passenger_routing.h++>
 #include <algo/scheduler.h++>
+#include <sim/simulator.h++>
 #include <util/passenger.h++>
 #include <util/track_network.h++>
 
@@ -27,11 +27,11 @@ private:
 		using WantedCapacityMap = std::vector<float>;
 
 		// stored using weak_ptr so that lifetime corresponds to external lifetime
-		std::weak_ptr<::algo::PassengerRoutes> passenger_routes;
 		std::weak_ptr<const TrackNetwork> tn;
 		std::weak_ptr<const PassengerList> passengers;
 		std::weak_ptr<const WantedCapacityMap> wanted_edge_capacities;
 		std::weak_ptr<const algo::Schedule> schedule;
+		::sim::SimulatorHandle simulator;
 	};
 	struct Cache {
 		// PIMPL because Impl may contain windowing/drawing dependencies
@@ -82,11 +82,8 @@ public:
 	/**
 	 * Display and Animate the results passed in
 	 */
-	void presentResultsWithRoutedPassengers(
-		std::weak_ptr<TrackNetwork> new_tn,
-		std::weak_ptr<PassengerList> new_passgrs,
-		std::weak_ptr<algo::Schedule> new_schedule,
-		std::weak_ptr<::algo::PassengerRoutes> new_passenger_routes
+	void displaySimulator(
+		::sim::SimulatorHandle new_simulator
 	);
 
 private:
@@ -116,7 +113,7 @@ private:
 	std::shared_ptr<const PassengerList> getPassengers();
 	std::shared_ptr<const algo::Schedule> getSchedule();
 	std::shared_ptr<const Data::WantedCapacityMap> getWantedEdgeCapacities();
-	std::shared_ptr<const ::algo::PassengerRoutes> getPassengerRoutes();
+	::sim::SimulatorHandle getSimulatorHandle();
 
 	TrainsArea* trains_area;
 	Data data;

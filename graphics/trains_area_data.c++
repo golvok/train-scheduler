@@ -38,8 +38,8 @@ void TrainsAreaData::clear() {
 
 	data.tn.reset();
 	data.passengers.reset();
-
 	data.schedule.reset();
+	data.simulator.reset();
 
 	if (hasTrainsArea()) {
 		trains_area->stopAnimating();
@@ -100,18 +100,20 @@ void TrainsAreaData::presentResults(
 	data.schedule = new_schedule;
 }
 
-void TrainsAreaData::presentResultsWithRoutedPassengers(
-	std::weak_ptr<TrackNetwork> new_tn,
-	std::weak_ptr<PassengerList> new_passgrs,
-	std::weak_ptr<algo::Schedule> new_schedule,
-	std::weak_ptr<::algo::PassengerRoutes> new_passenger_routes
+void TrainsAreaData::displaySimulator(
+	::sim::SimulatorHandle new_simulator
 ) {
 	auto sdl = getScopedDataLock();
 	clear();
 
-	displayTNAndPassengers(new_tn, new_passgrs);
-	data.schedule = new_schedule;
-	data.passenger_routes = new_passenger_routes;
+	displayTrackNetwork(new_simulator.getTrackNetworkUsed());
+	data.schedule = new_simulator.getScheduleUsed();
+	data.simulator = new_simulator;
+
+	if (hasTrainsArea() && getSchedule() && getSimulatorHandle()) {
+		trains_area->resetAnimationTime();
+		trains_area->beginAnimating();
+	}
 }
 
 void TrainsAreaData::setTrainsArea(TrainsArea* ta) {
@@ -148,9 +150,9 @@ std::shared_ptr<const TrainsAreaData::Data::WantedCapacityMap> TrainsAreaData::g
 	return data.wanted_edge_capacities.lock();
 }
 
-std::shared_ptr<const ::algo::PassengerRoutes> TrainsAreaData::getPassengerRoutes() {
+::sim::SimulatorHandle TrainsAreaData::getSimulatorHandle() {
 	auto sdl = getScopedDataLock();
-	return data.passenger_routes.lock();
+	return data.simulator;
 }
 
 } // end namespace graphics

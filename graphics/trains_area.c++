@@ -24,7 +24,6 @@ const uint INVALID_TIME = -1;
 
 TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
-	, time(INVALID_TIME)
 	, animation_connection()
 	, drawing_mutex()
 {
@@ -37,11 +36,9 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	// guarantee that state information will not change between drawing calls
 	auto sdrl = getScopedDrawingLock();
 
-	auto passenger_locations = findPassengerLocaions();
-
 	centerOnTrackNework(cc);
-	drawTrackNetwork(passenger_locations.passengers_at_stations, cc);
-	drawTrains(passenger_locations.passengers_on_trains, cc);
+	drawTrackNetwork(cc);
+	drawTrains(cc);
 	drawWantedEdgeCapacities(cc);
 
 	return true;
@@ -100,9 +97,10 @@ void TrainsArea::centerOnTrackNework(const Cairo::RefPtr<Cairo::Context>& cc) {
 	}
 }
 
-void TrainsArea::drawTrackNetwork(const StationMap<PassengerIDList>& passengers_at_stations, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto tn = data.getTN();
+	auto sim_handle = data.getSimulatorHandle();
 
 	if (!tn) { return; }
 
@@ -128,60 +126,61 @@ void TrainsArea::drawTrackNetwork(const StationMap<PassengerIDList>& passengers_
 		}
 
 		cc->stroke();
-		drawPassengersAt(v,passengers_at_stations[tn->getStationIDByVertexID(vi).getValue()],cc);
+
+		if (sim_handle) {
+			// draw passengers where they currently are in the simulation
+			drawPassengersAt(v, sim_handle.getPassengersAt(tn->getStationIDByVertexID(vi)), cc);
+		} else {
+			// draw passengers (if we have them) where they start.
+			auto passengers = data.getPassengers();
+			if (passengers) {
+				PassengerConstRefList passengers_here;
+				std::copy_if(passengers->begin(), passengers->end(), passengerRefListInserter(passengers_here), [&](auto& p) {
+					return p.getEntryID() == vi;
+				});
+				drawPassengersAt(v, passengers_here, cc);
+			}
+		}
 	}
 }
 
-void TrainsArea::drawTrains(const ::algo::TrainMap<PassengerIDList>& passengers_on_trains, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
-	auto schedule = data.getSchedule();
 	auto tn = data.getTN();
-
+	auto schedule = data.getSchedule();
+	auto sim_handle = data.getSimulatorHandle();
 
 	if (!is_animating) { return; }
-	if (!tn) { return; }
-	if (!schedule) { return; }
+	if (!sim_handle) { return; }
 
-	std::vector<::algo::Train> trains_in_network; // TODO move this to a "simulation" class/data member & fill it out
-	for (auto& train : trains_in_network) {
+	for (const auto& train_id : sim_handle.getActiveTrains()) {
+		const auto& path = schedule->getTrainRoute(train_id.getRouteID()).getPath();
+		const auto& position_info = sim_handle.getTrainLocation(train_id);
 
-		auto& route = train.getRoute().getPath();
+		const auto prev_vertex_it = path.begin() + position_info.edge_number;
+		const auto next_vertex_it = prev_vertex_it + 1;
 
-		TrainsArea::Time time_in_nework = time - train.getDepartureTime();
-		float time_until_prev_vertex = 0;
+		const auto prev_pt = tn->getVertexPosition(*prev_vertex_it);
 
-		// figure out which edge the train should be on, and interpolate between
-		TrackNetwork::ID prev_vertex(-1);
-		for (TrackNetwork::ID id : route) {
-			if (prev_vertex == TrackNetwork::ID(-1)) {
-				prev_vertex = std::move(id);
-				continue; // skip first one.
-			}
-
-			float additional_time_to_next_vertex = train.getExpectedTravelTime(std::make_pair(prev_vertex,id), *tn);
-
-			// the next vertex would be too far, so it's currently on this edge
-			if ((time_until_prev_vertex + additional_time_to_next_vertex) >= time_in_nework) {
-				auto prev_pt = tn->getVertexPosition(prev_vertex);
-				auto next_pt = tn->getVertexPosition(id);
-
+		const auto p = [&]() {
+			if (next_vertex_it == path.end()) {
+				// at last vertex case
+				return prev_pt;
+			} else {
 				// interpolate
-				auto fraction_distance_travelled = ((time_in_nework - time_until_prev_vertex)/(additional_time_to_next_vertex));
-				auto offset_to_next = (next_pt - prev_pt) * fraction_distance_travelled;
-				auto p = prev_pt + offset_to_next;
-
-				// draw
-				cc->set_source_rgb(0.0,0.0,1.0); // blue
-				cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
-				cc->stroke();
-				drawPassengersAt(p,passengers_on_trains.find(train.getTrainID())->second,cc);
-				break;
+				const auto next_pt = tn->getVertexPosition(*next_vertex_it);
+				return prev_pt + (next_pt - prev_pt) * position_info.fraction_through_edge;
 			}
+		}();
 
-			prev_vertex = std::move(id);
-			time_until_prev_vertex += additional_time_to_next_vertex;
-		}
+
+		// draw
+		cc->set_source_rgb(0.0,0.0,1.0); // blue
+		cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);
+		cc->stroke();
+
+		drawPassengersAt(p, sim_handle.getPassengersAt(train_id), cc);
 	}
 
 }
@@ -215,76 +214,20 @@ void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& c
 	}
 }
 
-TrainsArea::PassengerLocations TrainsArea::findPassengerLocaions() {
-	auto tn = data.getTN();
-	auto passengers = data.getPassengers();
-	auto schedule = data.getSchedule();
-	auto p_rotues = data.getPassengerRoutes();
-
-	PassengerLocations retval;
-
-	if (!tn) { return retval; }
-	if (!passengers) { return retval; }
-
-	retval.passengers_at_stations = tn->makeStationMap<PassengerIDList>();
-	if (schedule) {
-		retval.passengers_on_trains = schedule->makeTrainMap<PassengerIDList>();
-	}
-
-	if (schedule && p_rotues) {
-
-		for (const auto& p : *passengers) {
-
-			const auto& route = p_rotues->getRoute(p);
-			const auto next_route_element_it = std::find_if(route.begin(), route.end(), [&](const auto& re) {
-				return re.getTime() > time;
-			});
-
-			if (next_route_element_it == route.begin()) {
-				// this passenger hasn't started yet
-				// also handles a empty route
-				continue;
-			}
-
-			const auto& current_route_element = *(next_route_element_it - 1);
-			const auto& current_location = current_route_element.getLocation();
-
-			if (next_route_element_it == route.end() && current_route_element.getTime() < time) {
-				// this passenger has exited the system
-				continue;
-			}
-
-			if (current_location.isStation()) {
-				retval.passengers_at_stations[current_location.asStationID().getValue()].push_back(p.getID());
-			} else if (current_location.isTrain()) {
-				retval.passengers_on_trains.emplace(current_location.asTrainID(), PassengerIDList()).first->second.push_back(p.getID());
-			}
-		}
-	} else {
-		for (const auto& p : *passengers) {
-			retval.passengers_at_stations[p.getEntryID()].push_back(p.getID());
-		}
-	}
-
-	return retval;
-}
-
-void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerIDList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
+void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerConstRefList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();
-	auto all_passengers = data.getPassengers();
+	auto sim = data.getSimulatorHandle();
 
-	if (!is_animating) { return; }
 	if (!tn) { return; }
-	if (!all_passengers) { return; }
 
 	// draw a dot for each passenger
 	for (const auto& pid_and_i : index_assoc_iterate(passengers)) {
-		const Passenger& p = (*all_passengers)[pid_and_i.v().getValue()];
-		if (time == p.getStartTime()) {
+		const Passenger& p = pid_and_i.v();
+		if (!is_animating || !sim || sim.getCurrentTime() == p.getStartTime()) {
 			cc->set_source_rgb(0.0,1.0,0.0); // green
-		} else if (time > p.getStartTime()) {
+		} else if (sim.getCurrentTime() > p.getStartTime()) {
 			cc->set_source_rgb(1.0,1.0,0.0); // yellow
 		} else {
 			cc->set_source_rgb(1.0,0.0,0.0); // red
@@ -301,10 +244,20 @@ void TrainsArea::drawPassengersAt(const geom::Point<float> point, const Passenge
 
 bool TrainsArea::causeAnimationFrame() {
 	auto is_animating = getIsAnimatingAndLock();
+	auto sim = data.getSimulatorHandle();
 
 	bool retval = true;
 	if (is_animating) {
-		time += 1;
+		// TODO move work off the GUI thread...
+		// idea: submit an "observer (monitor?)" (actually a std::function) to the simulator
+		// as well as an associated delay/frequency. These monitors will get called every <delay>
+		// time that passes, and block the simulator from continuing until they return.
+		// the one for the trains area will cause an animation frame, then wait until it is drawn
+		// the TA must check if the simulator is paused before it draws anything related to it.
+		// use an "alive" bool, a mutex to protecte it, and a SafeWaitForNotify.
+		if (sim) {
+			sim.advanceBy(1);
+		}
 		retval = true;
 	} else {
 		retval = false;
@@ -356,7 +309,6 @@ std::unique_lock<std::recursive_mutex> TrainsArea::getScopedDrawingLock() {
 
 void TrainsArea::resetAnimationTime() {
 	getScopedDrawingLock();
-	time = 0;
 }
 
 } // end namespace graphics
