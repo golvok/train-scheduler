@@ -69,6 +69,10 @@ TrackNetwork::Time Train::getExpectedArrivalTime(
 	);
 }
 
+void Train::print(std::ostream& os) const {
+	getTrainID().print(os);
+}
+
 TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 	TrackNetwork::Time start_time,
 	std::pair<TrackNetwork::ID, TrackNetwork::ID> first_and_last,
@@ -104,7 +108,7 @@ TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 	);
 }
 
-std::pair<size_t,size_t> TrainRoute::getTrainsAtVertexInInterval_impl(
+std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
 	TrackNetwork::ID vid,
 	TrackNetwork::TimeInterval interval,
 	const TrackNetwork& tn
@@ -147,7 +151,7 @@ std::pair<size_t,size_t> TrainRoute::getTrainsAtVertexInInterval_impl(
 
 }
 
-Train TrainRoute::makeTrainFromIndex(size_t index) const {
+Train TrainRoute::makeTrainFromIndex(TrainIndex index) const {
 	return Train(
 		*this,
 		repeat_time*(index / start_offsets.size())

@@ -92,11 +92,17 @@ public:
 		return ::util::make_id<TrainID>(getRouteID(), index_number);
 	}
 
+	void print(std::ostream& os) const;
 private:
 	const TrainRoute* train_route;
 	TrackNetwork::Time departure_time;
 	TrainIndex index_number;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Train& t) {
+	t.print(os);
+	return os;
+}
 
 class TrainRoute {
 public:
@@ -149,10 +155,10 @@ public:
 	Train::Speed getSpeed() const { return speed; }
 
 
-	Train makeTrainFromIndex(size_t index) const;
+	Train makeTrainFromIndex(TrainIndex index) const;
 
 private:
-	std::pair<size_t,size_t> getTrainsAtVertexInInterval_impl(
+	std::pair<TrainIndex,TrainIndex> getTrainsAtVertexInInterval_impl(
 		TrackNetwork::ID vid,
 		TrackNetwork::TimeInterval interval,
 		const TrackNetwork& tn
