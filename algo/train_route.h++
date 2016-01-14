@@ -120,9 +120,16 @@ public:
 		const TrackNetwork& tn
 	) const {
 		auto data = getTrainsAtVertexInInterval_impl(vid, interval, tn);
-		return util::xrange<size_t>(data.first, data.second, [&](const auto& index) {
-			return this->makeTrainFromIndex(index);
-		});
+		return ::util::make_generator<TrainIndex>(
+			data.first,
+			data.second,
+			[&](const auto& index) {
+				return index + 1;
+			},
+			[&](const auto& index) {
+				return this->makeTrainFromIndex(index);
+			}
+		);
 	}
 
 	TrackNetwork::Time getExpectedTravelTime(
