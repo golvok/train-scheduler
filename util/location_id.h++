@@ -43,9 +43,21 @@ public:
 			os << 's' << asStationID().getValue();
 		}
 	}
+
+	bool operator==(const ::algo::TrainID& tid) const {
+		return isTrain() && asTrainID() == tid;
+	}
+	bool operator==(const StationID& sid) const {
+		return isStation() && asStationID() == sid;
+	}
 };
 
-inline std::ostream& operator<<(std::ostream& os, LocationID loc) {
+// ==, with lid on the right
+inline bool operator==(const ::algo::TrainID& tid, const LocationID& lid) { return lid == tid; }
+inline bool operator==(const StationID& sid, const LocationID& lid) { return lid == sid; }
+
+
+inline std::ostream& operator<<(std::ostream& os, const LocationID& loc) {
 	loc.print(os);
 	return os;
 }
