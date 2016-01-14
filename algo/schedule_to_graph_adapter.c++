@@ -123,7 +123,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			}
 		}
 
-		if (current_out_edge_index + 1 == out_edge_index) {
+		if (current_out_edge_index == out_edge_index) {
 			// if we get here, there are no more trains in this quantum
 			// so return a station vertex, with t+=quantum
 
