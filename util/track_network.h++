@@ -2,6 +2,7 @@
 #define GRAPH_H
 
 #include <graphics/geometry.h++>
+#include <util/generator.h++>
 #include <util/utils.h++>
 
 #include <boost/graph/adjacency_list.hpp>
@@ -81,6 +82,19 @@ public:
 
 	StationID getStationIDByVertexID(ID id) const { return ::util::make_id<StationID>(id); }
 	ID getVertexIDByStationID(StationID sid) const { return sid.getValue(); }
+
+	auto getStaitonRange() const {
+		return ::util::make_generator<decltype(vertices(g()).first)>(
+			vertices(g()).first,
+			vertices(g()).second,
+			[&](const auto& it) {
+				return std::next(it);
+			},
+			[&](const auto& it) {
+				return this->getStationIDByVertexID(*it);
+			}
+		);
+	}
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeStationMap(ARGS&&... args) const {
