@@ -41,6 +41,11 @@ public:
 
 	template<typename ROUTE>
 	void addRoute(const Passenger& p, ROUTE&& route) {
+		if (route.empty()) {
+			throw std::invalid_argument(
+				std::string(__PRETTY_FUNCTION__) + ": attempt to insert empty route for passenger " + p.getName()
+			);
+		}
 		auto emplace_results = routes.emplace(p.getID(), std::forward<ROUTE>(route));
 		if (emplace_results.second == false) {
 			emplace_results.first->second = std::forward<ROUTE>(route);
