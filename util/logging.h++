@@ -34,6 +34,10 @@ namespace DebugLevel {
 		PR_D3, // Passenger Routing debug level 3
 		PR_D4, // Passenger Routing lowest level debug
 
+		SIM_D1, // Simulator debug
+		SIM_D2, // Simulator debug level 2
+		SIM_D3, // Simulator lowest level debug
+
 		LEVEL_COUNT, // please make sure this is at the end
 	};
 

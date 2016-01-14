@@ -120,7 +120,7 @@ public:
 	TrainRoute& operator=(const TrainRoute&) = delete;
 	TrainRoute& operator=(TrainRoute&&) = default;
 
-	auto getTrainsAtVertexInInterval(
+	auto getTrainsAtVertexInInterval( // TODO rename to indicate generator return value
 		TrackNetwork::ID vid,
 		TrackNetwork::TimeInterval interval,
 		const TrackNetwork& tn
@@ -154,6 +154,12 @@ public:
 	const auto& getPath() const { return route; }
 	Train::Speed getSpeed() const { return speed; }
 
+	auto getTrainsLeavingInInterval( // TODO rename to indicate generator return value
+		TrackNetwork::TimeInterval interval,
+		const TrackNetwork& tn
+	) const {
+		return getTrainsAtVertexInInterval(getPath().front(), interval, tn);
+	}
 
 	Train makeTrainFromIndex(TrainIndex index) const;
 

@@ -59,6 +59,10 @@ inline void passengerRefListRemove(PassengerConstRefList& list, const Passenger&
 	}));
 }
 
+inline auto passengerRefListInserter(PassengerConstRefList& list) {
+	return std::back_inserter(list);
+}
+
 std::ostream& operator<<(std::ostream& os, const Passenger& p);
 std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair);
 

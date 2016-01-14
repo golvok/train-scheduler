@@ -50,7 +50,7 @@ LDFLAGS  += $(EXTRA_FLAGS) $(WARNING_FLAGS) $(LIBRARY_LINK_FLAGS)
 .PRECIOUS: $(OBJ_DIR)%.o
 
 # define source directories
-SOURCE_DIRS = algo/ graphics/ parsing/ util/ stats/ ./
+SOURCE_DIRS = algo/ graphics/ parsing/ util/ sim/ stats/ ./
 
 # compute all directories that might need creation
 DIRS=$(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR) \
@@ -82,6 +82,7 @@ $(EXE_DIR)train-sch: \
 	$(OBJ_DIR)util/passenger.o \
 	$(OBJ_DIR)util/track_network.o \
 	$(OBJ_DIR)util/thread_utils.o \
+	$(OBJ_DIR)sim/simulator.o \
 	$(OBJ_DIR)stats/report_engine.o \
 	$(OBJ_DIR)main.o
 
