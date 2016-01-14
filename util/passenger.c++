@@ -8,11 +8,11 @@ namespace {
 	}
 }
 
-// std::ostream& operator<<(std::ostream& os, const Passenger& p) {
-// 	print_first_part(os,p);
-// 	os << p.getEntryID() << "@t=" << p.getStartTime() << " -> " << p.getExitID();
-// 	return os;
-// }
+std::ostream& operator<<(std::ostream& os, const Passenger& p) {
+	print_first_part(os,p);
+	os << p.getEntryID() << "@t=" << p.getStartTime() << " -> " << p.getExitID();
+	return os;
+}
 
 std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair) {
 	const auto& p = pair.first;

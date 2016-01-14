@@ -59,7 +59,7 @@ inline void passengerRefListRemove(PassengerConstRefList& list, const Passenger&
 	}));
 }
 
-// std::ostream& operator<<(std::ostresam& os, const Passenger& p);
+std::ostream& operator<<(std::ostream& os, const Passenger& p);
 std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair);
 
 namespace std {
