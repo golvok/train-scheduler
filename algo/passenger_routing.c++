@@ -136,14 +136,17 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 			break;
 		}
 
-		if (vd.getLocation().isStation() && prev.getLocation().isStation()) {
+		if (
+			   (vd.getLocation().isStation() && prev.getLocation().isStation())
+			&& (vd.getLocation() != prev.getLocation())
+		) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "going from a Station to a Station: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
+				str << "going from a Station to a different Station: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
 			});
 		}
 		if (
 			   (vd.getLocation().isTrain() && prev.getLocation().isTrain())
-			&& (vd.getLocation().asTrainID() != prev.getLocation().asTrainID())
+			&& (vd.getLocation() != prev.getLocation())
 		) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
 				str << "going from a Train to a different Train: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
