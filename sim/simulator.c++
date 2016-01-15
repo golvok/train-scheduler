@@ -41,8 +41,7 @@ public:
 	void movePassengerFromHereGoingTo(
 		const Passenger& passenger,
 		const LocationID& from_location,
-		const LocationID& to_location,
-		const TrackNetwork::Time time_now
+		const LocationID& to_location
 	);
 
 	const std::shared_ptr<const ::algo::Schedule> getScheduleUsed() { return schedule; }
@@ -209,12 +208,12 @@ void Simulator::advanceBy(const TrackNetwork::Time& time_to_simulate) {
 
 				// pickup passengers
 				for (const auto& p : passengers_at_stations[arriving_station_id.getValue()]) {
-					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID(), current_time + time_to_simulate - time_until_prev_vertex);
+					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID());
 				}
 
 				// and drop off passengers
 				for (const auto& p : passengers_on_trains[train.getTrainID()]) {
-					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id, current_time + time_to_simulate - time_until_prev_vertex);
+					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id);
 				}
 			}
 
@@ -295,27 +294,29 @@ void Simulator::advanceBy(const TrackNetwork::Time& time_to_simulate) {
 void Simulator::movePassengerFromHereGoingTo(
 	const Passenger& passenger,
 	const LocationID& from_location,
-	const LocationID& to_location,
-	const TrackNetwork::Time time_now
+	const LocationID& to_location
 ) {
 	const auto& route = passenger_rotues.getRoute(passenger);
 
-	// find the next route element, according to the planned route
+	// find the next route element
 	const auto next_route_element_it = std::find_if(route.begin(), route.end(), [&](const auto& re) {
-		return re.getTime() >= time_now;
+		return re.getLocation() == to_location;
 	});
 
-	if (next_route_element_it == route.begin()) {
-		// this passenger hasn't started yet
-		//ignore
-		return;
-		// ::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-		// 	str << "passenger " << passenger.getName() << " hasn't entered the system (or has empty route)!\n";
-		// });
-	}
-
-	const auto& current_route_element = *std::prev(next_route_element_it); // note: next is not the begin()
+	const auto& current_route_element = *std::prev(next_route_element_it); // note: route can't be empty
 	const auto& current_location = current_route_element.getLocation();
+
+	if (next_route_element_it == route.begin()) {
+		if (current_location != from_location) {
+			// ignore
+			return;
+		} else {
+			// this passenger hasn't started yet
+			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
+				str << "passenger " << passenger.getName() << " hasn't entered the system (or has empty route)!\n";
+			});
+		}
+	}
 
 	if (next_route_element_it == route.end()) {
 		// this passenger has exited the system
@@ -332,39 +333,31 @@ void Simulator::movePassengerFromHereGoingTo(
 	const auto& next_location = next_route_element_it->getLocation(); // note: next is not end()
 
 	if (current_location != from_location) {
-		// ::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-		// 	str << "passenger " << passenger.getName() << " not at location expected!\n";
-		// });
+		::util::print_and_throw<std::runtime_error>([&](auto&& str) {
+			str << "passenger " << passenger.getName() << " not at location expected!\n";
+		});
 		return; // do nothing
 	}
 
 	dout(DL::SIM_D3) << "passenger " << passenger.getName() << " : " << current_location << " -> " << next_location << '\n';
 
 	if (current_location.isStation()) {
-		if (next_location == to_location) {
-			if (next_location.isTrain()) {
-				passengerRefListRemove(passengers_at_stations[current_location.asStationID().getValue()], passenger);
-				passengerRefListAdd(passengers_on_trains[next_location.asTrainID()], passenger);
-			} else {
-				::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-					str << "passenger going to unexpected location type (1)!\n";
-				});
-			}
+		if (next_location.isTrain()) {
+			passengerRefListRemove(passengers_at_stations[current_location.asStationID().getValue()], passenger);
+			passengerRefListAdd(passengers_on_trains[next_location.asTrainID()], passenger);
 		} else {
-			// TODO put re-route logic here?
+			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
+				str << "passenger going to unexpected location type: S->not T !\n";
+			});
 		}
 	} else if (current_location.isTrain()) {
-		if (next_location == to_location) {
-			if (next_location.isStation()) {
-				passengerRefListRemove(passengers_on_trains[current_location.asTrainID()], passenger);
-				passengerRefListAdd(passengers_at_stations[next_location.asStationID().getValue()], passenger);
-			} else {
-				::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-					str << "passenger going to unexpected location type (2)!\n";
-				});
-			}
+		if (next_location.isStation()) {
+			passengerRefListRemove(passengers_on_trains[current_location.asTrainID()], passenger);
+			passengerRefListAdd(passengers_at_stations[next_location.asStationID().getValue()], passenger);
 		} else {
-			// TODO put re-route logic here?
+			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
+				str << "passenger going to unexpected location typ: T->not S!\n";
+			});
 		}
 	} else { 					
 		::util::print_and_throw<std::runtime_error>([&](auto&& str) {
