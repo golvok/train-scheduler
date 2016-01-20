@@ -11,6 +11,7 @@
 namespace sim {
 
 class Simulator;
+class SimulatorHandle;
 
 struct TrainLocation {
 	size_t edge_number;
@@ -25,6 +26,8 @@ struct TrainLocation {
 };
 
 using Train2PositionInfoMap = ::algo::TrainMap<TrainLocation>;
+
+using ObserverType = std::function<bool()>;
 
 class SimulatorHandle {
 public:
@@ -50,7 +53,7 @@ public:
 	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
 	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
 
-	void advanceBy(const TrackNetwork::Time& t);
+	void runForTime(const TrackNetwork::Time& t);
 	TrackNetwork::Time getCurrentTime();
 
 	SimulatorHandle(const SimulatorHandle&) = default;
@@ -62,6 +65,9 @@ public:
 
 	std::shared_ptr<const ::algo::Schedule> getScheduleUsed();
 	std::shared_ptr<const TrackNetwork> getTrackNetworkUsed();
+
+	void registerObserver(ObserverType observer, TrackNetwork::Time period);
+	bool isPaused();
 private:
 	SimulatorHandle(const std::shared_ptr<Simulator>& sim_ptr) : sim_ptr(sim_ptr) { }
 
@@ -74,6 +80,7 @@ private:
 		std::shared_ptr<const ::algo::Schedule> schedule,
 		std::shared_ptr<const TrackNetwork> tn
 	);
+	friend class Simulator;
 };
 
 SimulatorHandle instantiate_simulator(
