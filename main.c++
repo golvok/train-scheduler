@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 
@@ -87,8 +88,14 @@ int program_main() {
 			tn
 		);
 
-		// display routed passengers
+		// display a simulation
 		graphics::get().trainsArea().displaySimulator(sim_handle);
+
+		std::thread sim_thread([&]() {
+			sim_handle.runForTime(20);
+		});
+		sim_thread.detach();
+
 		graphics::get().waitForPress();
 
 		::stats::ReportEngine report_engine(*tn,*passengers,*schedule,*p_routes);

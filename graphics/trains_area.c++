@@ -41,6 +41,8 @@ bool TrainsArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cc) {
 	drawTrains(cc);
 	drawWantedEdgeCapacities(cc);
 
+	data.notifyOfFrameDrawn();
+
 	return true;
 }
 
@@ -127,7 +129,7 @@ void TrainsArea::drawTrackNetwork(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 		cc->stroke();
 
-		if (sim_handle) {
+		if (sim_handle && sim_handle.isPaused()) {
 			// draw passengers where they currently are in the simulation
 			drawPassengersAt(v, sim_handle.getPassengersAt(tn->getStationIDByVertexID(vi)), cc);
 		} else {
@@ -153,6 +155,7 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 
 	if (!is_animating) { return; }
 	if (!sim_handle) { return; }
+	if (!sim_handle.isPaused()) { return; }
 
 	for (const auto& train_id : sim_handle.getActiveTrains()) {
 		const auto& path = schedule->getTrainRoute(train_id.getRouteID()).getPath();
@@ -218,16 +221,16 @@ void TrainsArea::drawPassengersAt(const geom::Point<float> point, const Passenge
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();
-	auto sim = data.getSimulatorHandle();
+	auto sim_handle = data.getSimulatorHandle();
 
 	if (!tn) { return; }
 
 	// draw a dot for each passenger
 	for (const auto& pid_and_i : index_assoc_iterate(passengers)) {
 		const Passenger& p = pid_and_i.v();
-		if (!is_animating || !sim || sim.getCurrentTime() == p.getStartTime()) {
+		if (!is_animating || !sim_handle || !sim_handle.isPaused() || sim_handle.getCurrentTime() == p.getStartTime()) {
 			cc->set_source_rgb(0.0,1.0,0.0); // green
-		} else if (sim.getCurrentTime() > p.getStartTime()) {
+		} else if (sim_handle.getCurrentTime() > p.getStartTime()) {
 			cc->set_source_rgb(1.0,1.0,0.0); // yellow
 		} else {
 			cc->set_source_rgb(1.0,0.0,0.0); // red
@@ -244,20 +247,9 @@ void TrainsArea::drawPassengersAt(const geom::Point<float> point, const Passenge
 
 bool TrainsArea::causeAnimationFrame() {
 	auto is_animating = getIsAnimatingAndLock();
-	auto sim = data.getSimulatorHandle();
 
 	bool retval = true;
 	if (is_animating) {
-		// TODO move work off the GUI thread...
-		// idea: submit an "observer (monitor?)" (actually a std::function) to the simulator
-		// as well as an associated delay/frequency. These monitors will get called every <delay>
-		// time that passes, and block the simulator from continuing until they return.
-		// the one for the trains area will cause an animation frame, then wait until it is drawn
-		// the TA must check if the simulator is paused before it draws anything related to it.
-		// use an "alive" bool, a mutex to protecte it, and a SafeWaitForNotify.
-		if (sim) {
-			sim.advanceBy(1);
-		}
 		retval = true;
 	} else {
 		retval = false;

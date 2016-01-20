@@ -7,6 +7,7 @@
 #include <util/passenger.h++>
 #include <util/track_network.h++>
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -115,11 +116,18 @@ private:
 	std::shared_ptr<const Data::WantedCapacityMap> getWantedEdgeCapacities();
 	::sim::SimulatorHandle getSimulatorHandle();
 
+	void notifyOfFrameDrawn();
+
 	TrainsArea* trains_area;
 	Data data;
 	Cache cache;
 
 	std::recursive_mutex data_mutex;
+
+	std::shared_ptr<std::pair<bool, std::mutex>> alive_flag_and_mutex;
+
+	std::condition_variable_any sim_wait_cv;
+	bool sim_frame_drawn;
 };
 
 } // end namespace graphics
