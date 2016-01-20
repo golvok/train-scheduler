@@ -76,4 +76,58 @@ void SafeWaitForNotify::notify_all_nolock() {
 	cv.notify_all();
 }
 
+TaskController::JobToken::JobToken(TaskController& tc)
+	: task_controller(tc)
+{
+	task_controller.incrementOutstanding();
+}
+
+TaskController::JobToken::~JobToken() {
+	task_controller.decrementOutstanding();
+}
+
+TaskController::TaskController()
+	: state_mutex()
+	, cancel_wait_cv()
+	, cancel_requested(false)
+	, outstanding_job_tokens(0)
+{ }
+
+TaskController::~TaskController() {
+	cancelTask();
+}
+
+void TaskController::cancelTask() {
+	auto state_ul = getStateMutexUL();
+	cancel_requested = true;
+	cancel_wait_cv.wait(state_ul, [&]() {
+		return outstanding_job_tokens == 0;
+	});
+}
+
+bool TaskController::isCancelRequested() {
+	auto state_ul = getStateMutexUL();
+	return cancel_requested;
+}
+
+TaskController::JobToken TaskController::getJobToken() {
+	return JobToken(*this);
+}
+
+void TaskController::incrementOutstanding() {
+	auto state_ul = getStateMutexUL();
+	outstanding_job_tokens += 1;
+}
+
+void TaskController::decrementOutstanding() {
+	auto state_ul = getStateMutexUL();
+	if (outstanding_job_tokens == 0) {
+		throw std::runtime_error("expected more than 0 job tokens\n");
+	}
+	outstanding_job_tokens -= 1;
+	if (cancel_requested && outstanding_job_tokens == 0) {
+		cancel_wait_cv.notify_all();
+	}
+}
+
 } // end namespace until

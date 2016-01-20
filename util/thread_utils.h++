@@ -76,6 +76,62 @@ public:
 	}
 };
 
+class TaskController {
+public:
+	class JobToken {
+	public:
+		JobToken(TaskController& tc);
+		~JobToken();
+	private:
+		TaskController& task_controller;
+	};
+
+	TaskController();
+	/**
+	 * Destroys this object, waiting first for all job tokens to be
+	 * returned, by calling cancelTask. (BLOCKS)
+	 */
+	~TaskController();
+
+	/**
+	 * Request a cancel of all tasks.
+	 * makes isCancelRequested return false, and waits untill there
+	 * are no outstanding job tokens. isCancelRequested will return false
+	 * until clearCancel is called. (BLOCKS)
+	 */
+	void cancelTask();
+
+	/**
+	 * Call to reset the return value of isCancelRequested to true.
+	 * Intented to be used once you are sure that you want threads to
+	 * start the task again.
+	 */
+	void clearCancel();
+
+	/**
+	 * To be used by task threads to check if they should give back their
+	 * job token, and stop.
+	 */
+	bool isCancelRequested();
+
+	/**
+	 * the returned object should be kept in scope as long
+	 * as your task is running
+	 */
+	JobToken getJobToken();
+private:
+	std::unique_lock<std::mutex> getStateMutexUL() {
+		return std::unique_lock<std::mutex>(state_mutex);
+	}
+	void incrementOutstanding();
+	void decrementOutstanding();
+
+	std::mutex state_mutex;
+	std::condition_variable cancel_wait_cv;
+	bool cancel_requested;
+	size_t outstanding_job_tokens;
+};
+
 } // end namespace util
 
 #endif /* UTILS__THREAD_UTILS_H */
