@@ -295,13 +295,18 @@ void Simulator::advanceBy(const TrackNetwork::Time& time_to_simulate) {
 			if (position_info.fraction_through_edge == 0) {
 				const auto& arriving_station_id = tn->getStationIDByVertexID(*prev_vertex_it);
 
+				// make copies, so that if the loops modify (which they do) then nothing confusing happens
+				// this isn't very efficient, but it's the most straightforward...
+				auto old_passengers_at_the_station = passengers_at_stations[arriving_station_id.getValue()];
+				auto old_passengers_on_this_train = passengers_on_trains[train.getTrainID()];
+
 				// pickup passengers
-				for (const auto& p : passengers_at_stations[arriving_station_id.getValue()]) {
+				for (const auto& p : old_passengers_at_the_station) {
 					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID());
 				}
 
 				// and drop off passengers
-				for (const auto& p : passengers_on_trains[train.getTrainID()]) {
+				for (const auto& p : old_passengers_on_this_train) {
 					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id);
 				}
 			}
