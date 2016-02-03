@@ -5,11 +5,12 @@
 #include <util/utils.h++>
 
 #include <bitset>
-#include <boost/iostreams/filtering_stream.hpp>
 #include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#include <boost/iostreams/filtering_stream.hpp>
 
 class IndentingLeveledDebugPrinter;
 
@@ -153,29 +154,6 @@ public:
 };
 
 /**
- * The class that detects lines and inserts the tabs to indent the lines
- * properly
- */
-class indent_filter	: public boost::iostreams::output_filter {
-private:
-	friend class IndentingLeveledDebugPrinter;
-
-	IndentingLeveledDebugPrinter& src;
-	bool just_saw_newline;
-
-	explicit indent_filter(IndentingLeveledDebugPrinter& src)
-		: src(src)
-		, just_saw_newline(true)
-	{ }
-
-public:
-	template<typename SINK> bool put(SINK& dest, int c);
-
-	// this should reset the state
-	template<typename SINK> void close(SINK&) { just_saw_newline = true; }
-};
-
-/**
  * A little helper class that is returned when an indent is done
  * It will either unindent when its destructor is called, or endIndent() is called
  */
@@ -226,25 +204,35 @@ private:
 	friend class IndentingLeveledDebugPrinter;
 
 	IndentingLeveledDebugPrinter* src;
+	std::stringstream underlying_ss;
 
 public:
 	LevelStream(IndentingLeveledDebugPrinter* src)
 		: src(src)
+		, underlying_ss()
 	{ }
 
 	LevelStream(const LevelStream&) = default;
 	LevelStream(LevelStream&&) = default;
 
+	~LevelStream();
+
 	LevelStream& operator=(const LevelStream&) = default;
 	LevelStream& operator=(LevelStream&&) = default;
-
-	template<typename T>
-	friend LevelStream& operator<<(LevelStream& lhs, const T& t);
 
 	template<typename T>
 	IndentLevel indentWithTitle(const T& t);
 
 	bool enabled() { return src != nullptr; }
+	void flush();
+
+	template<typename T>
+	LevelStream& push_in(const T& t) {
+		if (enabled()) {
+			underlying_ss << t;
+		}
+		return *this;
+	}
 };
 
 /**
@@ -271,7 +259,7 @@ class IndentingLeveledDebugPrinter
 	int highest_title_rank;
 	int indent_level;
 
-	std::stringstream ss;
+	bool just_saw_newline;
 public:
 
 	IndentingLeveledDebugPrinter(std::ostream& os, int highest_title_rank)
@@ -279,25 +267,31 @@ public:
 		, LevelRedirecter()
 		, highest_title_rank(highest_title_rank)
 		, indent_level(0)
-		, ss()
+		, just_saw_newline(false)
 	{
-		push(indent_filter(*this));
 		push(os);
 	}
 
 	IndentingLeveledDebugPrinter(const IndentingLeveledDebugPrinter&) = delete;
 	IndentingLeveledDebugPrinter& operator=(const IndentingLeveledDebugPrinter&) = delete;
 
-	template<typename T>
-	void print(const T& t) {
-		ss << t;
+	void print(std::istream& ss) {
 		while (true) {
 			auto c = ss.get();
 			if (ss.eof()) { break; }
+
+			// if we see a newline, remember it, and output spaces next time.
+			if (c == '\n') {
+				just_saw_newline = true;
+			} else if (just_saw_newline) {
+				util::repeat(getNumSpacesToIndent(),[&](){
+					this->put(' ');
+				});
+				just_saw_newline = false;
+			}
+
 			this->put(c);
 		}
-		this->flush(); // force printing now, so that indent is for sure correct.
-		ss.clear(); // clear EOF bit
 	}
 
 	uint getIndentLevel() {
@@ -326,21 +320,22 @@ private:
 	auto indentWithTitle(const FUNC& f) -> decltype(f(std::stringstream()),IndentLevel(this)) {
 		// the weird return value is so the compiler SFINAE's away this
 		// overload if FUNC is not a lambda style type
-		util::repeat(getTitleLevel(),[&](){
-			print('=');
-		});
-		print(' ');
-
 		std::stringstream local_ss;
-		f(local_ss);
-		std::string title = local_ss.str();
-		print(title);
 
-		print(' ');
 		util::repeat(getTitleLevel(),[&](){
-			print('=');
+			local_ss << '=';
 		});
-		print('\n');
+		local_ss << ' ';
+
+		f(local_ss);
+
+		local_ss << ' ';
+		util::repeat(getTitleLevel(),[&](){
+			local_ss << '=';
+		});
+		local_ss << '\n';
+
+		print(local_ss);
 		indent_level++;
 		return IndentLevel(this);
 	}
@@ -369,10 +364,7 @@ LevelStream& operator<<(LevelStream&& lhs, const T& t) {
 
 template<typename T>
 LevelStream& operator<<(LevelStream& lhs, const T& t) {
-	if (lhs.enabled()) {
-		lhs.src->print(t);
-	}
-	return lhs;
+	return lhs.push_in(t);
 }
 
 // has to be down here because the type of src (IndentingLeveledDebugPrinter*)
