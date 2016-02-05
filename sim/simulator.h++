@@ -13,6 +13,9 @@ namespace sim {
 class Simulator;
 class SimulatorHandle;
 
+using SimTime = double;
+using SimTimeInterval = std::pair<SimTime,SimTime>;
+
 struct TrainLocation {
 	size_t edge_number;
 	double fraction_through_edge;
@@ -53,8 +56,8 @@ public:
 	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
 	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
 
-	void runForTime(const TrackNetwork::Time& t);
-	TrackNetwork::Time getCurrentTime();
+	void runForTime(const SimTime& t);
+	SimTime getCurrentTime();
 
 	SimulatorHandle(const SimulatorHandle&) = default;
 	SimulatorHandle& operator=(const SimulatorHandle&) = default;
@@ -66,7 +69,7 @@ public:
 	std::shared_ptr<const ::algo::Schedule> getScheduleUsed();
 	std::shared_ptr<const TrackNetwork> getTrackNetworkUsed();
 
-	void registerObserver(ObserverType observer, TrackNetwork::Time period);
+	void registerObserver(ObserverType observer, SimTime period);
 	bool isPaused();
 private:
 	SimulatorHandle(const std::shared_ptr<Simulator>& sim_ptr) : sim_ptr(sim_ptr) { }

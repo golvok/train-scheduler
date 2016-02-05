@@ -45,9 +45,9 @@ public:
 	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
 	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
 
-	void runForTime(const TrackNetwork::Time& t);
-	void advanceBy(const TrackNetwork::Time& t);
-	TrackNetwork::Time getCurrentTime() { return current_time; }
+	void runForTime(const SimTime& t);
+	void advanceBy(const SimTime& t);
+	SimTime getCurrentTime() { return current_time; }
 
 	void movePassengerFromHereGoingTo(
 		const Passenger& passenger,
@@ -58,7 +58,7 @@ public:
 	const std::shared_ptr<const ::algo::Schedule> getScheduleUsed() const { return schedule; }
 	const std::shared_ptr<const TrackNetwork> getTrackNetworkUsed() const { return tn; }
 
-	void registerObserver(ObserverType observer, TrackNetwork::Time period);
+	void registerObserver(ObserverType observer, SimTime period);
 	bool isPaused() { std::unique_lock<std::recursive_mutex> paused_ul(is_paused_mutex); return is_paused; }
 	void setIsPaused(bool val) { std::unique_lock<std::recursive_mutex> paused_ul(is_paused_mutex); is_paused = val; }
 
@@ -67,9 +67,9 @@ private:
 	std::shared_ptr<const ::algo::Schedule> schedule;
 	std::shared_ptr<const TrackNetwork> tn;
 
-	std::list<std::pair<ObserverType, TrackNetwork::Time>> observers_and_periods;
+	std::list<std::pair<ObserverType, SimTime>> observers_and_periods;
 
-	TrackNetwork::Time current_time;
+	SimTime current_time;
 
 	::algo::PassengerRoutes passenger_rotues;
 
@@ -92,14 +92,14 @@ const Train2PositionInfoMap& SimulatorHandle::getTrainLocations() const { return
 const PassengerConstRefList& SimulatorHandle::getPassengersAt (const ::algo::TrainID& train) const { return sim_ptr->getPassengersAt(train  ); }
 const PassengerConstRefList& SimulatorHandle::getPassengersAt (const StationID& station  ) const { return sim_ptr->getPassengersAt(station); }
 
-void SimulatorHandle::runForTime(const TrackNetwork::Time& t) { sim_ptr->runForTime(t); }
-TrackNetwork::Time SimulatorHandle::getCurrentTime() { return sim_ptr->getCurrentTime(); }
+void SimulatorHandle::runForTime(const SimTime& t) { sim_ptr->runForTime(t); }
+SimTime SimulatorHandle::getCurrentTime() { return sim_ptr->getCurrentTime(); }
 
 
 std::shared_ptr<const ::algo::Schedule> SimulatorHandle::getScheduleUsed() { return sim_ptr->getScheduleUsed(); }
 std::shared_ptr<const TrackNetwork> SimulatorHandle::getTrackNetworkUsed() { return sim_ptr->getTrackNetworkUsed(); }
 
-void SimulatorHandle::registerObserver(ObserverType observer, TrackNetwork::Time period) { sim_ptr->registerObserver(observer, period); }
+void SimulatorHandle::registerObserver(ObserverType observer, SimTime period) { sim_ptr->registerObserver(observer, period); }
 bool SimulatorHandle::isPaused() { return sim_ptr->isPaused(); }
 
 SimulatorHandle instantiate_simulator(
@@ -142,7 +142,7 @@ const PassengerConstRefList& Simulator::getPassengersAt(const StationID& station
 	return passengers_at_stations[station.getValue()];
 }
 
-void Simulator::runForTime(const TrackNetwork::Time& time_to_run) {
+void Simulator::runForTime(const SimTime& time_to_run) {
 	auto job_token = sim_task_controller.getJobToken();
 	if (sim_task_controller.isCancelRequested()) { return; }
 
@@ -191,7 +191,7 @@ void Simulator::runForTime(const TrackNetwork::Time& time_to_run) {
 	}
 }
 
-void Simulator::advanceBy(const TrackNetwork::Time& time_to_simulate) {
+void Simulator::advanceBy(const SimTime& time_to_simulate) {
 	dout(DL::SIM_D2) << "advance by " << time_to_simulate << '\n';
 
 	// if (time_to_simulate == 0) {
@@ -204,7 +204,7 @@ void Simulator::advanceBy(const TrackNetwork::Time& time_to_simulate) {
 		});
 	}
 
-	auto t_interval = TrackNetwork::TimeInterval(current_time, current_time + time_to_simulate);
+	auto t_interval = SimTimeInterval(current_time, current_time + time_to_simulate);
 
 	dout(DL::SIM_D2) << "Simulating t:" << t_interval.first << " -> " << t_interval.second << '\n';
 
@@ -257,7 +257,7 @@ void Simulator::advanceBy(const TrackNetwork::Time& time_to_simulate) {
 		const auto& train = route.makeTrainFromIndex(trainID.getTrainIndex());
 		auto& position_info = value_pair.second;
 
-		TrackNetwork::Time time_until_prev_vertex = 0;
+		SimTime time_until_prev_vertex = 0;
 
 		auto train_indent = dout(DL::SIM_D3).indentWithTitle([&](auto&& str) {
 			str << "Updating Train " << train;
@@ -460,7 +460,7 @@ void Simulator::movePassengerFromHereGoingTo(
 	}
 }
 
-void Simulator::registerObserver(ObserverType observer, TrackNetwork::Time period) {
+void Simulator::registerObserver(ObserverType observer, SimTime period) {
 	auto prev_iter = std::find_if(observers_and_periods.begin(), observers_and_periods.end(), [&](auto& elem) {
 		return elem.second < period;
 	});
