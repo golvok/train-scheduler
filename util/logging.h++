@@ -292,6 +292,7 @@ public:
 
 			this->put(c);
 		}
+		flush(); // ensure each ss is printed immediately
 	}
 
 	uint getIndentLevel() {
