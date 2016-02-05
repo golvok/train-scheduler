@@ -120,7 +120,7 @@ std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
 	}
 
 	const TrackNetwork::TimeInterval time_in_day(
-		interval.first % repeat_time, interval.second % repeat_time
+		std::fmod(interval.first,repeat_time), std::fmod(interval.second,repeat_time)
 	);
 	const TrackNetwork::TimeInterval day_number(
 		interval.first / repeat_time, interval.second / repeat_time
