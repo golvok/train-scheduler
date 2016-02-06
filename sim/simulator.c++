@@ -45,8 +45,8 @@ public:
 	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
 	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
 
-	void runForTime(const SimTime& t);
-	void advanceBy(const SimTime& t);
+	void runForTime(const SimTime& time_to_run, const SimTime& max_step_size);
+	SimTime advanceUntilEvent(const SimTime& sim_until_time);
 	SimTime getCurrentTime() { return current_time; }
 
 	void movePassengerFromHereGoingTo(
@@ -92,7 +92,7 @@ const Train2PositionInfoMap& SimulatorHandle::getTrainLocations() const { return
 const PassengerConstRefList& SimulatorHandle::getPassengersAt (const ::algo::TrainID& train) const { return sim_ptr->getPassengersAt(train  ); }
 const PassengerConstRefList& SimulatorHandle::getPassengersAt (const StationID& station  ) const { return sim_ptr->getPassengersAt(station); }
 
-void SimulatorHandle::runForTime(const SimTime& t) { sim_ptr->runForTime(t); }
+void SimulatorHandle::runForTime(const SimTime& time_to_run, const SimTime& max_step_size) { sim_ptr->runForTime(time_to_run, max_step_size); }
 SimTime SimulatorHandle::getCurrentTime() { return sim_ptr->getCurrentTime(); }
 
 
@@ -142,71 +142,85 @@ const PassengerConstRefList& Simulator::getPassengersAt(const StationID& station
 	return passengers_at_stations[station.getValue()];
 }
 
-void Simulator::runForTime(const SimTime& time_to_run) {
+void Simulator::runForTime(const SimTime& time_to_run, const SimTime& max_step_size) {
 	auto job_token = sim_task_controller.getJobToken();
 	if (sim_task_controller.isCancelRequested()) { return; }
 
 	auto stop_time = current_time + time_to_run;
 
+	auto last_observer_update_time = current_time;
+
 	while (true) {
 		if (sim_task_controller.isCancelRequested()) { return; }
 
-		auto time_left = stop_time - current_time;
+		const auto time_left = stop_time - current_time;
 
 		if (time_left <= 0) {
 			break;
 		}
 
+		const auto next_step_time = current_time + std::min(time_left, max_step_size);
+		const auto next_observer_update_time = (
+			observers_and_periods.empty()
+		) ? (
+			// if no observers, just use max
+			std::numeric_limits<SimTime>::max()
+		) : (
+			// else, try to advance by shortest observer period (list is sorted)
+			last_observer_update_time + observers_and_periods.front().second
+		);
+
+		enum class WhichTime {
+			STEP, OBSERVER,
+		};
+		const auto sim_until_time_compare_results = std::min(
+			compare_with_tag(next_step_time,            WhichTime::STEP    ),
+			compare_with_tag(next_observer_update_time, WhichTime::OBSERVER)
+		);
+		const auto sim_until_time = sim_until_time_compare_results.value();
+
 		setIsPaused(false);
 
-		advanceBy(
-			(
-				observers_and_periods.empty()
-			) ? (
-				// if no observers, just use the time left
-				time_left
-			) : (
-				// else, advance by shortest observer period (list is sorted)
-				// or the time left if that is smaller
-				std::min(observers_and_periods.front().second, time_left)
-			)
-		);
+		auto time_advavced = advanceUntilEvent(sim_until_time);
+		(void)time_advavced;
 
 		setIsPaused(true);
 
+		if (current_time > sim_until_time) {
+			dout(DL::WARN) << "simulated too much! wanted " << sim_until_time << " but got " << current_time << '\n';
+		}
+
 		// call the observers
-		for (auto it = observers_and_periods.begin(); it != observers_and_periods.end();) {
+		if (sim_until_time_compare_results.id() == WhichTime::OBSERVER) {
+			last_observer_update_time = current_time;
+			dout(DL::SIM_D1) << "calling the " << observers_and_periods.size() << " observers\n";
 
-			bool result = it->first(); // execute observer
+			for (auto it = observers_and_periods.begin(); it != observers_and_periods.end();) {
 
-			// 'it' will get invalidated by the erase, so increment past it first
-			auto it_copy = it;
-			++it;
+				bool result = it->first(); // execute observer
 
-			if (result == false) {
-				// remove if return false
-				observers_and_periods.erase(it_copy);
+				// 'it' will get invalidated by the erase, so increment past it first
+				auto it_copy = it;
+				++it;
+
+				if (result == false) {
+					// remove if return false
+					observers_and_periods.erase(it_copy);
+				}
 			}
+
 		}
 	}
 }
 
-void Simulator::advanceBy(const SimTime& time_to_simulate) {
-	dout(DL::SIM_D2) << "advance by " << time_to_simulate << '\n';
+SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
+	dout(DL::SIM_D2) << "Simulating t:" << current_time << " -> " << sim_until_time << '\n';
 
-	// if (time_to_simulate == 0) {
-	// 	return;
-	// }
-
-	if (time_to_simulate < 0) {
+	if (sim_until_time < current_time) {
 		::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-			str << "negative simulation time not allowed: t=" << time_to_simulate << '\n';
+			str << "trying to simulate backwards! t1=" << current_time << ", t2=" << sim_until_time << '\n';
 		});
 	}
-
-	auto t_interval = SimTimeInterval(current_time, current_time + time_to_simulate);
-
-	dout(DL::SIM_D2) << "Simulating t:" << t_interval.first << " -> " << t_interval.second << '\n';
 
 	// remove passengers that are at the destinations
 	for (const auto& station_id : tn->getStaitonRange()) {
@@ -228,7 +242,7 @@ void Simulator::advanceBy(const SimTime& time_to_simulate) {
 	// add new trains
 	for (const auto& route : schedule->getTrainRoutes()) {
 		// find trains starting in t_interval, add them
-		for (const auto& train : route.getTrainsLeavingInInterval(t_interval, *tn)) {
+		for (const auto& train : route.getTrainsLeavingInInterval({current_time, sim_until_time + 1}, *tn)) {
 			dout(DL::SIM_D3) << "adding train " << train << ", departs at t=" << train.getDepartureTime() << '\n';
 			train_locations.emplace(train.getTrainID(), TrainLocation());
 			passengers_on_trains.emplace(train.getTrainID(), PassengerConstRefList());
@@ -239,7 +253,7 @@ void Simulator::advanceBy(const SimTime& time_to_simulate) {
 	for (const auto& p : *passengers) {
 		const auto& route = passenger_rotues.getRoute(p);
 		const auto& first_re = route.front();
-		if (t_interval.first <= first_re.getTime() && first_re.getTime() < t_interval.second) {
+		if (current_time <= first_re.getTime() && first_re.getTime() < sim_until_time) {
 			dout(DL::SIM_D3) << "adding passenger " << p << '\n';
 			passengerRefListAdd(passengers_at_stations[first_re.getLocation().asStationID().getValue()],p);
 		}
@@ -264,9 +278,9 @@ void Simulator::advanceBy(const SimTime& time_to_simulate) {
 		});
 
 		// handle trains that are starting in the simulated interval
-		const auto time_to_departure_from_interval_start = train.getDepartureTime() - t_interval.first;
+		const auto time_to_departure_from_interval_start = train.getDepartureTime() - current_time;
 
-		if (t_interval.second < time_to_departure_from_interval_start) {
+		if (sim_until_time < time_to_departure_from_interval_start) {
 			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
 				str << "train " << train << " departs in the future!\n";
 			});
@@ -323,9 +337,9 @@ void Simulator::advanceBy(const SimTime& time_to_simulate) {
 				break;
 			}
 
-			// total time, minus time already covered, minus time to departure if relevant
+			// time to stop at, minus time already covered, minus time to departure if relevant
 			const auto time_left_to_simulate =
-				time_to_simulate - time_until_prev_vertex - departing_subtraction
+				sim_until_time - (current_time + time_until_prev_vertex) - departing_subtraction
 			;
 
 			if (time_left_to_simulate <= 0) {
@@ -382,7 +396,9 @@ void Simulator::advanceBy(const SimTime& time_to_simulate) {
 	}
 
 	// update time
-	current_time = t_interval.second;
+	current_time = sim_until_time;
+
+	return sim_until_time - current_time;
 }
 
 void Simulator::movePassengerFromHereGoingTo(

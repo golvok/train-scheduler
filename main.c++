@@ -92,7 +92,7 @@ int program_main() {
 		graphics::get().trainsArea().displaySimulator(sim_handle);
 
 		std::thread sim_thread([&]() {
-			sim_handle.runForTime(20);
+			sim_handle.runForTime(20, 0.3);
 		});
 		sim_thread.detach();
 

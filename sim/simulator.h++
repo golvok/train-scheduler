@@ -56,7 +56,7 @@ public:
 	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
 	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
 
-	void runForTime(const SimTime& t);
+	void runForTime(const SimTime& time_to_run, const SimTime& step_size);
 	SimTime getCurrentTime();
 
 	SimulatorHandle(const SimulatorHandle&) = default;

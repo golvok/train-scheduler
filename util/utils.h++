@@ -61,7 +61,7 @@ public:
 	ComparesWithTag& operator=(const ComparesWithTag&) = delete;
 	ComparesWithTag& operator=(ComparesWithTag&&) = default;
 
-	operator std::tuple<T,U>() {
+	operator std::tuple<T,U>() const {
 		return {thing,identifier};
 	}
 
@@ -70,8 +70,8 @@ public:
 		return thing < rhs.thing;
 	}
 
-	const T& value() { return thing; }
-	U id() { return identifier; }
+	const T& value() const { return thing; }
+	U id() const { return identifier; }
 };
 
 
