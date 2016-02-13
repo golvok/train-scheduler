@@ -1,5 +1,7 @@
 
-#include "report_engine.h++"
+#include "report_engine_internal.h++"
+
+#include <sim/simulator_internal.h++>
 
 #include <ostream>
 #include <stdexcept>
@@ -10,10 +12,41 @@ namespace {
 
 namespace stats {
 
-void ReportEngine::report(const ReportConfig& config, std::ostream& os) {
+ReportEngineHandle::~ReportEngineHandle() { }
+ReportEngineHandle::ReportEngineHandle(std::unique_ptr<ReportEngine>&& ptr) : ptr(std::move(ptr)) { }
+ReportEngineHandle::ReportEngineHandle(ReportEngineHandle&& src) : ptr(std::move(src.ptr)) { }
+ReportEngine& ReportEngineHandle::operator*() { return *ptr; }
+ReportEngine* ReportEngineHandle::operator->() { return ptr.get(); }
+const ReportEngine& ReportEngineHandle::operator*() const { return *ptr; }
+
+
+ReportEngineHandle make_report_engine(
+	const ::TrackNetwork& track_network,
+	const PassengerList& passengers,
+	const ::algo::Schedule&	schedule,
+	const ::algo::PassengerRoutes& passenger_routes,
+	const ::sim::SimulatorHandle& sim_handle
+) {
+	return ReportEngineHandle(std::make_unique<ReportEngine>(
+		track_network,
+		passengers,
+		schedule,
+		passenger_routes,
+		sim_handle
+	));
+}
+
+void report_into(
+	ReportEngine& rengine,
+	const ReportConfig& config,
+	std::ostream& os
+) {
 	switch (config.getReportType()) {
 		case ReportConfig::ReportType::PASSENGER_ROUTE_STATS:
-			reportPassengerRouteStats(config,os);
+			rengine.reportPassengerRouteStats(config,os);
+			return;
+		case ReportConfig::ReportType::SIMULATION_PASSENGER_STATS:
+			rengine.reportSimulationPassengerStats(config,os);
 			return;
 	}
 }
@@ -23,6 +56,7 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 	TrackNetwork::Time totalWaitingTime = 0;
 	TrackNetwork::Time totalTimeInSystem = 0;
 
+	os << "Passenger Route Statistics Report\n";
 	os << "passenger, arrive time, leave time, exit time\n";
 	os << "---------------------------------------------\n";
 
@@ -41,6 +75,48 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 	os << "---------------------------------------------\n";
 	os << "total waiting time   = " << totalWaitingTime << '\n';
 	os << "total time in system = " << totalTimeInSystem << '\n';
+	os << "\n\n\n";
+}
+
+void ReportEngine::reportSimulationPassengerStats(const ReportConfig& config, std::ostream& os) {
+	(void)config;
+	const auto& passenger_exits = sim_handle.get()->getPassengerExits();
+
+	::sim::SimTime totalWaitingTime = 0;
+	::sim::SimTime totalTimeInSystem = 0;
+
+	os << "Simulation Passenger Statistics Report\n";
+	os << "passenger, arrive time, leave time, exit time\n";
+	os << "---------------------------------------------\n";
+
+	for (const auto& passenger : passengers) {
+		const auto& route = passenger_routes.getRoute(passenger);
+		const auto exit_it = std::find_if(passenger_exits.begin(), passenger_exits.end(),
+			[&](const auto& elem) {
+				return elem.passenger.get() == passenger;
+			}
+		);
+
+		::sim::SimTime start_time = passenger.getStartTime();
+		::sim::SimTime end_waiting_time = route.front().getTime();
+		totalWaitingTime += end_waiting_time - start_time;
+
+		os << passenger.getName() << ", " << start_time << ", " << end_waiting_time << ", ";
+
+		if (exit_it == passenger_exits.end()) {
+			os << "--";
+		} else {
+			totalTimeInSystem += exit_it->time_of_exit - end_waiting_time;
+			os << exit_it->time_of_exit;
+		}
+
+		os << '\n';
+	}
+
+	os << "---------------------------------------------\n";
+	os << "total waiting time   = " << totalWaitingTime << '\n';
+	os << "total time in system = " << totalTimeInSystem << '\n';
+	os << "\n\n\n";
 }
 
 } // end namespace stats

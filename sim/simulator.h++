@@ -71,6 +71,8 @@ public:
 
 	void registerObserver(ObserverType observer, SimTime period);
 	bool isPaused();
+
+	Simulator* get() const { return sim_ptr.get(); }
 private:
 	SimulatorHandle(const std::shared_ptr<Simulator>& sim_ptr) : sim_ptr(sim_ptr) { }
 

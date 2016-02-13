@@ -63,6 +63,9 @@ public:
 	bool isPaused() { std::unique_lock<std::recursive_mutex> paused_ul(is_paused_mutex); return is_paused; }
 	void setIsPaused(bool val) { std::unique_lock<std::recursive_mutex> paused_ul(is_paused_mutex); is_paused = val; }
 
+	// internal methods
+
+	const auto& getPassengerExits() const { return passenger_exits; }
 private:
 	std::shared_ptr<const PassengerList> passengers;
 	std::shared_ptr<const ::algo::Schedule> schedule;

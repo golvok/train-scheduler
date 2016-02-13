@@ -93,16 +93,23 @@ int program_main() {
 
 		std::thread sim_thread([&]() {
 			sim_handle.runForTime(20, 0.3);
+			auto report_engine_ptr = ::stats::make_report_engine(
+				*tn,*passengers,*schedule,*p_routes,sim_handle
+			);
+
+			std::ofstream report_file("reports.txt");
+
+			using ::stats::ReportConfig;
+			const ReportConfig conf_prs(ReportConfig::ReportType::PASSENGER_ROUTE_STATS);
+			const ReportConfig conf_sps(ReportConfig::ReportType::SIMULATION_PASSENGER_STATS);
+
+			::stats::report_into(*report_engine_ptr, conf_prs, report_file);
+			::stats::report_into(*report_engine_ptr, conf_sps, report_file);
 		});
 		sim_thread.detach();
 
 		graphics::get().waitForPress();
 
-		::stats::ReportEngine report_engine(*tn,*passengers,*schedule,*p_routes);
-
-		::stats::ReportConfig conf(::stats::ReportConfig::ReportType::PASSENGER_ROUTE_STATS);
-		std::ofstream report_file("reports.txt");
-		report_engine.report(conf,report_file);
 	}
 
 	return 0;
