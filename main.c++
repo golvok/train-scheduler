@@ -91,8 +91,9 @@ int program_main() {
 		// display a simulation
 		graphics::get().trainsArea().displaySimulator(sim_handle);
 
-		std::thread sim_thread([&]() {
+		std::thread sim_thread([&]() noexcept {
 			sim_handle.runForTime(20, 0.3);
+
 			auto report_engine_ptr = ::stats::make_report_engine(
 				*tn,*passengers,*schedule,*p_routes,sim_handle
 			);
