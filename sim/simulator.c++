@@ -26,6 +26,7 @@ public:
 	, passengers_on_trains(schedule->makeTrainMap<PassengerConstRefList>())
 	, passengers_at_stations(tn->makeStationMap<PassengerConstRefList>())
 	, train_locations()
+	, passenger_exits()
 	, is_paused(true)
 	, is_paused_mutex()
 	, sim_task_controller()
@@ -52,7 +53,8 @@ public:
 	void movePassengerFromHereGoingTo(
 		const Passenger& passenger,
 		const LocationID& from_location,
-		const LocationID& to_location
+		const LocationID& to_location,
+		const SimTime& time_of_move
 	);
 
 	const std::shared_ptr<const ::algo::Schedule> getScheduleUsed() const { return schedule; }
@@ -77,6 +79,12 @@ private:
 	StationMap<PassengerConstRefList> passengers_at_stations;
 
 	Train2PositionInfoMap train_locations;
+
+	struct PassengerExitInfo {
+		std::reference_wrapper<const Passenger> passenger;
+		SimTime time_of_exit;
+	};
+	std::vector<PassengerExitInfo> passenger_exits;
 
 
 	bool is_paused;
@@ -143,10 +151,10 @@ const PassengerConstRefList& Simulator::getPassengersAt(const StationID& station
 }
 
 void Simulator::runForTime(const SimTime& time_to_run, const SimTime& max_step_size) {
-	auto job_token = sim_task_controller.getJobToken();
+	const auto job_token = sim_task_controller.getJobToken();
 	if (sim_task_controller.isCancelRequested()) { return; }
 
-	auto stop_time = current_time + time_to_run;
+	const auto stop_time = current_time + time_to_run;
 
 	auto last_observer_update_time = current_time;
 
@@ -200,7 +208,7 @@ void Simulator::runForTime(const SimTime& time_to_run, const SimTime& max_step_s
 				bool result = it->first(); // execute observer
 
 				// 'it' will get invalidated by the erase, so increment past it first
-				auto it_copy = it;
+				const auto it_copy = it;
 				++it;
 
 				if (result == false) {
@@ -273,7 +281,7 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 
 		SimTime time_until_prev_vertex = 0;
 
-		auto train_indent = dout(DL::SIM_D3).indentWithTitle([&](auto&& str) {
+		const auto train_indent = dout(DL::SIM_D3).indentWithTitle([&](auto&& str) {
 			str << "Updating Train " << train;
 		});
 
@@ -306,22 +314,26 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 		while (true) {
 			dout(DL::SIM_D3) << "current position: en=" << position_info.edge_number << ", fte=" << position_info.fraction_through_edge << '\n';
 
+			const auto current_time_in_simulation_of_this_train =
+				current_time + time_until_prev_vertex - departing_subtraction
+			;
+
 			if (position_info.fraction_through_edge == 0) {
 				const auto& arriving_station_id = tn->getStationIDByVertexID(*prev_vertex_it);
 
 				// make copies, so that if the loops modify (which they do) then nothing confusing happens
 				// this isn't very efficient, but it's the most straightforward...
-				auto old_passengers_at_the_station = passengers_at_stations[arriving_station_id.getValue()];
-				auto old_passengers_on_this_train = passengers_on_trains[train.getTrainID()];
+				const auto old_passengers_at_the_station = passengers_at_stations[arriving_station_id.getValue()];
+				const auto old_passengers_on_this_train = passengers_on_trains[train.getTrainID()];
 
 				// pickup passengers
 				for (const auto& p : old_passengers_at_the_station) {
-					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID());
+					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID(), current_time_in_simulation_of_this_train);
 				}
 
 				// and drop off passengers
 				for (const auto& p : old_passengers_on_this_train) {
-					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id);
+					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id, current_time_in_simulation_of_this_train);
 				}
 			}
 
@@ -337,9 +349,8 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 				break;
 			}
 
-			// time to stop at, minus time already covered, minus time to departure if relevant
 			const auto time_left_to_simulate =
-				sim_until_time - (current_time + time_until_prev_vertex) - departing_subtraction
+				sim_until_time - current_time_in_simulation_of_this_train;
 			;
 
 			if (time_left_to_simulate <= 0) {
@@ -404,7 +415,8 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 void Simulator::movePassengerFromHereGoingTo(
 	const Passenger& passenger,
 	const LocationID& from_location,
-	const LocationID& to_location
+	const LocationID& to_location,
+	const SimTime& time_of_move
 ) {
 	const auto& route = passenger_rotues.getRoute(passenger);
 
@@ -466,7 +478,7 @@ void Simulator::movePassengerFromHereGoingTo(
 			passengerRefListAdd(passengers_at_stations[next_location.asStationID().getValue()], passenger);
 		} else {
 			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-				str << "passenger going to unexpected location typ: T->not S!\n";
+				str << "passenger going to unexpected location type: T->not S!\n";
 			});
 		}
 	} else {
@@ -474,10 +486,15 @@ void Simulator::movePassengerFromHereGoingTo(
 			str << "passenger at unexpected location type!\n";
 		});
 	}
+
+	if (next_location == tn->getStationIDByVertexID(passenger.getExitID())) {
+		// mark as exited
+		passenger_exits.emplace_back(PassengerExitInfo{passenger, time_of_move});
+	}
 }
 
 void Simulator::registerObserver(ObserverType observer, SimTime period) {
-	auto prev_iter = std::find_if(observers_and_periods.begin(), observers_and_periods.end(), [&](auto& elem) {
+	const auto prev_iter = std::find_if(observers_and_periods.begin(), observers_and_periods.end(), [&](const auto& elem) {
 		return elem.second < period;
 	});
 	observers_and_periods.emplace(prev_iter, std::make_pair(observer, period));
