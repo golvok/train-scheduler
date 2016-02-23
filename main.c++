@@ -91,11 +91,18 @@ int program_main() {
 		// display a simulation
 		graphics::get().trainsArea().displaySimulator(sim_handle);
 
-		std::thread sim_thread([&]() noexcept {
-			sim_handle.runForTime(20, 0.3);
+		std::thread sim_thread([&](
+			auto l_tn,
+			auto l_passengers,
+			auto l_schedule,
+			auto l_p_routes,
+			auto l_sim_handle
+		) noexcept {
+
+			l_sim_handle.runForTime(20, 0.3);
 
 			auto report_engine_ptr = ::stats::make_report_engine(
-				*tn,*passengers,*schedule,*p_routes,sim_handle
+				*l_tn, *l_passengers, *l_schedule, *l_p_routes, l_sim_handle
 			);
 
 			std::ofstream report_file("reports.txt");
@@ -106,7 +113,13 @@ int program_main() {
 
 			::stats::report_into(*report_engine_ptr, conf_prs, report_file);
 			::stats::report_into(*report_engine_ptr, conf_sps, report_file);
-		});
+		},
+			tn,
+			passengers,
+			schedule,
+			p_routes,
+			sim_handle
+		);
 		sim_thread.detach();
 
 		graphics::get().waitForPress();
