@@ -22,6 +22,7 @@ public:
 	 * Should the current invocation of the program display graphics?
 	 */
 	bool shouldEnableGraphics() const  { return graphics_enabled; }
+	int getSignglarInputNumber() const { return singular_input_number; }
 
 private:
 	friend ParsedArguments parse(int arc_int, char const** argv);
@@ -30,6 +31,8 @@ private:
 
 	/// The printing levels that should be enabled. Duplicate entries are possible & allowed
 	std::vector<DebugLevel::Level> levels_to_enable;
+
+	uint singular_input_number;
 
 	ParsedArguments(int arc_int, char const** argv);
 };

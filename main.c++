@@ -16,7 +16,7 @@
 #include <unordered_set>
 #include <vector>
 
-int program_main();
+int program_main(uint only_do_this_input_number);
 
 int main(int argc, char const** argv) {
 
@@ -35,10 +35,10 @@ int main(int argc, char const** argv) {
 		dout.enable_level(l);
 	}
 
-	return program_main();
+	return program_main(parsed_args.getSignglarInputNumber());
 }
 
-int program_main() {
+int program_main(uint only_do_this_input_number) {
 	uint tn_counter = 0;
 
 	while (true) {
@@ -56,6 +56,10 @@ int program_main() {
 		// if the data is bad, exit
 		if (data_is_good == false) {
 			break;
+		}
+
+		if (only_do_this_input_number != (uint)-1 && tn_counter != only_do_this_input_number) {
+			continue;
 		}
 
 		// display the track network first
