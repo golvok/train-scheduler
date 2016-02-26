@@ -30,11 +30,11 @@ class TrainID : public ::util::ID<uint64_t,TrainIDTagType> {
 public:
 
 	TrainID(RouteID rid, TrainIndex train_index)
-		: ID((rid.getValue() << sizeof(TrainIndex)*CHAR_BIT) | train_index) { }
+		: ID(((uint64_t)rid.getValue() << (sizeof(TrainIndex)*CHAR_BIT)) | train_index) { }
 	TrainID() : ID() { }
 
 	RouteID getRouteID() const {
-		return ::util::make_id<RouteID>(getValue() >> sizeof(TrainIndex)*CHAR_BIT);
+		return ::util::make_id<RouteID>(getValue() >> (sizeof(TrainIndex)*CHAR_BIT));
 	}
 	TrainIndex getTrainIndex() const {
 		return static_cast<TrainIndex>(getValue() & static_cast<TrainIndex>(-1));
