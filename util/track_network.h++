@@ -62,8 +62,9 @@ public:
 		, train_spawn_location()
 	{}
 
-	TrackNetwork& operator=(const TrackNetwork&) = default;
-	TrackNetwork(const TrackNetwork&) = default;
+	TrackNetwork& operator=(const TrackNetwork&) = delete;
+	TrackNetwork(const TrackNetwork&) = delete;
+	TrackNetwork& operator=(TrackNetwork&&) = default;
 	TrackNetwork(TrackNetwork&&) = default;
 
 	BackingGraphType& g() { return backing_graph; }

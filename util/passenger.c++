@@ -14,9 +14,9 @@ std::ostream& operator<<(std::ostream& os, const Passenger& p) {
 	return os;
 }
 
-std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair) {
-	const auto& p = pair.first;
-	const auto& tn = pair.second;
+std::ostream& operator<<(std::ostream& os, const std::tuple<const Passenger&,const TrackNetwork&>& pair) {
+	const auto& p = std::get<0>(pair);
+	const auto& tn = std::get<1>(pair);
 	print_first_part(os,p);
 	os << tn.getVertexName(p.getEntryID()) << "@t=" << p.getStartTime() << " -> " << tn.getVertexName(p.getExitID());
 	return os;

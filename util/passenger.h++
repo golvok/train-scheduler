@@ -64,7 +64,7 @@ inline auto passengerRefListInserter(PassengerConstRefList& list) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Passenger& p);
-std::ostream& operator<<(std::ostream& os, std::pair<const Passenger&,const TrackNetwork&> pair);
+std::ostream& operator<<(std::ostream& os, const std::tuple<const Passenger&,const TrackNetwork&>& pair);
 
 namespace std {
 	template<>

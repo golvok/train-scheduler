@@ -61,8 +61,8 @@ public:
 
 };
 
-// std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
-std::ostream& operator<<(std::ostream& os, std::pair<const vertex_descriptor&, const TrackNetwork&> pair);
+std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
+std::ostream& operator<<(std::ostream& os, const std::tuple<const vertex_descriptor&, const TrackNetwork&>& pair);
 
 using degree_size_type = size_t;
 

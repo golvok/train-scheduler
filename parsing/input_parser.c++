@@ -161,7 +161,7 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 	PassengerList passengers;
 
 	if (call_num > fake_data::passengers.size()) {
-		return std::make_tuple(tn,passengers,false);
+		return std::make_tuple(std::move(tn),std::move(passengers),false);
 	}
 
 	bool first = true;

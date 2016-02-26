@@ -133,7 +133,7 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 		auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
 		if (p.getStartTime() != 0) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& stream) {
-				stream << "don't support passengers with entry time != 0 (" << std::make_pair(p,network) << ')';
+				stream << "don't support passengers with entry time != 0 (" << std::tie(p,network) << ')';
 			});
 		}
 		auto next_iteration_weights = network.makeEdgeWeightMapCopy();

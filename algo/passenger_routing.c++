@@ -34,7 +34,7 @@ namespace {
 
 		void examine_vertex(STGA::vertex_descriptor vd, ScheduleToGraphAdapter const& g) {
 			(void)g;
-			dout(DL::PR_D3) << "Exploring " << std::make_pair(vd,g.getTrackNetwork()) << "..." << '\n';
+			dout(DL::PR_D3) << "Exploring " << std::tie(vd,g.getTrackNetwork()) << "..." << '\n';
 			if (vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
 				throw found_goal{vd};
 			} else if (vd.getTime() > (start_time + 1000)) {
@@ -79,7 +79,7 @@ PassengerRoutes route_passengers(
 			}
 		);
 
-		dout(DL::PR_D2) << "Start vertex and time: " << std::make_pair(start_vertex_and_time,tn) << '\n';
+		dout(DL::PR_D2) << "Start vertex and time: " << std::tie(start_vertex_and_time,tn) << '\n';
 		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '(' << goal_vertex << ")\n";
 
 		auto pred_map = baseGraph.make_pred_map();
@@ -106,7 +106,7 @@ PassengerRoutes route_passengers(
 			// do nothing
 		}
 
-		dout(DL::WARN) << "Didn't find a path from " << std::make_pair(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
+		dout(DL::WARN) << "Didn't find a path from " << std::tie(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
 	}
 
 	return results;
@@ -127,7 +127,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 	path.emplace_back(prev.getLocation(), prev.getTime());
 
 	dout(DL::PR_D1) << "path found: ";
-	dout(DL::PR_D3) << std::make_pair(prev,tn);
+	dout(DL::PR_D3) << std::tie(prev,tn);
 
 	while (true) {
 		STGA::vertex_descriptor vd = get(pred_map,prev);
@@ -141,7 +141,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 			&& (vd.getLocation() != prev.getLocation())
 		) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "going from a Station to a different Station: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
+				str << "going from a Station to a different Station: " << std::tie(prev,tn) << " <- " << std::tie(vd,tn);
 			});
 		}
 		if (
@@ -149,12 +149,12 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 			&& (vd.getLocation() != prev.getLocation())
 		) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "going from a Train to a different Train: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
+				str << "going from a Train to a different Train: " << std::tie(prev,tn) << " <- " << std::tie(vd,tn);
 			});
 		}
 		if (vd.getTime() > prev.getTime()) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-				str << "time went backwards!: " << std::make_pair(prev,tn) << " <- " << std::make_pair(vd,tn);
+				str << "time went backwards!: " << std::tie(prev,tn) << " <- " << std::tie(vd,tn);
 			});
 		}
 
@@ -165,7 +165,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 		} else {
 			path.emplace_back(vd.getLocation(), vd.getTime());
 		}
-		dout(DL::PR_D3) << " <- " << std::make_pair(vd,tn);
+		dout(DL::PR_D3) << " <- " << std::tie(vd,tn);
 		prev = vd;
 	}
 	dout(DL::PR_D3) << "\n\t = ";

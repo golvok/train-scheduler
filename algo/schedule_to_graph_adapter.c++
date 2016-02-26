@@ -6,14 +6,14 @@ namespace algo {
 
 namespace detail {
 	namespace STGA {
-		// std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd) {
-		// 	os << '{' << vd.getVertex() << "@t=" << vd.getTime() << ", l=" << vd.getLocation() << '}';
-		// 	return os;
-		// }
+		std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd) {
+			os << '{' << vd.getVertex() << "@t=" << vd.getTime() << ", l=" << vd.getLocation() << '}';
+			return os;
+		}
 
-		std::ostream& operator<<(std::ostream& os, std::pair<const vertex_descriptor&, const TrackNetwork&> pair) {
-			auto& tn = pair.second;
-			auto& vd = pair.first;
+		std::ostream& operator<<(std::ostream& os, const std::tuple<const vertex_descriptor&, const TrackNetwork&>& pair) {
+			const auto& tn = std::get<1>(pair);
+			const auto& vd = std::get<0>(pair);
 			os << '{' << tn.getVertexName(vd.getVertex()) << "@t=" << vd.getTime() << ",l=" << vd.getLocation() << '}';
 			return os;
 		}
@@ -39,14 +39,14 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 	// so that the iteration will not just end after that path
 	// fails to return a vertex
 
-	dout(DL::PR_D4) << "constructing " << std::make_pair(src,tn) << "'s " << out_edge_index << " out edge\n";
+	dout(DL::PR_D4) << "constructing " << std::tie(src,tn) << "'s " << out_edge_index << " out edge\n";
 	if (out_edge_index == STGA::out_edge_iterator::END_VAL) {
 		dout(DL::PR_D4) << "\twas end edge\n";
 		return STGA::vertex_descriptor();
 	}
 
 	auto print_edge_first = [&](auto&& next_vd) {
-		dout(DL::PR_D4) << "\tedge is " << std::make_pair(src,tn) << " --(#" << out_edge_index << ")-> " << std::make_pair(next_vd,tn) << '\n';
+		dout(DL::PR_D4) << "\tedge is " << std::tie(src,tn) << " --(#" << out_edge_index << ")-> " << std::tie(next_vd,tn) << '\n';
 		return next_vd;
 	};
 
@@ -68,7 +68,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			auto current_it = std::find(train_route.getPath().begin(), train_route.getPath().end(), src.getVertex());
 			if (current_it == train_route.getPath().end()) {
 				::util::print_and_throw<std::invalid_argument>([&](auto&& err) {
-					err << "vertex " << std::make_pair(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
+					err << "vertex " << std::tie(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
 				});
 			}
 			if (current_it + 1 != train_route.getPath().end()) {
