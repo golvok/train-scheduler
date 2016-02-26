@@ -17,6 +17,15 @@ struct RouteIDTagType {
 };
 using RouteID = ::util::ID<uint32_t,RouteIDTagType>;
 
+inline std::ostream& operator<<(std::ostream& os, const RouteID& rid) {
+	if (rid.getValue() == RouteID::DEFAULT_VALUE) {
+		os << "<DEFAULT_TRAIN>";
+	} else {
+		os << 'r' << rid.getValue();
+	}
+	return os;
+}
+
 class TrainRoute;
 using RouteType = std::vector<TrackNetwork::ID>;
 using TrainIndex = uint32_t;

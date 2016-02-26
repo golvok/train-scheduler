@@ -90,6 +90,7 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 		STGA::degree_size_type current_out_edge_index = STGA::out_edge_iterator::BEGIN_VAL;
 
 		for (const auto& train_route : sch.getTrainRoutes()) {
+			dout(DL::PR_D4) << "checking route " << train_route.getID() << "\n";
 
 			auto here_route_iter = std::find(train_route.getPath().begin(), train_route.getPath().end(), src.getVertex());
 
