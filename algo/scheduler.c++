@@ -112,12 +112,13 @@ Schedule Scheduler::do_schedule() {
 
 	std::vector<TrainRoute> trains;
 
-	for(auto route_iai_iter : index_assoc_iterate(train_routes)) {
+	for(auto& train_route : train_routes) {
+		auto repeat_time = train_route.size();
 		trains.emplace_back(
-			::util::make_id<::algo::RouteID>(route_iai_iter.i()),
-			std::move(*route_iai_iter),
+			::util::make_id<::algo::RouteID>(trains.size()),
+			std::move(train_route),
 			std::vector<TrackNetwork::Time>{ 0 }, // assumes all routes start at time 0
-			(*route_iai_iter).size(), // make it repeat after it's done for now
+			repeat_time, // make it repeat after it's done for now
 			network
 		);
 	}
