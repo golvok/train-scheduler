@@ -328,3 +328,11 @@ void Scheduler::dump_trains_to_dout(
 }
 
 } // end namespace algo
+
+/*** ALGO IDEAS ****\
+Figure out how to model people going to similar places (like pins on a net)
+	maybe some sort of path grouping?
+		then the paths need to be split...?
+
+Maybe start with one train/passenger, then iterative coalesce?
+*/

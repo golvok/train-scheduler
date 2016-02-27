@@ -2,7 +2,7 @@
 *.slo
 *.lo
 *.o
-**/OBJ/**/*.o
+build/OBJ/**/*.o
 
 # Compiled Dynamic libraries
 *.so
@@ -14,10 +14,10 @@
 *.a
 
 # Dependency Files
-**/DEPS/**/*.d
+build/DEPS/**/*.d
 
 # Executables
-EXE/train-sch
+build/EXE/train-sch
 
 # YCM compiled config
 .ycm_extra_conf.pyc
