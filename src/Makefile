@@ -10,9 +10,9 @@ MAKEFLAGS+=" -j$(grep -c "vendor_id" /proc/cpuinfo) "
 
 BUILD_MODE ?= debug
 
-EXE_DIR=EXE/
-OBJ_DIR=OBJ/
-DEPS_DIR=DEPS/
+EXE_DIR  = ../build/EXE/
+OBJ_DIR  = ../build/OBJ/src/
+DEPS_DIR = ../build/DEPS/src/
 
 # CXX = clang++ -stdlib=libstdc++
 # CXX = g++
@@ -55,7 +55,8 @@ SOURCE_DIRS = algo/ graphics/ parsing/ util/ sim/ stats/ ./
 # compute all directories that might need creation
 DIRS=$(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR) \
 	$(addprefix $(OBJ_DIR),$(SOURCE_DIRS)) \
-	$(addprefix $(DEPS_DIR),$(SOURCE_DIRS))
+	$(addprefix $(DEPS_DIR),$(SOURCE_DIRS)) \
+	../build
 
 # define executables
 EXES=$(EXE_DIR)train-sch
@@ -121,20 +122,23 @@ $(DIRS):
 	mkdir -p $@
 
 clean:
-	-rm -f $(EXES);
-	-if [ -e $(EXE_DIR)  ]; then rmdir --ignore-fail-on-non-empty $(EXE_DIR);  fi;
-
 	for subdir in $(SOURCE_DIRS); do \
 		if [ -e $(DEPS_DIR)$${subdir} ]; then \
 			deps_subdir=$$(readlink --canonicalize $(DEPS_DIR)$${subdir})/; \
-			echo $${deps_subdir}; \
+			echo rm $${deps_subdir}; \
 			rm -f $${deps_subdir}*.d; \
 			rmdir --ignore-fail-on-non-empty $${deps_subdir}; \
 		fi; \
 		if [ -e $(OBJ_DIR)$${subdir} ]; then \
 			objs_subdir=$$(readlink --canonicalize $(OBJ_DIR)$${subdir})/; \
-			echo $${objs_subdir}; \
+			echo rm $${objs_subdir}; \
 			rm -f $${objs_subdir}*.o; \
 			rmdir --ignore-fail-on-non-empty $${objs_subdir}; \
 		fi; \
+	done
+
+	-rm -f $(EXES);
+	for dir in $(DIRS); do \
+		echo rm $${dir}; \
+		if [ -e $${dir}  ]; then rmdir --ignore-fail-on-non-empty $${dir}; fi; \
 	done
