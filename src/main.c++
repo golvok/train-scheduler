@@ -41,6 +41,8 @@ int main(int argc, char const** argv) {
 int program_main(uint only_do_this_input_number) {
 	uint tn_counter = 0;
 
+	std::list<std::thread> sim_threads;
+
 	while (true) {
 		tn_counter += 1;
 
@@ -95,7 +97,7 @@ int program_main(uint only_do_this_input_number) {
 		// display a simulation
 		graphics::get().trainsArea().displaySimulator(sim_handle);
 
-		std::thread sim_thread([&](
+		sim_threads.emplace_back([&](
 			auto l_tn,
 			auto l_passengers,
 			auto l_schedule,
@@ -124,10 +126,13 @@ int program_main(uint only_do_this_input_number) {
 			p_routes,
 			sim_handle
 		);
-		sim_thread.detach();
 
 		graphics::get().waitForPress();
 
+	}
+
+	for (auto& thread : sim_threads) {
+		thread.join();
 	}
 
 	return 0;
