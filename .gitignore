@@ -24,3 +24,4 @@ build/EXE/train-sch
 
 # misc
 train-sch.sublime-workspace
+test/runs/*
