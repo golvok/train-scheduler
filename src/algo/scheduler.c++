@@ -12,7 +12,7 @@
 
 namespace algo {
 
-class Scheduler {
+class Scheduler2 {
 	using EdgeWantedCapacities = std::vector<float>;
 	using TrainsGoToVertex = std::vector<bool>;
 	using Route = std::vector<TrackNetwork::ID>;
@@ -22,7 +22,7 @@ class Scheduler {
 	const PassengerList& passengers;
 
 public:
-	Scheduler(
+	Scheduler2(
 		const TrackNetwork& network,
 		const PassengerList& passengers
 	)
@@ -91,13 +91,13 @@ Schedule schedule(
 	const TrackNetwork& network,
 	const PassengerList& passengers
 ) {
-	return Scheduler (
+	return Scheduler2 (
 		network,
 		passengers
 	).do_schedule();
 }
 
-Schedule Scheduler::do_schedule() {
+Schedule Scheduler2::do_schedule() {
 	auto fnd_routes_indent = dout(DL::INFO).indentWithTitle("finding routes (scheduler2)");
 
 	auto edge_wanted_capacities_sp = util::make_shared(::util::makeEdgeMap<float>(g,float()));
@@ -123,10 +123,10 @@ Schedule Scheduler::do_schedule() {
 		);
 	}
 
-	return Schedule("abc",std::move(trains));
+	return Schedule("Scheduler2 schedule",std::move(trains));
 }
 
-Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
+Scheduler2::EdgeWantedCapacities Scheduler2::compute_edge_wanted_capacities() {
 	auto edge_wanted_capacities = ::util::makeEdgeMap<float>(g,1);
 
 	auto ewc_indent = dout(DL::WC_D1).indentWithTitle("Computing Edge Wanted Capacities");
@@ -178,7 +178,7 @@ Scheduler::EdgeWantedCapacities Scheduler::compute_edge_wanted_capacities() {
 	return edge_wanted_capacities;
 }
 
-void Scheduler::dump_edge_wanted_capacites_to_dout(
+void Scheduler2::dump_edge_wanted_capacites_to_dout(
 	const EdgeWantedCapacities& edge_wanted_capacities,
 	DebugLevel::Level level
 ) {
@@ -190,7 +190,7 @@ void Scheduler::dump_edge_wanted_capacites_to_dout(
 }
 
 
-std::vector<Scheduler::Route> Scheduler::make_rotues(
+std::vector<Scheduler2::Route> Scheduler2::make_rotues(
 	const EdgeWantedCapacities& edge_wanted_capacities
 ) {
 	auto routing_indent = dout(DL::INFO).indentWithTitle("making train routes");
@@ -231,7 +231,7 @@ std::vector<Scheduler::Route> Scheduler::make_rotues(
 	return routes;
 }
 
-std::tuple<Scheduler::Route, Scheduler::TrainsGoToVertex, uint> Scheduler::make_train_route(
+std::tuple<Scheduler2::Route, Scheduler2::TrainsGoToVertex, uint> Scheduler2::make_train_route(
 	const EdgeWantedCapacities& edge_wanted_capacities,
 	TrainsGoToVertex&& trains_go_to_vertex,
 	uint vertex_covered_count
@@ -270,7 +270,7 @@ std::tuple<Scheduler::Route, Scheduler::TrainsGoToVertex, uint> Scheduler::make_
 	);
 }
 
-TrackNetwork::ID Scheduler::compute_next_vertex(
+TrackNetwork::ID Scheduler2::compute_next_vertex(
 	const EdgeWantedCapacities& edge_wanted_capacities,
 	const TrainsGoToVertex& trains_go_to_vertex,
 	TrackNetwork::ID curr
@@ -314,7 +314,7 @@ TrackNetwork::ID Scheduler::compute_next_vertex(
 	return next;
 }
 
-void Scheduler::dump_trains_to_dout(
+void Scheduler2::dump_trains_to_dout(
 	const std::vector<Route>& trains,
 	DebugLevel::Level level
 ) {
@@ -335,4 +335,5 @@ Figure out how to model people going to similar places (like pins on a net)
 		then the paths need to be split...?
 
 Maybe start with one train/passenger, then iterative coalesce?
+	capacity resolution must be done after.
 */
