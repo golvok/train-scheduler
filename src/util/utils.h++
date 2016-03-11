@@ -168,6 +168,57 @@ std::string stringify_through_stream(const T& t) {
 	return stream.str();
 }
 
+template<typename RETVAL_TYPE, typename ITER_TYPE>
+class DerefAndIncrementer {
+	ITER_TYPE iter;
+	size_t i;
+public:
+	DerefAndIncrementer(ITER_TYPE beg) : iter(beg), i(0) { }
+	template<typename ARG>
+	RETVAL_TYPE operator()(const ARG&) {
+		RETVAL_TYPE result = *iter;
+		std::cout << result << " - " << i << '\n';
+		++iter;
+		++i;
+		return result;
+	}
+};
+
+/**
+ * Retuns a lambda stlye object that will return the value of
+ * *iter the first time it is called, then *std::next(iter), etc.
+ */
+template<typename RETVAL_TYPE, typename ITER_TYPE>
+auto make_deref_and_incrementer(const ITER_TYPE& iter) {
+	return DerefAndIncrementer<RETVAL_TYPE,ITER_TYPE>(iter);
+}
+
+template<class InputIt, class UnaryPredicate>
+std::pair<InputIt,size_t> find_by_index(InputIt first, InputIt last, UnaryPredicate p) {
+	size_t index = 0;
+    for (; first != last; ++first, ++index) {
+        if (p(index)) {
+            return { first, index };
+        }
+    }
+    return { last, index };
+}
+
+template<class ForwardIt, class UnaryPredicate>
+ForwardIt remove_by_index(ForwardIt first, ForwardIt last, UnaryPredicate p) {
+	size_t index = 0;
+	std::tie(first, index) = find_by_index(first, last, p);
+	if (first != last) {
+		for(ForwardIt i = first; i != last; ++i, ++index) {
+			if (!p(index)) {
+				*first = std::move(*i);
+				++first;
+			}
+		}
+	}
+    return first;
+}
+
 } // end namespace util
 
 namespace std {
