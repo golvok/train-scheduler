@@ -178,6 +178,16 @@ void TrainsArea::drawTrains(const Cairo::RefPtr<Cairo::Context>& cc) {
 		}();
 
 
+		// draw ID
+		cc->set_source_rgb(0,0,0);
+		cc->set_font_size(4);
+		cc->move_to(p.x,p.y-10);
+		cc->save(); // would like to restore to unrotated matrix
+		cc->rotate_degrees(45);
+		cc->show_text(::util::stringify_through_stream(train_id).c_str());
+		cc->stroke();
+		cc->restore(); // restore to unrotated matrix
+
 		// draw
 		cc->set_source_rgb(0.0,0.0,1.0); // blue
 		cc->arc(p.x,p.y, 0.5, 0, 2 * M_PI);

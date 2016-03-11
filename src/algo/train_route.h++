@@ -58,6 +58,11 @@ public:
 	}
 };
 
+inline std::ostream& operator<<(std::ostream& os, const TrainID& tid) {
+	tid.print(os);
+	return os;
+}
+
 class Train {
 public:
 	friend class TrainRoute;

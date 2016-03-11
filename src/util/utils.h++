@@ -5,7 +5,11 @@
 #include <cstdint>
 #include <climits>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <type_traits>
+
+#include <iostream>
 
 template <typename...> struct all_convertible;
 
@@ -155,6 +159,13 @@ bool operator==(const ID<id_type,TAG>& lhs, const ID<id_type,TAG>& rhs) {
 template<typename id_type, typename TAG>
 bool operator!=(const ID<id_type,TAG>& lhs, const ID<id_type,TAG>& rhs) {
 	return !(lhs == rhs);
+}
+
+template<typename T>
+std::string stringify_through_stream(const T& t) {
+	std::ostringstream stream;
+	stream << t;
+	return stream.str();
 }
 
 } // end namespace util
