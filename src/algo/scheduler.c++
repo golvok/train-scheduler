@@ -409,8 +409,6 @@ Scheduler3::VertexListList Scheduler3::make_one_train_per_passenger() {
 }
 
 Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) {
-	auto& trains_ref = trains;
-	(void)trains_ref;
 
 	size_t old_size = trains.size();
 	int iter_num = 1;
@@ -430,17 +428,30 @@ Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) 
 
 				// TODO: this DOES NOT handle repeated vertices...
 
+				// the location of the train's first node in comp_train
 				auto comp_first_match = std::find(
 					comp_train.begin(), comp_train.end(), train.front()
 				);
 
+				// the location of the comp_train's first node in train
 				auto first_match = std::find(
 					train.begin(), train.end(), comp_train.front()
 				);
 
-				if (first_match == train.end() || comp_first_match == comp_train.end()) {
-					// neither path's start overlap with the other path anywhere
+				if (first_match == train.end() && comp_first_match == comp_train.end()) {
+					// neither path overlaps with the other
 					continue;
+				} else {
+					// exactly one train first node overlaps,
+					// so reset the other to it's beginning, so mismatch will
+					// start at where they overlap
+					if (first_match == train.end()) {
+						first_match = train.begin();
+					}
+
+					if (comp_first_match == comp_train.end()) {
+						comp_first_match = comp_train.begin();
+					}
 				}
 
 				auto mismatch_results = std::mismatch(
@@ -452,13 +463,27 @@ Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) 
 
 				size_t redundant_train = -1;
 				if (!reached_end && !comp_reached_end) {
-					// paths diverged
+					// paths diverged, so add for consideration for extension (TODO)
 					continue;
 				} else if (!reached_end && comp_reached_end) {
-					redundant_train = comp_train_i;
+					if (first_match == train.begin()) {
+						// extend comp train? maybe. So, add to consideration. (TODO)
+						continue;
+					} else {
+						// they overlap, and train is longer
+						redundant_train = comp_train_i;
+					}
 				} else if (reached_end && !comp_reached_end) {
-					redundant_train = train_i;
-				} else if (reached_end && comp_reached_end) {
+					if (comp_first_match == comp_train.begin()) {
+						// extend train? maybe. So, add to consideration. (TODO)
+						continue;
+					} else {
+						// they overlap, and comp trian is longer
+						redundant_train = train_i;
+					}
+				} else {
+					// both end on the same vertex, so remove the shorter one.
+					// (the one that could have it's start vertex found in the other)
 					if (first_match == train.begin()) {
 						redundant_train = train_i;
 					} else if (comp_first_match == comp_train.begin()) {
