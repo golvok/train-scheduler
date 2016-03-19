@@ -23,18 +23,18 @@ namespace STGA {
 class vertex_descriptor {
 	friend class ::algo::ScheduleToGraphAdapter;
 
-	TrackNetwork::ID vertex;
+	TrackNetwork::NodeID vertex;
 	TrackNetwork::Time time;
 	LocationID location;
 
-	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, LocationID location)
+	vertex_descriptor(TrackNetwork::NodeID v, TrackNetwork::Time t, LocationID location)
 		: vertex(v), time(t), location(location)
 	{ }
 public:
-	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, const TrackNetwork& tn)
+	vertex_descriptor(TrackNetwork::NodeID v, TrackNetwork::Time t, const TrackNetwork& tn)
 		: vertex(v), time(t), location(tn.getStationIDByVertexID(v))
 	{ }
-	vertex_descriptor(TrackNetwork::ID v, TrackNetwork::Time t, RouteID route_id, TrainIndex train_index)
+	vertex_descriptor(TrackNetwork::NodeID v, TrackNetwork::Time t, RouteID route_id, TrainIndex train_index)
 		: vertex(v), time(t), location(::util::make_id<TrainID>(route_id,train_index))
 	{ }
 	vertex_descriptor() : vertex(-1), time(-1), location() { }
@@ -223,7 +223,7 @@ public:
 		});
 	}
 
-	TrackNetwork::ID get_vertex_index(const vertex_descriptor& vd) const {
+	TrackNetwork::NodeID get_vertex_index(const vertex_descriptor& vd) const {
 		(void)vd;
 		return vd.getVertex() + num_vertices(tn.g())*vd.getTime();
 	}

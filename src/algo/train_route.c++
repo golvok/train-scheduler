@@ -24,7 +24,7 @@ RouteID Train::getRouteID() const { return train_route->getID(); }
 
 TrainRoute::TrainRoute(
 	const RouteID route_id,
-	std::vector<TrackNetwork::ID>&& route_,
+	std::vector<TrackNetwork::NodeID>&& route_,
 	std::vector<TrackNetwork::Time>&& start_offsets,
 	TrackNetwork::Time repeat_time,
 	const TrackNetwork& tn
@@ -46,7 +46,7 @@ TrainRoute::TrainRoute(
 { }
 
 TrackNetwork::Time Train::getExpectedTravelTime(
-	std::pair<TrackNetwork::ID, TrackNetwork::ID> first_and_last,
+	std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
 	const TrackNetwork& tn
 ) const {
 	return train_route->getExpectedTravelTime(getDepartureTime(), first_and_last, tn);
@@ -60,7 +60,7 @@ TrackNetwork::Time Train::getExpectedTravelTime(
 }
 
 TrackNetwork::Time Train::getExpectedArrivalTime(
-	TrackNetwork::ID to_here,
+	TrackNetwork::NodeID to_here,
 	const TrackNetwork& tn
 ) const {
 	return getDepartureTime() + getExpectedTravelTime(
@@ -75,7 +75,7 @@ void Train::print(std::ostream& os) const {
 
 TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 	TrackNetwork::Time start_time,
-	std::pair<TrackNetwork::ID, TrackNetwork::ID> first_and_last,
+	std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
 	const TrackNetwork& tn
 ) const {
 	auto first_iter = std::find(route.begin(), route.end(), first_and_last.first);
@@ -109,7 +109,7 @@ TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 }
 
 std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
-	TrackNetwork::ID vid,
+	TrackNetwork::NodeID vid,
 	TrackNetwork::TimeInterval interval,
 	const TrackNetwork& tn
 ) const {

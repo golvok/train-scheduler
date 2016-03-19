@@ -15,7 +15,7 @@ namespace algo {
 class Scheduler2 {
 	using EdgeWantedCapacities = std::vector<float>;
 	using TrainsGoToVertex = std::vector<bool>;
-	using Route = std::vector<TrackNetwork::ID>;
+	using Route = std::vector<TrackNetwork::NodeID>;
 
 	const TrackNetwork& network;
 	const TrackNetwork::BackingGraphType& g;
@@ -65,10 +65,10 @@ public:
 	 * Given a current vertex, return a next vertex to travel to, based
 	 * on the wanted capacites and other trains.
 	 */
-	TrackNetwork::ID compute_next_vertex(
+	TrackNetwork::NodeID compute_next_vertex(
 		const EdgeWantedCapacities& edge_wanted_capacities,
 		const TrainsGoToVertex& trains_go_to_vertex,
-		TrackNetwork::ID curr
+		TrackNetwork::NodeID curr
 	);
 
 	void dump_edge_wanted_capacites_to_dout(
@@ -83,7 +83,7 @@ public:
 };
 
 class Scheduler3 {
-	using VertexList = std::vector<TrackNetwork::ID>;
+	using VertexList = std::vector<TrackNetwork::NodeID>;
 	using VertexListList = std::vector<VertexList>;
 
 	const TrackNetwork& network;
@@ -190,7 +190,7 @@ Scheduler2::EdgeWantedCapacities Scheduler2::compute_edge_wanted_capacities() {
 			{
 				auto prev_vertex = route_for_p[0];
 				bool first = true;
-				for (TrackNetwork::ID id : route_for_p) {
+				for (TrackNetwork::NodeID id : route_for_p) {
 					if (first) { first = false; continue; }
 					auto edge_desc = boost::edge(prev_vertex,id,g).first;
 					auto edge_index = network.getEdgeIndex(edge_desc);
@@ -280,13 +280,13 @@ std::tuple<Scheduler2::Route, Scheduler2::TrainsGoToVertex, uint> Scheduler2::ma
 	vertex_covered_count += 1;
 
 	while (true) {
-		TrackNetwork::ID next = compute_next_vertex(
+		TrackNetwork::NodeID next = compute_next_vertex(
 			edge_wanted_capacities,
 			trains_go_to_vertex,
 			route.back()
 		);
 
-		if (next == TrackNetwork::ID(-1)) {
+		if (next == TrackNetwork::NodeID(-1)) {
 			dout(DL::TR_D3) << "didn't find anything. Ending route.\n";
 			break;
 		} else {
@@ -305,16 +305,16 @@ std::tuple<Scheduler2::Route, Scheduler2::TrainsGoToVertex, uint> Scheduler2::ma
 	);
 }
 
-TrackNetwork::ID Scheduler2::compute_next_vertex(
+TrackNetwork::NodeID Scheduler2::compute_next_vertex(
 	const EdgeWantedCapacities& edge_wanted_capacities,
 	const TrainsGoToVertex& trains_go_to_vertex,
-	TrackNetwork::ID curr
+	TrackNetwork::NodeID curr
 ) {
 	auto vertex_index = dout(DL::TR_D2).indentWithTitle([&](auto&&out){ out << "Vertex " << network.getVertexName(curr); });
 
 	// check if all adjacent vertices already have trains -- cache?
 	bool heed_trains_going_to = false;
-	for (TrackNetwork::ID v : make_iterable(adjacent_vertices(curr,g))) {
+	for (TrackNetwork::NodeID v : make_iterable(adjacent_vertices(curr,g))) {
 		if (trains_go_to_vertex[v] == false) {
 			heed_trains_going_to = true;
 			break;
@@ -325,11 +325,11 @@ TrackNetwork::ID Scheduler2::compute_next_vertex(
 		dout(DL::TR_D2) << "-- ignoring existing trains --\n";
 	}
 
-	TrackNetwork::ID next(-1);
+	TrackNetwork::NodeID next(-1);
 	float best_wanted_capacity = 0;
 
 	for (auto e_desc : make_iterable(out_edges(curr,g))) {
-		TrackNetwork::ID target_v = target(e_desc,g);
+		TrackNetwork::NodeID target_v = target(e_desc,g);
 		dout(DL::TR_D2) << "looking at " << network.getVertexName(target_v) << ", ";
 
 		if (heed_trains_going_to && trains_go_to_vertex[target_v]) {

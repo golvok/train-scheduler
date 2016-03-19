@@ -27,7 +27,7 @@ inline std::ostream& operator<<(std::ostream& os, const RouteID& rid) {
 }
 
 class TrainRoute;
-using RouteType = std::vector<TrackNetwork::ID>;
+using RouteType = std::vector<TrackNetwork::NodeID>;
 using TrainIndex = uint32_t;
 
 struct TrainIDTagType {
@@ -84,7 +84,7 @@ public:
 	Train& operator=(Train&&) = default;
 
 	TrackNetwork::Time getExpectedTravelTime(
-		std::pair<TrackNetwork::ID, TrackNetwork::ID> first_and_last,
+		std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
 		const TrackNetwork& tn
 	) const;
 
@@ -94,7 +94,7 @@ public:
 	) const;
 
 	TrackNetwork::Time getExpectedArrivalTime(
-		TrackNetwork::ID to_here,
+		TrackNetwork::NodeID to_here,
 		const TrackNetwork& tn
 	) const;
 
@@ -123,7 +123,7 @@ public:
 
 	TrainRoute(
 		const RouteID route_id,
-		std::vector<TrackNetwork::ID>&& route_,
+		std::vector<TrackNetwork::NodeID>&& route_,
 		std::vector<TrackNetwork::Time>&& start_offsets,
 		TrackNetwork::Time repeat_time,
 		const TrackNetwork& tn
@@ -135,7 +135,7 @@ public:
 	TrainRoute& operator=(TrainRoute&&) = default;
 
 	auto getTrainsAtVertexInInterval( // TODO rename to indicate generator return value
-		TrackNetwork::ID vid,
+		TrackNetwork::NodeID vid,
 		TrackNetwork::TimeInterval interval,
 		const TrackNetwork& tn
 	) const {
@@ -154,7 +154,7 @@ public:
 
 	TrackNetwork::Time getExpectedTravelTime(
 		TrackNetwork::Time start_time,
-		std::pair<TrackNetwork::ID, TrackNetwork::ID> first_and_last,
+		std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
 		const TrackNetwork& tn
 	) const;
 
@@ -179,7 +179,7 @@ public:
 
 private:
 	std::pair<TrainIndex,TrainIndex> getTrainsAtVertexInInterval_impl(
-		TrackNetwork::ID vid,
+		TrackNetwork::NodeID vid,
 		TrackNetwork::TimeInterval interval,
 		const TrackNetwork& tn
 	) const;

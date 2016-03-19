@@ -25,9 +25,9 @@ namespace {
 	class astar_goal_visitor : public boost::default_astar_visitor {
 	private:
 		TrackNetwork::Time start_time;
-		TrackNetwork::ID goal_vertex;
+		TrackNetwork::NodeID goal_vertex;
 	public:
-		astar_goal_visitor(TrackNetwork::Time start, TrackNetwork::ID goal)
+		astar_goal_visitor(TrackNetwork::Time start, TrackNetwork::NodeID goal)
 			: start_time(start)
 			, goal_vertex(goal)
 		{ }

@@ -42,17 +42,17 @@ public:
 		boost::vecS, boost::vecS, boost::directedS, boost::no_property, EdgeProperties
 	>;
 
-	using ID        = boost::graph_traits<BackingGraphType>::vertex_descriptor;
+	using NodeID    = boost::graph_traits<BackingGraphType>::vertex_descriptor;
 	using EdgeID    = boost::graph_traits<BackingGraphType>::edge_descriptor;
 
 	using EdgeWeightMap = std::vector<Weight>;
 
-	static const ID INVALID_ID;
+	static const NodeID INVALID_ID;
 private:
 	BackingGraphType backing_graph;
-	std::unordered_map<std::string,ID> name2id;
-	std::unordered_map<ID,std::pair<std::string,geom::Point<float>>> id2data;
-	ID train_spawn_location;
+	std::unordered_map<std::string,NodeID> name2id;
+	std::unordered_map<NodeID,std::pair<std::string,geom::Point<float>>> id2data;
+	NodeID train_spawn_location;
 
 public:
 	TrackNetwork()
@@ -70,19 +70,19 @@ public:
 	BackingGraphType& g() { return backing_graph; }
 	const BackingGraphType& g() const { return backing_graph; }
 
-	ID createVertex(const std::string& name, geom::Point<float> pos);
-	ID getVertex(const std::string& name) const;
-	const std::string& getVertexName(ID id) const;
-	geom::Point<float> getVertexPosition(ID id) const;
+	NodeID createVertex(const std::string& name, geom::Point<float> pos);
+	NodeID getVertex(const std::string& name) const;
+	const std::string& getVertexName(NodeID id) const;
+	geom::Point<float> getVertexPosition(NodeID id) const;
 
-	ID getTrainSpawnLocation() const { return train_spawn_location; }
-	void setTrainSpawnLocation(ID id) { train_spawn_location = id; }
+	NodeID getTrainSpawnLocation() const { return train_spawn_location; }
+	void setTrainSpawnLocation(NodeID id) { train_spawn_location = id; }
 
 	EdgeIndex getEdgeIndex(EdgeID eid) const;
 	EdgeWeightMap makeEdgeWeightMapCopy() const;
 
-	StationID getStationIDByVertexID(ID id) const { return ::util::make_id<StationID>(id); }
-	ID getVertexIDByStationID(StationID sid) const { return sid.getValue(); }
+	StationID getStationIDByVertexID(NodeID id) const { return ::util::make_id<StationID>(id); }
+	NodeID getVertexIDByStationID(StationID sid) const { return sid.getValue(); }
 
 	auto getStaitonRange() const {
 		return ::util::make_generator<decltype(vertices(g()).first)>(
@@ -106,7 +106,7 @@ public:
 		return ::util::makeVertexMap<MAPPED_TYPE>(g(), std::forward<ARGS>(args)...);
 	}
 
-	Weight getDistanceBetween(std::pair<ID,ID> edge) const;
+	Weight getDistanceBetween(std::pair<NodeID,NodeID> edge) const;
 
 	template<typename ITER, typename SPEED_FUNC>
 	Time sumTimeTakenWithCustomSpeed(::boost::iterator_range<ITER> range, SPEED_FUNC sf) const;

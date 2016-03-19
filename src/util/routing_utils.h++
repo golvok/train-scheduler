@@ -14,7 +14,7 @@ namespace util {
  * from p.getEntryID() to p.getExitID()
  */
 template<typename WEIGHT_MAP>
-std::vector<TrackNetwork::ID> get_shortest_route(
+std::vector<TrackNetwork::NodeID> get_shortest_route(
 	const Passenger& p,
 	const TrackNetwork& tn,
 	const WEIGHT_MAP& weight_map
@@ -31,9 +31,9 @@ std::vector<TrackNetwork::ID> get_shortest_route(
  * return the shortest route from start to end using the default
  * weight mapping.
  */
-inline std::vector<TrackNetwork::ID> get_shortest_route(
-	TrackNetwork::ID start,
-	TrackNetwork::ID end,
+inline std::vector<TrackNetwork::NodeID> get_shortest_route(
+	TrackNetwork::NodeID start,
+	TrackNetwork::NodeID end,
 	const TrackNetwork& network
 ) {
 	return get_shortest_route(
@@ -47,10 +47,10 @@ inline std::vector<TrackNetwork::ID> get_shortest_route(
 /**
  * determines the shortest route for each passenger, and stores it in a map keyed by the passenger
  */
-inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> get_shortest_routes(
+inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::NodeID>> get_shortest_routes(
 	TrackNetwork& network, PassengerList& passengers
 ) {
-	std::unordered_map<Passenger,typename std::vector<TrackNetwork::ID>> passenger2route;
+	std::unordered_map<Passenger,typename std::vector<TrackNetwork::NodeID>> passenger2route;
 
 	for (auto passenger : passengers) {
 		dout(DL::INFO) << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";

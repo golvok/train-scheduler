@@ -15,16 +15,16 @@ class Passenger {
 private:
 	std::string name;
 	PassengerId id;
-	TrackNetwork::ID entry_id;
-	TrackNetwork::ID exit_id;
+	TrackNetwork::NodeID entry_id;
+	TrackNetwork::NodeID exit_id;
 	TrackNetwork::Time start_time;
 
 public:
 	Passenger(
 		const std::string& name,
 		PassengerId id,
-		TrackNetwork::ID entry_id,
-		TrackNetwork::ID exit_id,
+		TrackNetwork::NodeID entry_id,
+		TrackNetwork::NodeID exit_id,
 		TrackNetwork::Time start_time
 	)
 		: name(name)
@@ -36,8 +36,8 @@ public:
 
 	PassengerId getID() const { return id; }
 	const std::string& getName() const { return name; }
-	TrackNetwork::ID getEntryID() const { return entry_id; }
-	TrackNetwork::ID getExitID() const { return exit_id; }
+	TrackNetwork::NodeID getEntryID() const { return entry_id; }
+	TrackNetwork::NodeID getExitID() const { return exit_id; }
 	TrackNetwork::Time getStartTime() const { return start_time; }
 
 	bool operator==(const Passenger& rhs) const {
