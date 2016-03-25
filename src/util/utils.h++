@@ -196,12 +196,23 @@ auto make_deref_and_incrementer(const ITER_TYPE& iter) {
 template<class InputIt, class UnaryPredicate>
 std::pair<InputIt,size_t> find_by_index(InputIt first, InputIt last, UnaryPredicate p) {
 	size_t index = 0;
-    for (; first != last; ++first, ++index) {
-        if (p(index)) {
-            return { first, index };
-        }
-    }
-    return { last, index };
+	for (; first != last; ++first, ++index) {
+		if (p(index)) {
+			return { first, index };
+		}
+	}
+	return { last, index };
+}
+
+template<class InputIt, class BinaryPredicate>
+std::pair<InputIt,size_t> find_with_index(InputIt first, InputIt last, BinaryPredicate p) {
+	size_t index = 0;
+	for (; first != last; ++first, ++index) {
+		if (p(*first,index)) {
+			return { first, index };
+		}
+	}
+	return { last, index };
 }
 
 template<class ForwardIt, class UnaryPredicate>
@@ -216,8 +227,9 @@ ForwardIt remove_by_index(ForwardIt first, ForwardIt last, UnaryPredicate p) {
 			}
 		}
 	}
-    return first;
+	return first;
 }
+
 
 } // end namespace util
 
