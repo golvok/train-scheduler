@@ -82,6 +82,8 @@ public:
 	);
 };
 
+const size_t NO_TRAIN = -1;
+
 class Scheduler3 {
 	using VertexList = std::vector<TrackNetwork::NodeID>;
 	using VertexListList = std::vector<VertexList>;
@@ -106,15 +108,63 @@ public:
 	 */
 	Schedule do_schedule();
 
-	VertexListList make_one_train_per_passenger();
-	VertexListList coalesce_trains(VertexListList&& initial_trains);
+	class TrainData {
+		using TNNodeID = TrackNetwork::NodeID;
+	public:
+		struct SrcInfo {
+			SrcInfo(const TNNodeID& dest) : dest(dest) { }
+			TNNodeID dest;
+		};
+		struct DestInfo {
+			DestInfo(const TNNodeID& src) : src(src) { }
+			TNNodeID src;
+		};
+
+		TrainData(VertexList&& train)
+			: train(train)
+			, src_infos{ {train.front(), SrcInfo(train.back())} }
+			, dest_infos{ {train.back(), DestInfo(train.front())} }
+		{ }
+
+		void add_src_dest_pair(const TNNodeID& src, const TNNodeID& dest) {
+			src_infos.emplace(src, SrcInfo(dest));
+			dest_infos.emplace(dest, DestInfo(src));
+		}
+
+		bool is_src      (const TNNodeID& node_id) const { return src_infos.find(node_id) != src_infos.end(); }
+		auto get_srces   (                       ) const { return ::util::xrange_forward_pe<decltype(src_infos.begin())>(src_infos.begin(), src_infos.end(), [](const auto& it) { return it->first; }); }
+		auto get_dests_of(const TNNodeID& node_id) const { auto r = src_infos.equal_range(node_id); return ::util::xrange_forward_pe<decltype(r.first)>(r.first, r.second, [](const auto& e) { return e->second.dest; }); }
+
+		bool is_dest     (const TNNodeID& node_id) const { return dest_infos.find(node_id) != dest_infos.end(); }
+		auto get_dests   (                       ) const { return ::util::xrange_forward_pe<decltype(dest_infos.begin())>(dest_infos.begin(), dest_infos.end(), [](const auto& it) { return it->first; }); }
+		auto get_srces_of(const TNNodeID& node_id) const { auto r = dest_infos.equal_range(node_id); return ::util::xrange_forward_pe<decltype(r.first)>(r.first, r.second, [](const auto& e) { return e->second.src; }); }
+
+		VertexList& get_train() { return train; }
+		const VertexList& get_train() const { return train; }
+	private:
+		VertexList train;
+
+		std::unordered_multimap<TNNodeID, SrcInfo> src_infos;
+		std::unordered_multimap<TNNodeID, DestInfo> dest_infos;
+	};
+
+	using TrainDataList = std::vector<TrainData>;
+
+private:
+	TrainDataList make_one_train_per_passenger();
+	TrainDataList coalesce_trains(TrainDataList&& initial_trains);
 
 	void dump_trains_to_dout(
-		const VertexListList& train_routes,
+		const TrainDataList& train_data,
 		const std::string& title,
 		DebugLevel::Level level
 	);
 };
+
+Scheduler3::TrainDataList remove_redundant_trains(
+	Scheduler3::TrainDataList&& train_data,
+	const std::vector<size_t>& train_is_rudundant_with
+);
 
 /**
  * Entry Point.
@@ -374,19 +424,19 @@ Maybe start with one train/passenger, then iterative coalesce?
 Schedule Scheduler3::do_schedule() {
 	auto fnd_routes_indent = dout(DL::INFO).indentWithTitle("finding routes (scheduler3)");
 
-	auto trains = make_one_train_per_passenger();
+	auto train_data = make_one_train_per_passenger();
 
-	dump_trains_to_dout(trains, "Initial Trains", DL::TR_D1);
+	dump_trains_to_dout(train_data, "Initial Trains", DL::TR_D1);
 
-	trains = coalesce_trains(std::move(trains));
+	train_data = coalesce_trains(std::move(train_data));
 
 	std::vector<TrainRoute> train_routes;
 
-	for(auto& train : trains) {
-		auto repeat_time = train.size();
+	for(auto& datum : train_data) {
+		auto repeat_time = datum.get_train().size();
 		train_routes.emplace_back(
 			::util::make_id<::algo::RouteID>(train_routes.size()),
-			std::move(train),
+			std::move(datum.get_train()),
 			std::vector<TrackNetwork::Time>{ 0 }, // assumes all routes start at time 0
 			repeat_time, // make it repeat after it's done for now
 			network
@@ -396,37 +446,46 @@ Schedule Scheduler3::do_schedule() {
 	return Schedule("Scheduler3 schedule",std::move(train_routes));
 }
 
-Scheduler3::VertexListList Scheduler3::make_one_train_per_passenger() {
-	VertexListList trains;
+Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() {
+	TrainDataList train_data;
 	for (const auto& p : passengers) {
-		trains.emplace_back(::util::get_shortest_route(
+		train_data.emplace_back(::util::get_shortest_route(
 			p.getEntryID(),
 			p.getExitID(),
 			network
 		));
+		train_data.back().add_src_dest_pair(p.getEntryID(), p.getExitID());
 	}
-	return std::move(trains);
+	return std::move(train_data);
 }
 
-Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) {
+Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data) {
 
-	size_t old_size = trains.size();
+	size_t old_size = train_data.size();
 	int iter_num = 1;
 	while (true) {
 		auto iter_indent = dout(DL::TR_D2).indentWithTitle([&](auto&& str) {
 			str << "Coalescing Iteration " << iter_num;
 		});
-		std::vector<bool> train_is_rudundant(trains.size());
 
-		for (size_t train_i = 0; train_i != trains.size(); ++train_i) {
-			if (train_is_rudundant[train_i]) { continue; }
-			auto& train = trains[train_i];
+		// the train that will take over the duties of the i'th train.
+		// not sure we need to do this every time...
+		std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
 
-			for (size_t comp_train_i = train_i + 1; comp_train_i != trains.size(); ++comp_train_i) {
-				if (train_is_rudundant[comp_train_i]) { continue; }
-				auto& comp_train = trains[comp_train_i];
+		for (size_t train_i = 0; train_i != train_data.size(); ++train_i) {
+			if (train_is_rudundant_with[train_i] != NO_TRAIN) { continue; }
+			auto& train = train_data[train_i].get_train();
+
+			for (size_t comp_train_i = train_i + 1; comp_train_i != train_data.size(); ++comp_train_i) {
+				if (train_is_rudundant_with[comp_train_i] != NO_TRAIN) { continue; }
+				auto& comp_train = train_data[comp_train_i].get_train();
 
 				// TODO: this DOES NOT handle repeated vertices...
+				// TODO: keep track of how many (and what wanted capacity) routes get combinded
+				//       and where, so that any splitting/moving is aware of the weighting. Store
+				//       per edge?
+				// IDEA: A "move" is a swap of edges between train_data, or a re-route.
+				//       A timing analysis is done after.
 
 				// the location of the train's first node in comp_train
 				auto comp_first_match = std::find(
@@ -470,7 +529,9 @@ Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) 
 						// extend comp train? maybe. So, add to consideration. (TODO)
 						continue;
 					} else {
-						// they overlap, and train is longer
+						// they overlap, and train is longer, eg:
+						//              \/ trian ends
+						//  ...==>+====>+--->+  <- comp train ends
 						redundant_train = comp_train_i;
 					}
 				} else if (reached_end && !comp_reached_end) {
@@ -478,7 +539,9 @@ Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) 
 						// extend train? maybe. So, add to consideration. (TODO)
 						continue;
 					} else {
-						// they overlap, and comp trian is longer
+						// they overlap, and comp trian is longer, eg:
+						//              \/ comp trian ends
+						//  ...==>+====>+--->+  <- train ends
 						redundant_train = train_i;
 					}
 				} else {
@@ -488,6 +551,8 @@ Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) 
 						redundant_train = train_i;
 					} else if (comp_first_match == comp_train.begin()) {
 						redundant_train = comp_train_i;
+					} else {
+						::util::print_and_throw<std::runtime_error>([&](auto&& err) { err << "don't handle convergence case\n"; });
 					}
 				}
 
@@ -495,43 +560,134 @@ Scheduler3::VertexListList Scheduler3::coalesce_trains(VertexListList&& trains) 
 					::util::print_and_throw<std::runtime_error>([&](auto&& err) { err << "no train selected as redundant!\n"; });
 				}
 
-				train_is_rudundant[redundant_train] = true;
-
 				size_t other_train = redundant_train == train_i ? comp_train_i : train_i;
+				train_is_rudundant_with[redundant_train] = other_train;
+
 				dout(DL::TR_D3) << "train #" << redundant_train << " marked redundant in favour of #" << other_train << "\n";
 			}
 		}
 
-		trains.erase(
-			util::remove_by_index(
-				trains.begin(), trains.end(),
-				[&](auto& index) { return train_is_rudundant[index]; }
-			),
-			trains.end()
-		);
+		// copy over the src,dest pairs from the redundant train to the replacement train
+		for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
+			auto repalcemnt_train = train_is_rudundant_with[itrain];
+			if (repalcemnt_train == NO_TRAIN) { continue; }
 
-		dump_trains_to_dout(trains, "Trains After Iteration", DL::TR_D2);
+			for (const auto& src : train_data[itrain].get_srces()) {
+				for (const auto& dest : train_data[itrain].get_dests_of(src)) {
+					train_data[repalcemnt_train].add_src_dest_pair(src, dest);
+				}
+			}
+		}
 
-		if (trains.size() <= max_trains_at_a_time || trains.size() == old_size) {
+		train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
+		train_is_rudundant_with = std::vector<size_t>(train_data.size(), NO_TRAIN);
+
+		dump_trains_to_dout(train_data, "Trains After basic redundancy removal", DL::TR_D2);
+
+		/* pick a route (for each route?), see which (src,dest)s can't make it without this route
+		 * then figure out how to fix that, while lowering cost (?)
+		 * What is cost though? obviously number of trains, but this is too discrete
+		 * Total route lengths? will that end up with fewer trains?
+		 *     I feel this will result in many small trains, feeding into a big one.
+		 *     Is there a way to make bad moves? and do a simulated annealing thing?
+		 *         bad moves would be... duplication? well, the case of adding two small spur routes is "bad"
+		 *         hmm... that's fine actually. Would need to have a move that combines 2+ spurs & normal sized one into 3 routes to counter
+		 */
+
+		struct SrcDestPair {
+			TrackNetwork::NodeID src;
+			TrackNetwork::NodeID dest;
+		};
+
+
+		for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
+			std::vector<SrcDestPair> needs_this_train;
+
+			auto check_if_needs_this_train = [&](const auto& test_id, const auto& other_id, bool reverse) {
+				const auto find_results = ::util::find_with_index(
+					train_data.begin(), train_data.end(),
+					[&](const auto& train_datum, const auto& index) {
+						const auto& train = train_datum.get_train();
+						return
+							( index != itrain )
+							&& ( train.end() != std::find(train.begin(), train.end(), test_id) )
+						;
+					}
+				);
+				const auto other_train_iter = find_results.first;
+
+				if (other_train_iter == train_data.end()) {
+					if (reverse) {
+						needs_this_train.emplace_back(SrcDestPair{other_id, test_id});
+					} else {
+						needs_this_train.emplace_back(SrcDestPair{test_id, other_id});
+					}
+				}
+			};
+
+			for (const auto& src : train_data[itrain].get_srces()) {
+				for (const auto& dest : train_data[itrain].get_dests_of(src)) {
+					check_if_needs_this_train(dest, src, true);
+				}
+			}
+
+			for (const auto& dest : train_data[itrain].get_dests()) {
+				for (const auto& src : train_data[itrain].get_srces_of(dest)) {
+					check_if_needs_this_train(src, dest, false);
+				}
+			}
+
+			if (needs_this_train.size() == 0) {
+				train_is_rudundant_with[itrain] = -2; // anything but NO_TRAIN...
+				dout(DL::TR_D1) << "no one NEEDS train " << itrain << '\n';
+			} else {
+				dout(DL::TR_D1) << "someone needs train " << itrain << '\n';
+			}
+		}
+
+		train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
+
+		dump_trains_to_dout(train_data, "Trains After No-Need-Removal", DL::TR_D2);
+
+		if (train_data.size() <= max_trains_at_a_time || train_data.size() == old_size || iter_num == 10) {
 			break;
 		}
-		old_size = trains.size();
+		old_size = train_data.size();
 		iter_num += 1;
 	}
 
-	return std::move(trains);
+	return std::move(train_data);
+}
+
+Scheduler3::TrainDataList remove_redundant_trains(
+	Scheduler3::TrainDataList&& train_data,
+	const std::vector<size_t>& train_is_rudundant_with
+) {
+	auto train_is_rudundant_at_this_index = [&](const auto& index) {
+		return train_is_rudundant_with[index] != NO_TRAIN;
+	};
+
+	train_data.erase(
+		::util::remove_by_index(
+			train_data.begin(), train_data.end(),
+			train_is_rudundant_at_this_index
+		),
+		train_data.end()
+	);
+
+	return train_data;
 }
 
 void Scheduler3::dump_trains_to_dout(
-	const VertexListList& train_routes,
+	const TrainDataList& train_data,
 	const std::string& title,
 	DebugLevel::Level level
 ) {
 	auto output_indent = dout(level).indentWithTitle(title);
 	uint i = 0;
-	for (auto& route : train_routes) {
+	for (const auto& datum : train_data) {
 		auto route_indent = dout(level).indentWithTitle([&](auto&&out){ out << "train " << i; });
-		::util::print_route(route,network,dout(level));
+		::util::print_route(datum.get_train(),network,dout(level));
 		++i;
 	}
 }
