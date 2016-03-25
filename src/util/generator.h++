@@ -108,9 +108,10 @@ template<
 	>
 >
 auto make_generator(PTYPE1 initial, PTYPE2 past_end, NEXT next, TRANSFORM transform = TRANSFORM(), decltype(transform(initial),next(initial))* = nullptr) {
-	return make_generator<INDEX_TYPE>(
+	auto done = [=](const INDEX_TYPE& current ) { return current == (INDEX_TYPE)past_end; };
+	return generator<INDEX_TYPE, NEXT, decltype(done), TRANSFORM>(
 		initial,
-		[=](const INDEX_TYPE& current ) { return current == (INDEX_TYPE)past_end; },
+		done,
 		next,
 		transform
 	);
@@ -133,11 +134,30 @@ template<
 		std::is_convertible<PTYPE1,INDEX_TYPE>::value && std::is_convertible<PTYPE2,INDEX_TYPE>::value
 	>
 >
-auto xrange_forward(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSFORM()) {
-	return make_generator<INDEX_TYPE>(
+auto xrange_forward_pe(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSFORM()) {
+	auto next = [](INDEX_TYPE i) { return ++i; };
+	auto done = [=](INDEX_TYPE i) { return i == end; };
+	return generator<INDEX_TYPE, decltype(next), decltype(done), TRANSFORM>(
 		start,
-		end + 1,
-		[=](INDEX_TYPE i) { return i + 1; },
+		done,
+		next,
+		transform
+	);
+}
+
+template<
+	typename INDEX_TYPE, typename PTYPE1, typename PTYPE2, typename TRANSFORM = detail::identity,
+	typename = std::enable_if_t<
+		std::is_convertible<PTYPE1,INDEX_TYPE>::value && std::is_convertible<PTYPE2,INDEX_TYPE>::value
+	>
+>
+auto xrange_forward(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSFORM()) {
+	auto next = [](INDEX_TYPE i) { return ++i; };
+	auto done = [=](INDEX_TYPE i) { return i == end + 1; };
+	return generator<INDEX_TYPE, decltype(next), decltype(done), TRANSFORM>(
+		start,
+		done,
+		next,
 		transform
 	);
 }
@@ -149,10 +169,12 @@ template<
 	>
 >
 auto xrange_backward(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSFORM()) {
-	return make_generator<INDEX_TYPE>(
+	auto next = [](INDEX_TYPE i) { return --i; };
+	auto done = [=](INDEX_TYPE i) { return i == end - 1; };
+	return generator<INDEX_TYPE, decltype(next), decltype(done), TRANSFORM>(
 		start,
-		end - 1,
-		[=](INDEX_TYPE i) { return i - 1; },
+		done,
+		next,
 		transform
 	);
 }
@@ -165,10 +187,12 @@ template<
 >
 auto xrange(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSFORM()) {
 	const bool forwards = end >= start;
-	return make_generator<INDEX_TYPE>(
+	auto next = [=](INDEX_TYPE i) { return forwards ? ++i : --i; };
+	auto done = [=](INDEX_TYPE i) { return i == end + (forwards ? 1 : -1); };
+	return generator<INDEX_TYPE, decltype(next), decltype(done), TRANSFORM>(
 		start,
-		end + (forwards ? 1 : -1),
-		[=](INDEX_TYPE i) { return i + (forwards ? 1 : -1); },
+		done,
+		next,
 		transform
 	);
 }

@@ -140,12 +140,9 @@ public:
 		const TrackNetwork& tn
 	) const {
 		auto data = getTrainsAtVertexInInterval_impl(vid, interval, tn);
-		return ::util::make_generator<TrainIndex>(
+		return ::util::xrange_forward_pe<TrainIndex>(
 			data.first,
 			data.second,
-			[&](const auto& index) {
-				return index + 1;
-			},
 			[&](const auto& index) {
 				return this->makeTrainFromIndex(index);
 			}
