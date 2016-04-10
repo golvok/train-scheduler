@@ -45,6 +45,11 @@ namespace util {
 			std::forward<T>(t)
 		);
 	}
+
+	template<typename T>
+	auto make_copy(const T& t) {
+		return T(t);
+	}
 }
 
 /*******
