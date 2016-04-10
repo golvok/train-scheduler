@@ -3,6 +3,7 @@
 #define SIM__SIMULATOR_HPP
 
 #include <algo/scheduler.h++>
+#include <util/handles.h++>
 #include <util/track_network.h++>
 
 #include <functional>
@@ -32,9 +33,10 @@ using Train2PositionInfoMap = ::algo::TrainMap<TrainLocation>;
 
 using ObserverType = std::function<bool()>;
 
-class SimulatorHandle {
+class SimulatorHandle : public ::util::shared_handle<Simulator> {
 public:
-	SimulatorHandle() : sim_ptr() { }
+	using shared_handle::shared_handle;
+	using shared_handle::operator=;
 
 	auto getActiveTrains() const {
 		using map_iter = Train2PositionInfoMap::const_iterator;
@@ -59,26 +61,14 @@ public:
 	void runForTime(const SimTime& time_to_run, const SimTime& step_size);
 	SimTime getCurrentTime();
 
-	SimulatorHandle(const SimulatorHandle&) = default;
-	SimulatorHandle& operator=(const SimulatorHandle&) = default;
-	SimulatorHandle& operator=(SimulatorHandle&&) = default;
-
-	operator bool() { return (bool)sim_ptr; }
-	void reset() { sim_ptr.reset(); }
-
 	std::shared_ptr<const ::algo::Schedule> getScheduleUsed();
 	std::shared_ptr<const TrackNetwork> getTrackNetworkUsed();
 
 	void registerObserver(ObserverType observer, SimTime period);
 	bool isPaused();
 
-	Simulator* get() const { return sim_ptr.get(); }
 private:
-	SimulatorHandle(const std::shared_ptr<Simulator>& sim_ptr) : sim_ptr(sim_ptr) { }
-
 	const Train2PositionInfoMap& getTrainLocations() const;
-
-	std::shared_ptr<Simulator> sim_ptr;
 
 	friend SimulatorHandle instantiate_simulator(
 		std::shared_ptr<const PassengerList> passengers,

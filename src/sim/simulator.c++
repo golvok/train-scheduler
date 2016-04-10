@@ -7,20 +7,20 @@ namespace sim {
 
 // std::vector<std::reference_wrapper<Passenger>> SimulatorHandle::getActivePassengers() const { return sim_ptr->getActivePassengers(); }
 
-const TrainLocation& SimulatorHandle::getTrainLocation(const ::algo::TrainID& train) const { return sim_ptr->getTrainLocation(train ); }
-const Train2PositionInfoMap& SimulatorHandle::getTrainLocations() const { return sim_ptr->getTrainLocations(); }
-const PassengerConstRefList& SimulatorHandle::getPassengersAt (const ::algo::TrainID& train) const { return sim_ptr->getPassengersAt(train  ); }
-const PassengerConstRefList& SimulatorHandle::getPassengersAt (const StationID& station  ) const { return sim_ptr->getPassengersAt(station); }
+const TrainLocation& SimulatorHandle::getTrainLocation(const ::algo::TrainID& train) const { return get()->getTrainLocation(train ); }
+const Train2PositionInfoMap& SimulatorHandle::getTrainLocations() const { return get()->getTrainLocations(); }
+const PassengerConstRefList& SimulatorHandle::getPassengersAt (const ::algo::TrainID& train) const { return get()->getPassengersAt(train  ); }
+const PassengerConstRefList& SimulatorHandle::getPassengersAt (const StationID& station  ) const { return get()->getPassengersAt(station); }
 
-void SimulatorHandle::runForTime(const SimTime& time_to_run, const SimTime& max_step_size) { sim_ptr->runForTime(time_to_run, max_step_size); }
-SimTime SimulatorHandle::getCurrentTime() { return sim_ptr->getCurrentTime(); }
+void SimulatorHandle::runForTime(const SimTime& time_to_run, const SimTime& max_step_size) { get()->runForTime(time_to_run, max_step_size); }
+SimTime SimulatorHandle::getCurrentTime() { return get()->getCurrentTime(); }
 
 
-std::shared_ptr<const ::algo::Schedule> SimulatorHandle::getScheduleUsed() { return sim_ptr->getScheduleUsed(); }
-std::shared_ptr<const TrackNetwork> SimulatorHandle::getTrackNetworkUsed() { return sim_ptr->getTrackNetworkUsed(); }
+std::shared_ptr<const ::algo::Schedule> SimulatorHandle::getScheduleUsed() { return get()->getScheduleUsed(); }
+std::shared_ptr<const TrackNetwork> SimulatorHandle::getTrackNetworkUsed() { return get()->getTrackNetworkUsed(); }
 
-void SimulatorHandle::registerObserver(ObserverType observer, SimTime period) { sim_ptr->registerObserver(observer, period); }
-bool SimulatorHandle::isPaused() { return sim_ptr->isPaused(); }
+void SimulatorHandle::registerObserver(ObserverType observer, SimTime period) { get()->registerObserver(observer, period); }
+bool SimulatorHandle::isPaused() { return get()->isPaused(); }
 
 SimulatorHandle instantiate_simulator(
 	std::shared_ptr<const PassengerList> passengers,
