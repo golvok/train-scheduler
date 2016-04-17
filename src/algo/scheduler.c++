@@ -594,41 +594,42 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 			TrackNetwork::NodeID dest;
 		};
 
+		//TODO: this is rather trivially parallelizable
+
+		::algo::RouteTroughScheduleCacheHandle rts_cache_handle;
 
 		for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
+			auto path_testing_indent = dout(DL::TR_D1).indentWithTitle([&](auto&& s) {
+				s << "Testing train #" << itrain;
+			});
+
 			std::vector<SrcDestPair> needs_this_train;
 
-			auto check_if_needs_this_train = [&](const auto& test_id, const auto& other_id, bool reverse) {
-				const auto find_results = ::util::find_with_index(
-					train_data.begin(), train_data.end(),
-					[&](const auto& train_datum, const auto& index) {
-						const auto& train = train_datum.get_train();
-						return
-							( index != itrain )
-							&& ( train.end() != std::find(train.begin(), train.end(), test_id) )
-						;
+			// remove this train for testing
+			TrainData this_train_data;
+			std::swap(this_train_data, train_data[itrain]);
+
+			for (const auto& src : this_train_data.get_srces()) {
+				auto src_dest_indent = dout(DL::TR_D2).indentWithTitle([&](auto&& s) {
+					s << "Test Paths from " << src;
+				});
+				for (const auto& dest : this_train_data.get_dests_of(src)) {
+					auto src_dest_indent = dout(DL::TR_D3).indentWithTitle([&](auto&& s) {
+						s << "Test Path " << src << " -> " << dest;
+					});
+
+					PassengerRoutes::RouteType route_found;
+
+					std::tie(route_found, rts_cache_handle) = ::algo::route_through_schedule(
+						network,
+						make_a_schedule__all_start_zero("no-need schedule", train_data, network),
+						src, dest,
+						std::move(rts_cache_handle)
+					);
+
+					if (route_found.empty()) {
+						needs_this_train.emplace_back(SrcDestPair{src, dest});
 					}
-				);
-				const auto other_train_iter = find_results.first;
-
-				if (other_train_iter == train_data.end()) {
-					if (reverse) {
-						needs_this_train.emplace_back(SrcDestPair{other_id, test_id});
-					} else {
-						needs_this_train.emplace_back(SrcDestPair{test_id, other_id});
-					}
-				}
-			};
-
-			for (const auto& src : train_data[itrain].get_srces()) {
-				for (const auto& dest : train_data[itrain].get_dests_of(src)) {
-					check_if_needs_this_train(dest, src, true);
-				}
-			}
-
-			for (const auto& dest : train_data[itrain].get_dests()) {
-				for (const auto& src : train_data[itrain].get_srces_of(dest)) {
-					check_if_needs_this_train(src, dest, false);
 				}
 			}
 
@@ -638,6 +639,9 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 			} else {
 				dout(DL::TR_D1) << "someone needs train " << itrain << '\n';
 			}
+
+			// put this train back
+			train_data[itrain] = std::move(this_train_data);
 		}
 
 		train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);

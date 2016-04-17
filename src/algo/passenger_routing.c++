@@ -137,7 +137,7 @@ std::pair<
 		// do nothing
 	}
 
-	dout(DL::WARN) << "Didn't find a path from " << std::tie(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
+	dout(DL::PR_D1) << "Didn't find a path from " << std::tie(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
 
 	return { PassengerRoutes::RouteType(), std::move(cache_handle) };
 }
