@@ -2,6 +2,7 @@
 #ifndef ALGO__PASSENGER_ROUTING_HPP
 #define ALGO__PASSENGER_ROUTING_HPP
 
+#include <util/handles.h++>
 #include <util/location_id.h++>
 #include <util/passenger.h++>
 
@@ -67,6 +68,27 @@ PassengerRoutes route_passengers(
 	const TrackNetwork& tn,
 	const Schedule& sch,
 	const PassengerList& passgrs
+);
+
+struct RouteTroughScheduleCache;
+struct RouteTroughScheduleCacheHandle : public ::util::unique_handle<RouteTroughScheduleCache> {
+	using unique_handle::unique_handle;
+	using unique_handle::operator=;
+	RouteTroughScheduleCacheHandle(RouteTroughScheduleCacheHandle&&);
+	RouteTroughScheduleCacheHandle& operator=(RouteTroughScheduleCacheHandle&&);
+	RouteTroughScheduleCacheHandle();
+	~RouteTroughScheduleCacheHandle();
+};
+
+std::pair<
+	PassengerRoutes::RouteType,
+	RouteTroughScheduleCacheHandle
+> route_through_schedule(
+	const TrackNetwork& tn,
+	const Schedule& sch,
+	const TrackNetwork::NodeID start_vertex,
+	const TrackNetwork::NodeID goal_vertex,
+	RouteTroughScheduleCacheHandle&& cache_handle = RouteTroughScheduleCacheHandle()
 );
 
 } // end namespace algo

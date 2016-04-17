@@ -63,53 +63,83 @@ PassengerRoutes route_passengers(
 
 	PassengerRoutes results;
 
-	const ScheduleToGraphAdapter baseGraph(tn,sch,5); // TODO calculate station_lookahead_quanta from... something
-
+	RouteTroughScheduleCacheHandle cache_handle;
 	for (auto passenger : passgrs) {
 		auto pass_indent = dout(DL::PR_D1).indentWithTitle([&](auto&& s){ s << "Passenger " << passenger.getName(); });
 
-		// TODO: change next line to use actual leave time when TR and WC understand time...
-		auto start_vertex_and_time = STGA::vertex_descriptor(passenger.getEntryID(),0,tn);
-		auto goal_vertex = passenger.getExitID();
-
-		auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
-			[&](const STGA::vertex_descriptor& vd) -> TrackNetwork::Weight {
-				(void)vd;
-				return 1;
-			}
-		);
-
-		dout(DL::PR_D2) << "Start vertex and time: " << std::tie(start_vertex_and_time,tn) << '\n';
-		dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '(' << goal_vertex << ")\n";
-
-		auto pred_map = baseGraph.make_pred_map();
-		auto backing_distance_map = baseGraph.make_backing_distance_map(start_vertex_and_time);
-		auto backing_rank_map = baseGraph.make_backing_rank_map(heuristic);
-		auto backing_colour_map = baseGraph.make_backing_colour_map();
-
-		try {
-			astar_search_no_init(baseGraph,
-				start_vertex_and_time,
-				heuristic
-				, visitor(astar_goal_visitor(start_vertex_and_time.getTime(), goal_vertex))
-				. distance_map(baseGraph.make_distance_map(backing_distance_map))
-				. predecessor_map(std::ref(pred_map)) // don't want to pass by value
-				. rank_map(baseGraph.make_rank_map(backing_rank_map))
-				. color_map(baseGraph.make_colour_map(backing_colour_map))
-			);
-		} catch (const found_goal& fg) { // found a path to the goal
-
-			results.addRoute(passenger, extract_coalesced_path(start_vertex_and_time, fg.vd, pred_map, tn));
-
-			continue;
-		} catch (const no_route&) {
-			// do nothing
-		}
-
-		dout(DL::WARN) << "Didn't find a path from " << std::tie(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
+		PassengerRoutes::RouteType route;
+		std::tie(route, cache_handle) = route_through_schedule(tn, sch, passenger.getEntryID(), passenger.getExitID(), std::move(cache_handle));
+		results.addRoute(passenger, std::move(route));
 	}
 
 	return results;
+}
+
+struct RouteTroughScheduleCache {
+	// uh... empty for now
+	// if the STGA is cached (which is pointless?), or paths are, then there
+	// would have to be some checksum type thing on the Schedule & TN...
+};
+
+// These are declared here because the need to be after the definition of RouteTroughScheduleCache
+RouteTroughScheduleCacheHandle::RouteTroughScheduleCacheHandle(RouteTroughScheduleCacheHandle&&) = default;
+RouteTroughScheduleCacheHandle& RouteTroughScheduleCacheHandle::operator=(RouteTroughScheduleCacheHandle&&) = default;
+RouteTroughScheduleCacheHandle::RouteTroughScheduleCacheHandle() = default;
+RouteTroughScheduleCacheHandle::~RouteTroughScheduleCacheHandle() { }
+
+std::pair<
+	PassengerRoutes::RouteType,
+	RouteTroughScheduleCacheHandle
+> route_through_schedule(
+	const TrackNetwork& tn,
+	const Schedule& sch,
+	const TrackNetwork::NodeID start_vertex,
+	const TrackNetwork::NodeID goal_vertex,
+	RouteTroughScheduleCacheHandle&& cache_handle
+) {
+
+	// if null, create a cache
+	if (!cache_handle) { cache_handle = std::make_unique<::algo::RouteTroughScheduleCache>(); }
+
+	// TODO: change next line to use actual leave time when TR and WC understand time...
+	auto start_vertex_and_time = STGA::vertex_descriptor(start_vertex,0,tn);
+
+	auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
+		[&](const STGA::vertex_descriptor& vd) -> TrackNetwork::Weight {
+			(void)vd;
+			return 1;
+		}
+	);
+
+	dout(DL::PR_D2) << "Start vertex and time: " << std::tie(start_vertex_and_time,tn) << '\n';
+	dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '(' << goal_vertex << ")\n";
+
+	const ScheduleToGraphAdapter baseGraph(tn,sch,5); // TODO calculate station_lookahead_quanta from... something
+
+	auto pred_map = baseGraph.make_pred_map();
+	auto backing_distance_map = baseGraph.make_backing_distance_map(start_vertex_and_time);
+	auto backing_rank_map = baseGraph.make_backing_rank_map(heuristic);
+	auto backing_colour_map = baseGraph.make_backing_colour_map();
+
+	try {
+		astar_search_no_init(baseGraph,
+			start_vertex_and_time,
+			heuristic
+			, visitor(astar_goal_visitor(start_vertex_and_time.getTime(), goal_vertex))
+			. distance_map(baseGraph.make_distance_map(backing_distance_map))
+			. predecessor_map(std::ref(pred_map)) // don't want to pass by value
+			. rank_map(baseGraph.make_rank_map(backing_rank_map))
+			. color_map(baseGraph.make_colour_map(backing_colour_map))
+		);
+	} catch (const found_goal& fg) { // found a path to the goal
+		return { extract_coalesced_path(start_vertex_and_time, fg.vd, pred_map, tn), std::move(cache_handle) };
+	} catch (const no_route&) {
+		// do nothing
+	}
+
+	dout(DL::WARN) << "Didn't find a path from " << std::tie(start_vertex_and_time,tn) << " to " << tn.getVertexName(goal_vertex) << '\n';
+
+	return { PassengerRoutes::RouteType(), std::move(cache_handle) };
 }
 
 namespace {
