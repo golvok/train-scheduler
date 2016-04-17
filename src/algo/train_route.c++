@@ -45,6 +45,23 @@ TrainRoute::TrainRoute(
 	)
 { }
 
+TrainRoute::TrainRoute(
+	const RouteID route_id,
+	const std::vector<TrackNetwork::NodeID>& route,
+	std::vector<TrackNetwork::Time>&& start_offsets,
+	TrackNetwork::Time repeat_time,
+	const TrackNetwork& tn
+)
+	: TrainRoute(
+		route_id,
+		std::vector<TrackNetwork::NodeID>(route),
+		std::move(start_offsets),
+		repeat_time,
+		tn
+	)
+{ }
+
+
 TrackNetwork::Time Train::getExpectedTravelTime(
 	std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
 	const TrackNetwork& tn

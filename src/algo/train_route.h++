@@ -123,7 +123,15 @@ public:
 
 	TrainRoute(
 		const RouteID route_id,
-		std::vector<TrackNetwork::NodeID>&& route_,
+		std::vector<TrackNetwork::NodeID>&& route,
+		std::vector<TrackNetwork::Time>&& start_offsets,
+		TrackNetwork::Time repeat_time,
+		const TrackNetwork& tn
+	);
+
+	TrainRoute(
+		const RouteID route_id,
+		const std::vector<TrackNetwork::NodeID>& route,
 		std::vector<TrackNetwork::Time>&& start_offsets,
 		TrackNetwork::Time repeat_time,
 		const TrackNetwork& tn

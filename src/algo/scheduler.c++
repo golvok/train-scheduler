@@ -1,5 +1,6 @@
 #include "scheduler.h++"
 
+#include <algo/passenger_routing.h++>
 #include <graphics/graphics.h++>
 #include <util/graph_utils.h++>
 #include <util/iteration_utils.h++>
@@ -9,6 +10,11 @@
 #include <boost/property_map/function_property_map.hpp>
 #include <iostream>
 #include <unordered_set>
+
+namespace {
+	template<typename TRAIN_DATA_COLLECTION>
+	::algo::Schedule make_a_schedule__all_start_zero(std::string name, const TRAIN_DATA_COLLECTION& train_data, const TrackNetwork& network);
+}
 
 namespace algo {
 
@@ -125,6 +131,8 @@ public:
 			, src_infos{ {train.front(), SrcInfo(train.back())} }
 			, dest_infos{ {train.back(), DestInfo(train.front())} }
 		{ }
+
+		TrainData() : train(), src_infos(), dest_infos() { }
 
 		void add_src_dest_pair(const TNNodeID& src, const TNNodeID& dest) {
 			src_infos.emplace(src, SrcInfo(dest));
@@ -430,20 +438,7 @@ Schedule Scheduler3::do_schedule() {
 
 	train_data = coalesce_trains(std::move(train_data));
 
-	std::vector<TrainRoute> train_routes;
-
-	for(auto& datum : train_data) {
-		auto repeat_time = datum.get_train().size();
-		train_routes.emplace_back(
-			::util::make_id<::algo::RouteID>(train_routes.size()),
-			std::move(datum.get_train()),
-			std::vector<TrackNetwork::Time>{ 0 }, // assumes all routes start at time 0
-			repeat_time, // make it repeat after it's done for now
-			network
-		);
-	}
-
-	return Schedule("Scheduler3 schedule",std::move(train_routes));
+	return make_a_schedule__all_start_zero("Scheduler3 schedule", train_data, network);
 }
 
 Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() {
@@ -693,3 +688,28 @@ void Scheduler3::dump_trains_to_dout(
 }
 
 } // end namespace algo
+
+namespace {
+
+template<typename TRAIN_DATA_COLLECTION>
+::algo::Schedule make_a_schedule__all_start_zero(std::string name, const TRAIN_DATA_COLLECTION& train_data, const TrackNetwork& network) {
+	std::vector<::algo::TrainRoute> train_routes;
+
+	for(auto& datum : train_data) {
+		auto repeat_time = datum.get_train().size();
+		if (repeat_time == 0) {
+			continue;
+		}
+		train_routes.emplace_back(
+			::util::make_id<::algo::RouteID>(train_routes.size()),
+			datum.get_train(),
+			std::vector<TrackNetwork::Time>{ 0 }, // assumes all routes start at time 0
+			repeat_time, // make it repeat after it's done for now
+			network
+		);
+	}
+
+	return ::algo::Schedule(name, std::move(train_routes));
+}
+
+} // end anonymous namespace
