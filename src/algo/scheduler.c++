@@ -13,7 +13,7 @@
 
 namespace {
 	template<typename TRAIN_DATA_COLLECTION>
-	::algo::Schedule make_a_schedule__all_start_zero(std::string name, const TRAIN_DATA_COLLECTION& train_data, const TrackNetwork& network);
+	::algo::Schedule make_a_schedule__all_start_zero(const std::string& name, const TRAIN_DATA_COLLECTION& train_data, const TrackNetwork& network);
 }
 
 namespace algo {
@@ -161,6 +161,9 @@ public:
 private:
 	TrainDataList make_one_train_per_passenger();
 	TrainDataList coalesce_trains(TrainDataList&& initial_trains);
+
+	TrainDataList schstep_remove_redundant_trains(TrainDataList&& train_data);
+	TrainDataList schstep_remove_unneeded_trains(TrainDataList&& train_data);
 
 	void dump_trains_to_dout(
 		const TrainDataList& train_data,
@@ -426,7 +429,8 @@ Figure out how to model people going to similar places (like pins on a net)
 		then the paths need to be split...?
 
 Maybe start with one train/passenger, then iterative coalesce?
-	capacity resolution must be done after.
+	capacity resolution must be done after. It should be mostly an issue of
+	selecting start & repeat times. Though, re-routes may be needed
 */
 
 Schedule Scheduler3::do_schedule() {
@@ -463,190 +467,9 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 			str << "Coalescing Iteration " << iter_num;
 		});
 
-		// the train that will take over the duties of the i'th train.
-		// not sure we need to do this every time...
-		std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
+		train_data = schstep_remove_redundant_trains(std::move(train_data));
 
-		for (size_t train_i = 0; train_i != train_data.size(); ++train_i) {
-			if (train_is_rudundant_with[train_i] != NO_TRAIN) { continue; }
-			auto& train = train_data[train_i].get_train();
-
-			for (size_t comp_train_i = train_i + 1; comp_train_i != train_data.size(); ++comp_train_i) {
-				if (train_is_rudundant_with[comp_train_i] != NO_TRAIN) { continue; }
-				auto& comp_train = train_data[comp_train_i].get_train();
-
-				// TODO: this DOES NOT handle repeated vertices...
-				// TODO: keep track of how many (and what wanted capacity) routes get combinded
-				//       and where, so that any splitting/moving is aware of the weighting. Store
-				//       per edge?
-				// IDEA: A "move" is a swap of edges between train_data, or a re-route.
-				//       A timing analysis is done after.
-
-				// the location of the train's first node in comp_train
-				auto comp_first_match = std::find(
-					comp_train.begin(), comp_train.end(), train.front()
-				);
-
-				// the location of the comp_train's first node in train
-				auto first_match = std::find(
-					train.begin(), train.end(), comp_train.front()
-				);
-
-				if (first_match == train.end() && comp_first_match == comp_train.end()) {
-					// neither path overlaps with the other
-					continue;
-				} else {
-					// exactly one train first node overlaps,
-					// so reset the other to it's beginning, so mismatch will
-					// start at where they overlap
-					if (first_match == train.end()) {
-						first_match = train.begin();
-					}
-
-					if (comp_first_match == comp_train.end()) {
-						comp_first_match = comp_train.begin();
-					}
-				}
-
-				auto mismatch_results = std::mismatch(
-					first_match, train.end(),
-					comp_first_match, comp_train.end()
-				);
-				bool      reached_end = mismatch_results.first  == train.end();
-				bool comp_reached_end = mismatch_results.second == comp_train.end();
-
-				size_t redundant_train = -1;
-				if (!reached_end && !comp_reached_end) {
-					// paths diverged, so add for consideration for extension (TODO)
-					continue;
-				} else if (!reached_end && comp_reached_end) {
-					if (first_match == train.begin()) {
-						// extend comp train? maybe. So, add to consideration. (TODO)
-						continue;
-					} else {
-						// they overlap, and train is longer, eg:
-						//              \/ trian ends
-						//  ...==>+====>+--->+  <- comp train ends
-						redundant_train = comp_train_i;
-					}
-				} else if (reached_end && !comp_reached_end) {
-					if (comp_first_match == comp_train.begin()) {
-						// extend train? maybe. So, add to consideration. (TODO)
-						continue;
-					} else {
-						// they overlap, and comp trian is longer, eg:
-						//              \/ comp trian ends
-						//  ...==>+====>+--->+  <- train ends
-						redundant_train = train_i;
-					}
-				} else {
-					// both end on the same vertex, so remove the shorter one.
-					// (the one that could have it's start vertex found in the other)
-					if (first_match == train.begin()) {
-						redundant_train = train_i;
-					} else if (comp_first_match == comp_train.begin()) {
-						redundant_train = comp_train_i;
-					} else {
-						::util::print_and_throw<std::runtime_error>([&](auto&& err) { err << "don't handle convergence case\n"; });
-					}
-				}
-
-				if (redundant_train == (size_t)-1) {
-					::util::print_and_throw<std::runtime_error>([&](auto&& err) { err << "no train selected as redundant!\n"; });
-				}
-
-				size_t other_train = redundant_train == train_i ? comp_train_i : train_i;
-				train_is_rudundant_with[redundant_train] = other_train;
-
-				dout(DL::TR_D3) << "train #" << redundant_train << " marked redundant in favour of #" << other_train << "\n";
-			}
-		}
-
-		// copy over the src,dest pairs from the redundant train to the replacement train
-		for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
-			auto repalcemnt_train = train_is_rudundant_with[itrain];
-			if (repalcemnt_train == NO_TRAIN) { continue; }
-
-			for (const auto& src : train_data[itrain].get_srces()) {
-				for (const auto& dest : train_data[itrain].get_dests_of(src)) {
-					train_data[repalcemnt_train].add_src_dest_pair(src, dest);
-				}
-			}
-		}
-
-		train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
-		train_is_rudundant_with = std::vector<size_t>(train_data.size(), NO_TRAIN);
-
-		dump_trains_to_dout(train_data, "Trains After basic redundancy removal", DL::TR_D2);
-
-		/* pick a route (for each route?), see which (src,dest)s can't make it without this route
-		 * then figure out how to fix that, while lowering cost (?)
-		 * What is cost though? obviously number of trains, but this is too discrete
-		 * Total route lengths? will that end up with fewer trains?
-		 *     I feel this will result in many small trains, feeding into a big one.
-		 *     Is there a way to make bad moves? and do a simulated annealing thing?
-		 *         bad moves would be... duplication? well, the case of adding two small spur routes is "bad"
-		 *         hmm... that's fine actually. Would need to have a move that combines 2+ spurs & normal sized one into 3 routes to counter
-		 */
-
-		struct SrcDestPair {
-			TrackNetwork::NodeID src;
-			TrackNetwork::NodeID dest;
-		};
-
-		//TODO: this is rather trivially parallelizable
-
-		::algo::RouteTroughScheduleCacheHandle rts_cache_handle;
-
-		for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
-			auto path_testing_indent = dout(DL::TR_D1).indentWithTitle([&](auto&& s) {
-				s << "Testing train #" << itrain;
-			});
-
-			std::vector<SrcDestPair> needs_this_train;
-
-			// remove this train for testing
-			TrainData this_train_data;
-			std::swap(this_train_data, train_data[itrain]);
-
-			for (const auto& src : this_train_data.get_srces()) {
-				auto src_dest_indent = dout(DL::TR_D2).indentWithTitle([&](auto&& s) {
-					s << "Test Paths from " << src;
-				});
-				for (const auto& dest : this_train_data.get_dests_of(src)) {
-					auto src_dest_indent = dout(DL::TR_D3).indentWithTitle([&](auto&& s) {
-						s << "Test Path " << src << " -> " << dest;
-					});
-
-					PassengerRoutes::RouteType route_found;
-
-					std::tie(route_found, rts_cache_handle) = ::algo::route_through_schedule(
-						network,
-						make_a_schedule__all_start_zero("no-need schedule", train_data, network),
-						src, dest,
-						std::move(rts_cache_handle)
-					);
-
-					if (route_found.empty()) {
-						needs_this_train.emplace_back(SrcDestPair{src, dest});
-					}
-				}
-			}
-
-			if (needs_this_train.size() == 0) {
-				train_is_rudundant_with[itrain] = -2; // anything but NO_TRAIN...
-				dout(DL::TR_D1) << "no one NEEDS train " << itrain << '\n';
-			} else {
-				dout(DL::TR_D1) << "someone needs train " << itrain << '\n';
-			}
-
-			// put this train back
-			train_data[itrain] = std::move(this_train_data);
-		}
-
-		train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
-
-		dump_trains_to_dout(train_data, "Trains After No-Need-Removal", DL::TR_D2);
+		train_data = schstep_remove_unneeded_trains(std::move(train_data));
 
 		if (train_data.size() <= max_trains_at_a_time || train_data.size() == old_size || iter_num == 10) {
 			break;
@@ -656,6 +479,200 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 	}
 
 	return std::move(train_data);
+}
+
+Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataList&& train_data) {
+	// the train that will take over the duties of the i'th train.
+	// not sure we need to do this every time...
+	std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
+
+	for (size_t train_i = 0; train_i != train_data.size(); ++train_i) {
+		if (train_is_rudundant_with[train_i] != NO_TRAIN) { continue; }
+		auto& train = train_data[train_i].get_train();
+
+		for (size_t comp_train_i = train_i + 1; comp_train_i != train_data.size(); ++comp_train_i) {
+			if (train_is_rudundant_with[comp_train_i] != NO_TRAIN) { continue; }
+			auto& comp_train = train_data[comp_train_i].get_train();
+
+			// TODO: this DOES NOT handle repeated vertices...
+			// TODO: keep track of how many (and what wanted capacity) routes get combinded
+			//       and where, so that any splitting/moving is aware of the weighting. Store
+			//       per edge?
+			// IDEA: A "move" is a swap of edges between train_data, or a re-route.
+			//       A timing analysis is done after.
+
+			// the location of the train's first node in comp_train
+			auto comp_first_match = std::find(
+				comp_train.begin(), comp_train.end(), train.front()
+			);
+
+			// the location of the comp_train's first node in train
+			auto first_match = std::find(
+				train.begin(), train.end(), comp_train.front()
+			);
+
+			if (first_match == train.end() && comp_first_match == comp_train.end()) {
+				// neither path overlaps with the other
+				continue;
+			} else {
+				// exactly one train first node overlaps,
+				// so reset the other to it's beginning, so mismatch will
+				// start at where they overlap
+				if (first_match == train.end()) {
+					first_match = train.begin();
+				}
+
+				if (comp_first_match == comp_train.end()) {
+					comp_first_match = comp_train.begin();
+				}
+			}
+
+			auto mismatch_results = std::mismatch(
+				first_match, train.end(),
+				comp_first_match, comp_train.end()
+			);
+			bool      reached_end = mismatch_results.first  == train.end();
+			bool comp_reached_end = mismatch_results.second == comp_train.end();
+
+			size_t redundant_train = -1;
+			if (!reached_end && !comp_reached_end) {
+				// paths diverged, so add for consideration for extension (TODO)
+				continue;
+			} else if (!reached_end && comp_reached_end) {
+				if (first_match == train.begin()) {
+					// extend comp train? maybe. So, add to consideration. (TODO)
+					continue;
+				} else {
+					// they overlap, and train is longer, eg:
+					//              \/ train ends
+					//  ...==>+====>+--->+  <- comp train ends
+					redundant_train = comp_train_i;
+				}
+			} else if (reached_end && !comp_reached_end) {
+				if (comp_first_match == comp_train.begin()) {
+					// extend train? maybe. So, add to consideration. (TODO)
+					continue;
+				} else {
+					// they overlap, and comp train is longer, eg:
+					//              \/ comp train ends
+					//  ...==>+====>+--->+  <- train ends
+					redundant_train = train_i;
+				}
+			} else {
+				// both end on the same vertex, so remove the shorter one.
+				// (the one that could have it's start vertex found in the other)
+				if (first_match == train.begin()) {
+					redundant_train = train_i;
+				} else if (comp_first_match == comp_train.begin()) {
+					redundant_train = comp_train_i;
+				} else {
+					::util::print_and_throw<std::runtime_error>([&](auto&& err) { err << "don't handle convergence case\n"; });
+				}
+			}
+
+			if (redundant_train == (size_t)-1) {
+				::util::print_and_throw<std::runtime_error>([&](auto&& err) { err << "no train selected as redundant!\n"; });
+			}
+
+			size_t other_train = redundant_train == train_i ? comp_train_i : train_i;
+			train_is_rudundant_with[redundant_train] = other_train;
+
+			dout(DL::TR_D3) << "train #" << redundant_train << " marked redundant in favour of #" << other_train << "\n";
+		}
+	}
+
+	// copy over the src,dest pairs from the redundant train to the replacement train
+	for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
+		auto repalcemnt_train = train_is_rudundant_with[itrain];
+		if (repalcemnt_train == NO_TRAIN) { continue; }
+
+		for (const auto& src : train_data[itrain].get_srces()) {
+			for (const auto& dest : train_data[itrain].get_dests_of(src)) {
+				train_data[repalcemnt_train].add_src_dest_pair(src, dest);
+			}
+		}
+	}
+
+	train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
+
+	dump_trains_to_dout(train_data, "Trains After basic redundancy removal", DL::TR_D2);
+
+	return train_data;
+}
+
+Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataList&& train_data) {
+	std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
+
+	/* pick a route (for each route?), see which (src,dest)s can't make it without this route
+	 * then figure out how to fix that, while lowering cost (?)
+	 * What is cost though? obviously number of trains, but this is too discrete
+	 * Total route lengths? will that end up with fewer trains?
+	 *     I feel this will result in many small trains, feeding into a big one.
+	 *     Is there a way to make bad moves? and do a simulated annealing thing?
+	 *         bad moves would be... duplication? well, the case of adding two small spur routes is "bad"
+	 *         hmm... that's fine actually. Would need to have a move that combines 2+ spurs & normal sized one into 3 routes to counter
+	 */
+
+	struct SrcDestPair {
+		TrackNetwork::NodeID src;
+		TrackNetwork::NodeID dest;
+	};
+
+	//TODO: this is rather trivially parallelizable
+
+	::algo::RouteTroughScheduleCacheHandle rts_cache_handle;
+
+	for (size_t itrain = 0; itrain != train_data.size(); ++itrain) {
+		auto path_testing_indent = dout(DL::TR_D1).indentWithTitle([&](auto&& s) {
+			s << "Testing train #" << itrain;
+		});
+
+		std::vector<SrcDestPair> needs_this_train;
+
+		// remove this train for testing
+		TrainData this_train_data;
+		std::swap(this_train_data, train_data[itrain]);
+
+		for (const auto& src : this_train_data.get_srces()) {
+			auto src_dest_indent = dout(DL::TR_D2).indentWithTitle([&](auto&& s) {
+				s << "Test Paths from " << src;
+			});
+			for (const auto& dest : this_train_data.get_dests_of(src)) {
+				auto src_dest_indent = dout(DL::TR_D3).indentWithTitle([&](auto&& s) {
+					s << "Test Path " << src << " -> " << dest;
+				});
+
+				PassengerRoutes::RouteType route_found;
+
+				std::tie(route_found, rts_cache_handle) = ::algo::route_through_schedule(
+					network,
+					make_a_schedule__all_start_zero("no-need schedule", train_data, network),
+					src, dest,
+					std::move(rts_cache_handle)
+				);
+
+				if (route_found.empty()) {
+					needs_this_train.emplace_back(SrcDestPair{src, dest});
+				}
+			}
+		}
+
+		if (needs_this_train.size() == 0) {
+			train_is_rudundant_with[itrain] = -2; // anything but NO_TRAIN...
+			dout(DL::TR_D1) << "no one NEEDS train " << itrain << '\n';
+		} else {
+			dout(DL::TR_D1) << "someone needs train " << itrain << '\n';
+		}
+
+		// put this train back
+		train_data[itrain] = std::move(this_train_data);
+	}
+
+	train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
+
+	dump_trains_to_dout(train_data, "Trains After No-Need-Removal", DL::TR_D2);
+
+	return train_data;
 }
 
 Scheduler3::TrainDataList remove_redundant_trains(
@@ -696,7 +713,7 @@ void Scheduler3::dump_trains_to_dout(
 namespace {
 
 template<typename TRAIN_DATA_COLLECTION>
-::algo::Schedule make_a_schedule__all_start_zero(std::string name, const TRAIN_DATA_COLLECTION& train_data, const TrackNetwork& network) {
+::algo::Schedule make_a_schedule__all_start_zero(const std::string& name, const TRAIN_DATA_COLLECTION& train_data, const TrackNetwork& network) {
 	std::vector<::algo::TrainRoute> train_routes;
 
 	for(auto& datum : train_data) {
