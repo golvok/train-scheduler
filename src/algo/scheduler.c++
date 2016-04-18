@@ -159,17 +159,17 @@ public:
 	using TrainDataList = std::vector<TrainData>;
 
 private:
-	TrainDataList make_one_train_per_passenger();
-	TrainDataList coalesce_trains(TrainDataList&& initial_trains);
+	TrainDataList make_one_train_per_passenger() const;
+	TrainDataList coalesce_trains(TrainDataList&& initial_trains) const;
 
-	TrainDataList schstep_remove_redundant_trains(TrainDataList&& train_data);
-	TrainDataList schstep_remove_unneeded_trains(TrainDataList&& train_data);
+	TrainDataList schstep_remove_redundant_trains(TrainDataList&& train_data) const;
+	TrainDataList schstep_remove_unneeded_trains(TrainDataList&& train_data) const;
 
 	void dump_trains_to_dout(
 		const TrainDataList& train_data,
 		const std::string& title,
 		DebugLevel::Level level
-	);
+	) const;
 };
 
 Scheduler3::TrainDataList remove_redundant_trains(
@@ -445,7 +445,7 @@ Schedule Scheduler3::do_schedule() {
 	return make_a_schedule__all_start_zero("Scheduler3 schedule", train_data, network);
 }
 
-Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() {
+Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() const {
 	TrainDataList train_data;
 	for (const auto& p : passengers) {
 		train_data.emplace_back(::util::get_shortest_route(
@@ -458,7 +458,7 @@ Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() {
 	return std::move(train_data);
 }
 
-Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data) {
+Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data) const {
 
 	size_t old_size = train_data.size();
 	int iter_num = 1;
@@ -481,7 +481,7 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 	return std::move(train_data);
 }
 
-Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataList&& train_data) {
+Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataList&& train_data) const {
 	// the train that will take over the duties of the i'th train.
 	// not sure we need to do this every time...
 	std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
@@ -600,7 +600,7 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataL
 	return train_data;
 }
 
-Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataList&& train_data) {
+Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataList&& train_data) const {
 	std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
 
 	/* pick a route (for each route?), see which (src,dest)s can't make it without this route
@@ -698,7 +698,7 @@ void Scheduler3::dump_trains_to_dout(
 	const TrainDataList& train_data,
 	const std::string& title,
 	DebugLevel::Level level
-) {
+) const {
 	auto output_indent = dout(level).indentWithTitle(title);
 	uint i = 0;
 	for (const auto& datum : train_data) {
