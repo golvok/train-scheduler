@@ -15,8 +15,8 @@ if [ ! -z "$TRAIN_SCH_ROOTDIR" ]; then
 	echo "WARNING: invocation from already initialized environment. Old TRAIN_SCH_ROOTDIR=$TRAIN_SCH_ROOTDIR";
 fi
 
-export TRAIN_SCH_ROOTDIR="$(readlink --canonicalize "$PWD")";
-export TRAIN_SCH_EXEDIR="$TRAIN_SCH_ROOTDIR/build/EXE";
+export TRAIN_SCH_ROOTDIR="$(readlink --canonicalize "$PWD")/";
+export TRAIN_SCH_EXEDIR="$TRAIN_SCH_ROOTDIR/build/EXE/";
 
 export PATH="$PATH:$TRAIN_SCH_EXEDIR"
 

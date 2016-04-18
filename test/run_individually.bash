@@ -4,7 +4,7 @@ if [ -z "$TRAIN_SCH_ROOTDIR" ]; then
 	exit 1;
 fi;
 
-EXE="$TRAIN_SCH_EXEDIR/train-sch"
+EXE="${TRAIN_SCH_EXEDIR}train-sch"
 
 START_DATASET=$1
 STOP_DATASET=$2
