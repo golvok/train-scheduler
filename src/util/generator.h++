@@ -3,6 +3,7 @@
 #define UTIL__GENERATOR_HPP
 
 #include <functional>
+#include <util/tuple_utils.h++>
 
 namespace util {
 
@@ -200,6 +201,53 @@ auto xrange(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSF
 template<typename INDEX_TYPE, typename PTYPE1, typename TRANSFORM = detail::identity>
 auto xrange(const PTYPE1& end, TRANSFORM transform = TRANSFORM(), decltype(transform(end),-1)* = nullptr) {
 	return xrange<INDEX_TYPE>(0,end,transform);
+}
+
+template<typename... COLLECTION_TYPES>
+auto zip(COLLECTION_TYPES&... containers) {
+	using iterator_tuple = std::tuple<typename COLLECTION_TYPES::iterator...>;
+	using reference_tuple = std::tuple<typename COLLECTION_TYPES::reference...>;
+
+	iterator_tuple end_iter_tuple(end(containers)...);
+
+	auto next = [=](const iterator_tuple& i) -> iterator_tuple {
+		return ::util::map_tuple(i, [](auto& elem) {
+			return std::next(elem);
+		});
+	};
+
+	auto done = [=](const iterator_tuple& i) -> bool {
+		return combine_tuples(
+			true,
+			[](auto& eleml, auto& elemr) -> bool {
+				return eleml == elemr;
+			},
+			[](bool lhs, bool rhs) -> bool {
+				return lhs || rhs;
+			},
+			i,
+			end_iter_tuple
+		);
+	};
+
+	auto transform = [=](const iterator_tuple& i) -> reference_tuple {
+		return ::util::map_tuple<reference_tuple>(i, dereferencer());
+	};
+
+	return generator<iterator_tuple, decltype(next), decltype(done), decltype(transform)>(
+		iterator_tuple(begin(containers)...),
+		done,
+		next,
+		transform
+	);
+}
+
+template<typename CONTAINER>
+auto iterate_with_iterators(CONTAINER& c) {
+	return xrange_forward_pe<decltype(std::begin(c))>(
+		begin(c),
+		end(c)
+	);
 }
 
 } // end namespace util

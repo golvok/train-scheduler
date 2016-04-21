@@ -39,8 +39,7 @@ public:
  * }
  */
 template<typename PAIR_TYPE>
-iterator_pair_adapter<typename std::remove_reference<PAIR_TYPE>::type>
-make_iterable(PAIR_TYPE&& src) {
+auto make_iterable(PAIR_TYPE&& src) {
 	return iterator_pair_adapter<PAIR_TYPE>(std::forward<PAIR_TYPE>(src));
 }
 
