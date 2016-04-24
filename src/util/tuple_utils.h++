@@ -44,13 +44,6 @@ struct getter {
 	}
 };
 
-struct dereferencer {
-	template<typename T>
-	auto operator()(T& elem) -> std::add_lvalue_reference_t<decltype(*elem)> {
-		return *elem;
-	}
-};
-
 namespace detail {
 
 	template<typename TUPLE_IN, typename F, size_t... Is>

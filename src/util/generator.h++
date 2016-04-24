@@ -23,7 +23,7 @@ struct generator_base {
 };
 
 template<typename INDEX_TYPE, typename NEXT, typename DONE, typename TRANSFORM>
-class generator_iterator {
+class generator_iterator : public std::iterator<std::forward_iterator_tag, const INDEX_TYPE, std::ptrdiff_t, const INDEX_TYPE*, const INDEX_TYPE> {
 private:
 	INDEX_TYPE current;
 	NEXT next;
@@ -67,8 +67,8 @@ public:
 template<typename INDEX_TYPE, typename NEXT, typename DONE, typename TRANSFORM>
 class generator {
 public:
-	using iter_type = generator_iterator<INDEX_TYPE,NEXT,DONE,TRANSFORM>;
-
+	using iterator = generator_iterator<INDEX_TYPE,NEXT,DONE,TRANSFORM>;
+	using reference = typename std::iterator_traits<iterator>::reference;
 private:
 	INDEX_TYPE current;
 	DONE done;
@@ -83,14 +83,24 @@ public:
 		, transform(transform)
 	{ }
 
-	iter_type begin() {
-		return iter_type(current,next,done,transform,false);
+	iterator begin() const {
+		return iterator(current,next,done,transform,false);
 	}
 
-	iter_type end() {
-		return iter_type(current,next,done,transform,true);
+	iterator end() const {
+		return iterator(current,next,done,transform,true);
 	}
 };
+
+template<typename INDEX_TYPE, typename NEXT, typename DONE, typename TRANSFORM>
+auto begin(const generator<INDEX_TYPE,NEXT,DONE,TRANSFORM>& gen) {
+	return gen.begin();
+}
+
+template<typename INDEX_TYPE, typename NEXT, typename DONE, typename TRANSFORM>
+auto end(const generator<INDEX_TYPE,NEXT,DONE,TRANSFORM>& gen) {
+	return gen.end();
+}
 
 template<typename INDEX_TYPE, typename PTYPE1, typename NEXT, typename DONE, typename TRANSFORM = detail::identity>
 auto make_generator(PTYPE1 initial, DONE done, NEXT next, TRANSFORM transform = TRANSFORM(), decltype(transform(initial),done(initial),next(initial))* = nullptr) {
@@ -187,7 +197,7 @@ template<
 	>
 >
 auto xrange(const PTYPE1& start, const PTYPE2& end, TRANSFORM transform = TRANSFORM()) {
-	const bool forwards = end >= start;
+	const bool forwards = static_cast<INDEX_TYPE>(end) >= static_cast<INDEX_TYPE>(start);
 	auto next = [=](INDEX_TYPE i) { return forwards ? ++i : --i; };
 	auto done = [=](INDEX_TYPE i) { return i == end + (forwards ? 1 : -1); };
 	return generator<INDEX_TYPE, decltype(next), decltype(done), TRANSFORM>(
@@ -202,6 +212,13 @@ template<typename INDEX_TYPE, typename PTYPE1, typename TRANSFORM = detail::iden
 auto xrange(const PTYPE1& end, TRANSFORM transform = TRANSFORM(), decltype(transform(end),-1)* = nullptr) {
 	return xrange<INDEX_TYPE>(0,end,transform);
 }
+
+struct dereferencer {
+	template<typename T, typename RETTYPE = typename std::iterator_traits<T>::reference >
+	RETTYPE operator()(T& elem) {
+		return *elem;
+	}
+};
 
 template<typename... COLLECTION_TYPES>
 auto zip(COLLECTION_TYPES&... containers) {
