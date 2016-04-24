@@ -704,6 +704,14 @@ void Scheduler3::dump_trains_to_dout(
 	for (const auto& datum : train_data) {
 		auto route_indent = dout(level).indentWithTitle([&](auto&&out){ out << "train " << i; });
 		::util::print_route(datum.get_train(),network,dout(level));
+		auto source_indent = dout(level).indentWithTitle("Sources & Destinations");
+		for (const auto& src : datum.get_srces()) {
+			dout(level) << src << " -> {";
+			for (const auto& dest : datum.get_dests_of(src)) {
+				dout(level) << dest << ' ';
+			}
+			dout(level) << "}\n";
+		}
 		++i;
 	}
 }
