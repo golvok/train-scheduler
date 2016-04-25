@@ -9,6 +9,7 @@
 
 #include <boost/property_map/function_property_map.hpp>
 #include <iostream>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace {
@@ -117,6 +118,9 @@ public:
 	class TrainData {
 		using TNNodeID = TrackNetwork::NodeID;
 	public:
+		struct dont_add_endpoint_src_and_dest {};
+		struct add_endpoint_src_and_dest {};
+
 		struct SrcInfo {
 			SrcInfo(const TNNodeID& dest) : dest(dest) { }
 			TNNodeID dest;
@@ -126,34 +130,42 @@ public:
 			TNNodeID src;
 		};
 
-		TrainData(VertexList&& train)
+		TrainData(VertexList&& train, add_endpoint_src_and_dest)
 			: train(train)
-			, src_infos{ {train.front(), SrcInfo(train.back())} }
-			, dest_infos{ {train.back(), DestInfo(train.front())} }
+			, src_infos{ {train.front(), { SrcInfo(train.back()) } } }
+			, dest_infos{ {train.back(), { DestInfo(train.front()) } } }
+		{ }
+
+		TrainData(VertexList&& train, dont_add_endpoint_src_and_dest)
+			: train(train)
+			, src_infos()
+			, dest_infos()
 		{ }
 
 		TrainData() : train(), src_infos(), dest_infos() { }
 
 		void add_src_dest_pair(const TNNodeID& src, const TNNodeID& dest) {
-			src_infos.emplace(src, SrcInfo(dest));
-			dest_infos.emplace(dest, DestInfo(src));
+			src_infos[src].emplace_back(dest);
+			dest_infos[dest].emplace_back(src);
 		}
+
+		void add_src_dest_pairs_of(const TrainData& td);
 
 		bool is_src      (const TNNodeID& node_id) const { return src_infos.find(node_id) != src_infos.end(); }
 		auto get_srces   (                       ) const { return ::util::xrange_forward_pe<decltype(src_infos.begin())>(src_infos.begin(), src_infos.end(), [](const auto& it) { return it->first; }); }
-		auto get_dests_of(const TNNodeID& node_id) const { auto r = src_infos.equal_range(node_id); return ::util::xrange_forward_pe<decltype(r.first)>(r.first, r.second, [](const auto& e) { return e->second.dest; }); }
+		auto get_dests_of(const TNNodeID& node_id) const { const auto& list = src_infos.find(node_id)->second; return ::util::xrange_forward_pe<decltype(list.begin())>(list.begin(), list.end(), [](const auto& it) { return it->dest; }); }
 
 		bool is_dest     (const TNNodeID& node_id) const { return dest_infos.find(node_id) != dest_infos.end(); }
 		auto get_dests   (                       ) const { return ::util::xrange_forward_pe<decltype(dest_infos.begin())>(dest_infos.begin(), dest_infos.end(), [](const auto& it) { return it->first; }); }
-		auto get_srces_of(const TNNodeID& node_id) const { auto r = dest_infos.equal_range(node_id); return ::util::xrange_forward_pe<decltype(r.first)>(r.first, r.second, [](const auto& e) { return e->second.src; }); }
+		auto get_srces_of(const TNNodeID& node_id) const { const auto& list = dest_infos.find(node_id)->second; return ::util::xrange_forward_pe<decltype(list.begin())>(list.begin(), list.end(), [](const auto& it) { return it->src; }); }
 
 		VertexList& get_train() { return train; }
 		const VertexList& get_train() const { return train; }
 	private:
 		VertexList train;
 
-		std::unordered_multimap<TNNodeID, SrcInfo> src_infos;
-		std::unordered_multimap<TNNodeID, DestInfo> dest_infos;
+		std::unordered_map<TNNodeID, std::vector<SrcInfo>> src_infos;
+		std::unordered_map<TNNodeID, std::vector<DestInfo>> dest_infos;
 	};
 
 	using TrainDataList = std::vector<TrainData>;
@@ -448,11 +460,14 @@ Schedule Scheduler3::do_schedule() {
 Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() const {
 	TrainDataList train_data;
 	for (const auto& p : passengers) {
-		train_data.emplace_back(::util::get_shortest_route(
-			p.getEntryID(),
-			p.getExitID(),
-			network
-		));
+		train_data.emplace_back(
+			::util::get_shortest_route(
+				p.getEntryID(),
+				p.getExitID(),
+				network
+			),
+			TrainData::add_endpoint_src_and_dest()
+		);
 		train_data.back().add_src_dest_pair(p.getEntryID(), p.getExitID());
 	}
 	return std::move(train_data);
@@ -586,16 +601,12 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataL
 		auto repalcemnt_train = train_is_rudundant_with[itrain];
 		if (repalcemnt_train == NO_TRAIN) { continue; }
 
-		for (const auto& src : train_data[itrain].get_srces()) {
-			for (const auto& dest : train_data[itrain].get_dests_of(src)) {
-				train_data[repalcemnt_train].add_src_dest_pair(src, dest);
-			}
-		}
+		train_data[repalcemnt_train].add_src_dest_pairs_of(train_data[itrain]);
 	}
 
 	train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
 
-	dump_trains_to_dout(train_data, "Trains After basic redundancy removal", DL::TR_D2);
+	dump_trains_to_dout(train_data, "Trains After Basic Redundancy Removal", DL::TR_D2);
 
 	return train_data;
 }
@@ -713,6 +724,14 @@ void Scheduler3::dump_trains_to_dout(
 			dout(level) << "}\n";
 		}
 		++i;
+	}
+}
+
+void Scheduler3::TrainData::add_src_dest_pairs_of(const TrainData& td) {
+	for (const auto& src : td.get_srces()) {
+		for (const auto& dest : td.get_dests_of(src)) {
+			add_src_dest_pair(src, dest);
+		}
 	}
 }
 
