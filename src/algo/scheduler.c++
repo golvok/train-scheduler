@@ -175,6 +175,7 @@ private:
 	TrainDataList coalesce_trains(TrainDataList&& initial_trains) const;
 
 	TrainDataList schstep_remove_redundant_trains(TrainDataList&& train_data) const;
+	TrainDataList schstep_combine_trains(TrainDataList&& train_data) const;
 	TrainDataList schstep_remove_unneeded_trains(TrainDataList&& train_data) const;
 
 	void dump_trains_to_dout(
@@ -484,6 +485,8 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 
 		train_data = schstep_remove_redundant_trains(std::move(train_data));
 
+		train_data = schstep_combine_trains(std::move(train_data));
+
 		train_data = schstep_remove_unneeded_trains(std::move(train_data));
 
 		if (train_data.size() <= max_trains_at_a_time || train_data.size() == old_size || iter_num == 10) {
@@ -609,6 +612,118 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataL
 	dump_trains_to_dout(train_data, "Trains After Basic Redundancy Removal", DL::TR_D2);
 
 	return train_data;
+}
+
+Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& train_data) const {
+	std::vector<std::vector<size_t>> trains_that_could_combine_list;
+
+	auto train_index_range = ::util::xrange_forward_pe<size_t>(0,train_data.size());
+
+	for (const auto& itrain : train_index_range) {
+		trains_that_could_combine_list.emplace_back();
+
+		std::copy_if(
+			train_index_range.begin(), train_index_range.end(),
+			std::back_inserter(trains_that_could_combine_list.back()),
+			[&](const auto& iother_train) {
+				return
+					   iother_train != itrain
+					&& train_data[itrain].get_train().back() == train_data[iother_train].get_train().front()
+				;
+			}
+		);
+	}
+
+	if (trains_that_could_combine_list.size() != train_data.size()) {
+		::util::print_and_throw<std::runtime_error>([&] (auto&& s) {
+			s << "expected trains_that_could_combine_list to be the same size at train_data";
+		});
+	}
+
+	std::unordered_map<size_t, size_t> train_extension_choice;
+
+	{
+		std::vector<bool> train_is_used(train_data.size(), false);
+
+		for (const auto& itrain : train_index_range) {
+			const auto& trains_that_could_combine = trains_that_could_combine_list[itrain];
+
+			auto max_length_train_iter = std::max_element(
+				trains_that_could_combine.begin(), trains_that_could_combine.end(),
+				[&](auto& ilhs, auto& irhs) {
+					// rank it low if it is used
+					return train_is_used[ilhs] == false || train_data[ilhs].get_train().size() < train_data[irhs].get_train().size();
+				}
+			);
+
+			if (max_length_train_iter == trains_that_could_combine.end() || train_is_used[*max_length_train_iter]) {
+				// case of nothing in the list for this train
+				continue;
+			}
+
+			train_extension_choice[itrain] = *max_length_train_iter;
+			train_is_used[*max_length_train_iter] = true;
+		}
+	}
+
+	std::vector<std::vector<size_t>> list_of_new_train_components;
+	// std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
+
+	{
+		std::vector<bool> train_is_used(train_data.size(), false);
+
+		for (const auto& itrain : train_index_range) {
+			if (train_is_used[itrain]) {
+				continue;
+			}
+
+			list_of_new_train_components.emplace_back();
+
+			for (auto jtrain = itrain; ;) {
+				list_of_new_train_components.back().push_back(jtrain);
+				train_is_used[jtrain] = true;
+
+				const auto& find_results = train_extension_choice.find(jtrain);
+				if (find_results == train_extension_choice.end()) {
+					break;
+				}
+
+				jtrain = find_results->second;
+			}
+		}
+
+	}
+
+	std::vector<TrainData> new_train_data;
+
+	for (const auto& new_train_components : list_of_new_train_components) {
+		dout(DL::TR_D3) << "combining: ";
+		VertexList new_path;
+
+		new_path.push_back(train_data[new_train_components.front()].get_train().front());
+		for (const auto& itrain : new_train_components) {
+			dout(DL::TR_D3) << itrain << ", ";
+			std::copy(
+				std::next(train_data[itrain].get_train().begin()), train_data[itrain].get_train().end(),
+				std::back_inserter(new_path)
+			);
+		}
+		dout(DL::TR_D3) << '\n';
+
+		new_train_data.emplace_back(std::move(new_path), TrainData::dont_add_endpoint_src_and_dest());
+
+		for (const auto& itrain : new_train_components) {
+			new_train_data.back().add_src_dest_pairs_of(train_data[itrain]);
+		}
+	}
+
+	train_data = std::move(new_train_data);
+
+	// train_data = remove_redundant_trains(std::move(train_data), train_is_rudundant_with);
+
+	dump_trains_to_dout(train_data, "Trains After Basic Combining", DL::TR_D2);
+
+	return std::move(train_data);
 }
 
 Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataList&& train_data) const {
