@@ -16,7 +16,7 @@ fi
 
 for i in $(seq $START_DATASET $STOP_DATASET); do
 	DIR="dataset-$i";
-	(mkdir -p "$DIR" && cd "$DIR" && "$EXE" --data-num "$i" $TRAIN_SCH_ARGS > stdout.txt) &
+	(mkdir -p "$DIR" && cd "$DIR" && ( time "$EXE" --data-num "$i" $TRAIN_SCH_ARGS ) > output.txt 2>&1 ) &
 done
 
 wait
