@@ -1,8 +1,6 @@
-.SUFFIXES:
 .PHONY: all clean build_info
 
-# remove ALL implicit rules
-.SUFFIXES:
+# remove ALL implicit rules & all suffixes
 MAKEFLAGS+=" -r "
 
 # add parallelism equal to number of cores
