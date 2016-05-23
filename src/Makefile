@@ -126,24 +126,38 @@ $(EXE_DIR)%: | build_info $(EXE_DIR)
 $(DIRS):
 	mkdir -p $@
 
-clean:
-	for subdir in $(SOURCE_DIRS); do \
-		if [ -e $(DEPS_DIR)$${subdir} ]; then \
-			deps_subdir=$$(readlink --canonicalize $(DEPS_DIR)$${subdir})/; \
-			echo rm $${deps_subdir}; \
-			rm -f $${deps_subdir}*.d; \
-			rmdir --ignore-fail-on-non-empty $${deps_subdir}; \
-		fi; \
-		if [ -e $(OBJ_DIR)$${subdir} ]; then \
-			objs_subdir=$$(readlink --canonicalize $(OBJ_DIR)$${subdir})/; \
-			echo rm $${objs_subdir}; \
-			rm -f $${objs_subdir}*.o; \
-			rmdir --ignore-fail-on-non-empty $${objs_subdir}; \
-		fi; \
+.PHONY: $(patsubst %, delete_%*.o_file/, $(ALL_OBJ_DIRS) )
+.PHONY: $(patsubst %, delete_%*.d_file/, $(ALL_DEPS_DIRS) )
+
+delete_%_file/:
+	@if [ -e "$*" ]; then echo rm -f "$*"; fi
+	@if [ -e "$*" ]; then      rm -f "$*"; fi
+
+delete_%_dir/:
+	@for f in "$*"*.o; do \
+		if [ -e "$$f" ]; then echo rm -f "$$f"; fi; \
+		if [ -e "$$f" ]; then      rm -f "$$f"; fi; \
 	done
 
-	-rm -f $(EXES);
-	for dir in $(DIRS); do \
-		echo rm $${dir}; \
-		if [ -e $${dir}  ]; then rmdir --ignore-fail-on-non-empty $${dir}; fi; \
+	@for f in "$*"*.d; do \
+		if [ -e "$$f" ]; then echo rm -f "$$f"; fi; \
+		if [ -e "$$f" ]; then      rm -f "$$f"; fi; \
 	done
+
+	@if [ -e "$*" ]; then echo rmdir "$*"; fi;
+	@if [ -e "$*" ]; then      rmdir --ignore-fail-on-non-empty "$$(readlink --canonicalize "$*")"; fi
+
+
+delete_$(BUILD_DIR)_dir/: $(patsubst %, delete_%_dir/, $(BUILD_SUBDIRS))
+
+delete_$(OBJ_DIR)_dir/: $(patsubst %, delete_%_dir/, $(ALL_OBJ_DIRS) )
+delete_$(OBJ_DIR)%_dir/: delete_$(OBJ_DIR)%*.o_file/
+# rm -f $(OBJ_DIR)$**.o
+
+delete_$(DEPS_DIR)_dir/: $(patsubst %, delete_%_dir/, $(ALL_DEPS_DIRS))
+delete_$(DEPS_DIR)%_dir/: delete_$(DEPS_DIR)%*.d_file/
+# rm -f $(DEPS_DIR)$**.d
+
+delete_$(EXE_DIR)_dir/:  $(patsubst %, delete_%_file/, $(EXES))
+
+clean: delete_$(BUILD_DIR)_dir/
