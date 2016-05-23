@@ -8,9 +8,12 @@ MAKEFLAGS+=" -j$(grep -c "vendor_id" /proc/cpuinfo) "
 
 BUILD_MODE ?= debug
 
-EXE_DIR  = ../build/EXE/
-OBJ_DIR  = ../build/OBJ/src/
-DEPS_DIR = ../build/DEPS/src/
+BUILD_DIR = ../build/
+EXE_DIR  = $(BUILD_DIR)EXE/
+OBJ_DIR  = $(BUILD_DIR)OBJ/
+DEPS_DIR = $(BUILD_DIR)DEPS/
+
+BUILD_SUBDIRS = $(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR)
 
 # CXX = clang++ -stdlib=libstdc++
 # CXX = g++
@@ -50,11 +53,15 @@ LDFLAGS  += $(EXTRA_FLAGS) $(WARNING_FLAGS) $(LIBRARY_LINK_FLAGS)
 # define source directories
 SOURCE_DIRS = algo/ graphics/ parsing/ util/ sim/ stats/ ./
 
+ALL_OBJ_DIRS  = $(addprefix $(OBJ_DIR),  $(SOURCE_DIRS))
+ALL_DEPS_DIRS = $(addprefix $(DEPS_DIR), $(SOURCE_DIRS))
+
 # compute all directories that might need creation
-DIRS=$(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR) \
-	$(addprefix $(OBJ_DIR),$(SOURCE_DIRS)) \
-	$(addprefix $(DEPS_DIR),$(SOURCE_DIRS)) \
-	../build
+DIRS= \
+	$(ALL_OBJ_DIRS) \
+	$(ALL_DEPS_DIRS) \
+	$(BUILD_SUBDIRS) \
+	$(BUILD_DIR)
 
 # define executables
 EXES=$(EXE_DIR)train-sch
@@ -102,7 +109,7 @@ endif
 # second CC line generates the initial dependency file
 # first sed line adds $(OBJ_DIR) prefixes to the dependency file,
 # second one adds stub rules for each depended on file (make might
-# complain with generated files
+# complain with generated files)
 .SECONDEXPANSION:
 $(OBJ_DIR)%.o: %.c++ | build_info $(OBJ_DIR)$$(dir %) $(DEPS_DIR)$$(dir %)
 	$(CXX) -c  $(shell readlink --canonicalize $<) -o  $@ $(CXXFLAGS)
