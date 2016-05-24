@@ -26,20 +26,44 @@ namespace {
 	private:
 		TrackNetwork::Time start_time;
 		TrackNetwork::NodeID goal_vertex;
+
+		::StationMap<TrackNetwork::Time> earliest_seen_time_at_station;
 	public:
-		astar_goal_visitor(TrackNetwork::Time start, TrackNetwork::NodeID goal)
+		astar_goal_visitor(TrackNetwork::Time start, TrackNetwork::NodeID goal, const TrackNetwork& tn)
 			: start_time(start)
 			, goal_vertex(goal)
+			, earliest_seen_time_at_station(tn.makeStationMap<TrackNetwork::Time>(TrackNetwork::INVALID_TIME))
 		{ }
 
+		// caled right after vd is poped off the heap, before any operaitons, eg. expansion.
 		void examine_vertex(STGA::vertex_descriptor vd, ScheduleToGraphAdapter const& g) {
 			(void)g;
 			dout(DL::PR_D3) << "Exploring " << std::tie(vd,g.getTrackNetwork()) << "..." << '\n';
+
+			// TODO: make note of this vertex in the Network, and then in the heuristic,
+			// mark up the cost a bunch, if it sees it.
+			// may need to use vis.finish_vertex(v, g); instead.
+
+			if (vd.getLocation().isStation()) {
+				auto& earliest_seen_time_at_this_station = earliest_seen_time_at_station[vd.getLocation().asStationID().getValue()];
+				if (
+					   earliest_seen_time_at_this_station == TrackNetwork::INVALID_TIME
+					|| vd.getTime() > earliest_seen_time_at_this_station
+				) {
+					earliest_seen_time_at_this_station = vd.getTime();
+				}
+			}
+
 			if (vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
 				throw found_goal{vd};
 			} else if (vd.getTime() > (start_time + 1000)) {
 				throw no_route();
 			}
+		}
+
+		bool haveVisitedStationOfVertex(const STGA::vertex_descriptor& vd) {
+			assert(vd.getLocation().isStation() == true);
+			return earliest_seen_time_at_station[vd.getLocation().asStationID().getValue()] != TrackNetwork::INVALID_TIME;
 		}
 	};
 
@@ -104,17 +128,24 @@ std::pair<
 	// TODO: change next line to use actual leave time when TR and WC understand time...
 	auto start_vertex_and_time = STGA::vertex_descriptor(start_vertex,0,tn);
 
+	auto my_visitor = astar_goal_visitor(start_vertex_and_time.getTime(), goal_vertex, tn);
+
 	auto heuristic = ::util::make_astar_heuristic<ScheduleToGraphAdapter>(
 		[&](const STGA::vertex_descriptor& vd) -> TrackNetwork::Weight {
 			(void)vd;
-			return 1;
+			if (vd.getLocation().isStation() && my_visitor.haveVisitedStationOfVertex(vd)) {
+				return 100000;
+			} else {
+				return 1;
+			}
 		}
 	);
 
 	dout(DL::PR_D2) << "Start vertex and time: " << std::tie(start_vertex_and_time,tn) << '\n';
 	dout(DL::PR_D2) << "Goal vertex: " << tn.getVertexName(goal_vertex) << '(' << goal_vertex << ")\n";
 
-	const ScheduleToGraphAdapter baseGraph(tn,sch,5); // TODO calculate station_lookahead_quanta from... something
+	const TrackNetwork::Time station_lookahead_quanta = 5; // TODO calculate station_lookahead_quanta from... something
+	const ScheduleToGraphAdapter baseGraph(tn,sch,station_lookahead_quanta);
 
 	auto pred_map = baseGraph.make_pred_map();
 	auto backing_distance_map = baseGraph.make_backing_distance_map(start_vertex_and_time);
@@ -122,10 +153,11 @@ std::pair<
 	auto backing_colour_map = baseGraph.make_backing_colour_map();
 
 	try {
-		astar_search_no_init(baseGraph,
+		astar_search_no_init(
+			baseGraph,
 			start_vertex_and_time,
 			heuristic
-			, visitor(astar_goal_visitor(start_vertex_and_time.getTime(), goal_vertex))
+			, visitor(::util::make_ref_astar_visitor(my_visitor))
 			. distance_map(baseGraph.make_distance_map(backing_distance_map))
 			. predecessor_map(std::ref(pred_map)) // don't want to pass by value
 			. rank_map(baseGraph.make_rank_map(backing_rank_map))
