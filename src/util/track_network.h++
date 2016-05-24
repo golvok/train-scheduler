@@ -3,7 +3,6 @@
 
 #include <graphics/geometry.h++>
 #include <util/generator.h++>
-#include <util/utils.h++>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/range/iterator_range.hpp>

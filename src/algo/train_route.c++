@@ -2,6 +2,8 @@
 #include "train_route.h++"
 
 #include <util/logging.h++>
+#include <util/routing_utils.h++>
+#include <util/utils.h++>
 
 namespace algo {
 
@@ -177,5 +179,12 @@ Train TrainRoute::makeTrainFromIndex(TrainIndex index) const {
 	);
 }
 
+void TrainRoute::print(std::ostream& os) const {
+	os << "{ Train " << route_id << " : Path=";
+	::util::print_route(route, os);
+	os << ", Start Offsets=";
+	::util::print_container(start_offsets, os);
+	os << ", Speed=" << speed << ", Repeat Time=" << repeat_time << " }";
+}
 
 } // end namespace algo

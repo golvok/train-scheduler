@@ -109,7 +109,7 @@ private:
 	TrainIndex index_number;
 };
 
-class TrainRoute {
+class TrainRoute : public ::util::print_printable {
 public:
 
 	TrainRoute(
@@ -172,6 +172,8 @@ public:
 	}
 
 	Train makeTrainFromIndex(TrainIndex index) const;
+
+	void print(std::ostream& os) const;
 
 private:
 	std::pair<TrainIndex,TrainIndex> getTrainsAtVertexInInterval_impl(
