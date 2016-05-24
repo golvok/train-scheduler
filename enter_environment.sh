@@ -17,8 +17,9 @@ fi
 
 export TRAIN_SCH_ROOTDIR="$(readlink --canonicalize "$PWD")/";
 export TRAIN_SCH_EXEDIR="$TRAIN_SCH_ROOTDIR/build/EXE/";
+export TRAIN_SCH_SCRIPTSDIR="$TRAIN_SCH_ROOTDIR/scripts/";
 
-export PATH="$PATH:$TRAIN_SCH_EXEDIR"
+export PATH="$PATH:$TRAIN_SCH_EXEDIR:$TRAIN_SCH_SCRIPTSDIR"
 
 echo "Entering $SHELL_EXE with setup environment. TRAIN_SCH_ROOTDIR=$TRAIN_SCH_ROOTDIR";
 $SHELL_EXE
