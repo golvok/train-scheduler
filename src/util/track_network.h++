@@ -1,5 +1,5 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef UTIL__TRACK_NETWORK_HPP
+#define UTIL__TRACK_NETWORK_HPP
 
 #include <graphics/geometry.h++>
 #include <util/generator.h++>
@@ -138,4 +138,4 @@ TrackNetwork::Time TrackNetwork::sumTimeTakenWithCustomSpeed(::boost::iterator_r
 }
 
 
-#endif /* GRAPH_H */
+#endif /* UTIL__TRACK_NETWORK_HPP */
