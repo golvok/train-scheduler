@@ -244,6 +244,29 @@ namespace detail {
 	};
 }
 
+template<typename CONTAINER, typename OSTREAM, typename FUNC = ::util::detail::printer>
+void print_container(
+	const CONTAINER& c,
+	OSTREAM&& os,
+	FUNC func = FUNC{},
+	const std::string& prefix_str = "{ ",
+	const std::string& suffix_str = " }",
+	const std::string& sep = ", "
+) {
+	auto beg = begin(c);
+	auto en = end(c);
+
+	os << prefix_str;
+	if (beg != en) {
+		func(os,*beg);
+		std::for_each(std::next(beg), en, [&](auto& v){
+			os << sep;
+			func(os,v);
+		});
+	}
+	os << suffix_str;
+}
+
 } // end namespace util
 
 namespace std {
