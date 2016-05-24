@@ -97,7 +97,7 @@ int program_main(uint only_do_this_input_number) {
 		// display a simulation
 		graphics::get().trainsArea().displaySimulator(sim_handle);
 
-		sim_threads.emplace_back([&](
+		sim_threads.emplace_back([](
 			auto l_tn,
 			auto l_passengers,
 			auto l_schedule,
@@ -116,9 +116,11 @@ int program_main(uint only_do_this_input_number) {
 			using ::stats::ReportConfig;
 			const ReportConfig conf_prs(ReportConfig::ReportType::PASSENGER_ROUTE_STATS);
 			const ReportConfig conf_sps(ReportConfig::ReportType::SIMULATION_PASSENGER_STATS);
+			const ReportConfig conf_trains(ReportConfig::ReportType::TRAIN_ROUTES);
 
 			::stats::report_into(*report_engine_ptr, conf_prs, report_file);
 			::stats::report_into(*report_engine_ptr, conf_sps, report_file);
+			::stats::report_into(*report_engine_ptr, conf_trains, report_file);
 		},
 			tn,
 			passengers,

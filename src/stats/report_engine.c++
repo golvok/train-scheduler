@@ -48,6 +48,9 @@ void report_into(
 		case ReportConfig::ReportType::SIMULATION_PASSENGER_STATS:
 			rengine.reportSimulationPassengerStats(config,os);
 			return;
+		case ReportConfig::ReportType::TRAIN_ROUTES:
+			rengine.reportTrains(config,os);
+			return;
 	}
 }
 
@@ -116,6 +119,20 @@ void ReportEngine::reportSimulationPassengerStats(const ReportConfig& config, st
 	os << "---------------------------------------------\n";
 	os << "total waiting time   = " << totalWaitingTime << '\n';
 	os << "total time in system = " << totalTimeInSystem << '\n';
+	os << "\n\n\n";
+}
+
+void ReportEngine::reportTrains(const ReportConfig& config, std::ostream& os) {
+	(void)config;
+
+	os << "Report of Trains & Their Routes\n";
+	os << "---------------------------------------------\n";
+
+	for (const auto& route : schedule.getTrainRoutes()) {
+		os << route << '\n';
+	}
+
+	os << "---------------------------------------------\n";
 	os << "\n\n\n";
 }
 

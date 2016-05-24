@@ -9,6 +9,7 @@ public:
 	enum class ReportType {
 		PASSENGER_ROUTE_STATS,
 		SIMULATION_PASSENGER_STATS,
+		TRAIN_ROUTES,
 	};
 
 	ReportConfig(ReportType report_type)

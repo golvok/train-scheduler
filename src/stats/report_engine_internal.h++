@@ -24,6 +24,7 @@ public:
 private:
 	void reportPassengerRouteStats(const ReportConfig& config, std::ostream& os);
 	void reportSimulationPassengerStats(const ReportConfig& config, std::ostream& os);
+	void reportTrains(const ReportConfig& config, std::ostream& os);
 
 	const ::TrackNetwork& track_network;
 	const PassengerList& passengers;
