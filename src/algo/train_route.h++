@@ -3,6 +3,7 @@
 #define ALGO__TRAIN_ROUTE_HPP
 
 #include <util/generator.h++>
+#include <util/print_printable.h++>
 #include <util/track_network.h++>
 
 #include <boost/range/iterator_range.hpp>
@@ -33,7 +34,7 @@ using TrainIndex = uint32_t;
 struct TrainIDTagType {
 	const static uint64_t DEFAULT_VALUE = -1;
 };
-class TrainID : public ::util::ID<uint64_t,TrainIDTagType> {
+class TrainID : public ::util::ID<uint64_t,TrainIDTagType>, public ::util::print_printable {
 	friend class ::LocationID;
 	TrainID(IDType val) : ID(val) { }
 public:
@@ -58,12 +59,7 @@ public:
 	}
 };
 
-inline std::ostream& operator<<(std::ostream& os, const TrainID& tid) {
-	tid.print(os);
-	return os;
-}
-
-class Train {
+class Train : public ::util::print_printable {
 public:
 	friend class TrainRoute;
 	using Speed = float;
@@ -112,11 +108,6 @@ private:
 	TrackNetwork::Time departure_time;
 	TrainIndex index_number;
 };
-
-inline std::ostream& operator<<(std::ostream& os, const Train& t) {
-	t.print(os);
-	return os;
-}
 
 class TrainRoute {
 public:
