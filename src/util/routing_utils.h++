@@ -117,6 +117,60 @@ void print_route_of_route_elements(
 	});
 }
 
+namespace detail {
+	template<typename VISITOR>
+	class ref_visitor : public boost::default_astar_visitor {
+		VISITOR& vis;
+
+	public:
+		ref_visitor(VISITOR& vis) : vis(vis) { }
+
+		template<typename VIRTEX_DESCRIPTOR, typename GRAPH>
+		void initialize_vertex(VIRTEX_DESCRIPTOR&& vd, GRAPH&& g) {
+			vis.initialize_vertex(std::forward<VIRTEX_DESCRIPTOR>(vd), std::forward<GRAPH>(g));
+		}
+		template<typename VIRTEX_DESCRIPTOR, typename GRAPH>
+		void discover_vertex(VIRTEX_DESCRIPTOR&& vd, GRAPH&& g) {
+			vis.discover_vertex(std::forward<VIRTEX_DESCRIPTOR>(vd), std::forward<GRAPH>(g));
+		}
+		template<typename VIRTEX_DESCRIPTOR, typename GRAPH>
+		void examine_vertex(VIRTEX_DESCRIPTOR&& vd, GRAPH&& g) {
+			vis.examine_vertex(std::forward<VIRTEX_DESCRIPTOR>(vd), std::forward<GRAPH>(g));
+		}
+		template<typename EDGE_DESCRIPTOR, typename GRAPH>
+		void examine_edge(EDGE_DESCRIPTOR&& ed, GRAPH&& g) {
+			vis.examine_edge(std::forward<EDGE_DESCRIPTOR>(ed), std::forward<GRAPH>(g));
+		}
+		template<typename EDGE_DESCRIPTOR, typename GRAPH>
+		void edge_relaxed(EDGE_DESCRIPTOR&& ed, GRAPH&& g) {
+			vis.edge_relaxed(std::forward<EDGE_DESCRIPTOR>(ed), std::forward<GRAPH>(g));
+		}
+		template<typename EDGE_DESCRIPTOR, typename GRAPH>
+		void edge_not_relaxed(EDGE_DESCRIPTOR&& ed, GRAPH&& g) {
+			vis.edge_not_relaxed(std::forward<EDGE_DESCRIPTOR>(ed), std::forward<GRAPH>(g));
+		}
+		template<typename EDGE_DESCRIPTOR, typename GRAPH>
+		void black_target(EDGE_DESCRIPTOR&& ed, GRAPH&& g) {
+			vis.black_target(std::forward<EDGE_DESCRIPTOR>(ed), std::forward<GRAPH>(g));
+		}
+		template<typename VIRTEX_DESCRIPTOR, typename GRAPH>
+		void finish_vertex(VIRTEX_DESCRIPTOR&& vd, GRAPH&& g) {
+			vis.finish_vertex(std::forward<VIRTEX_DESCRIPTOR>(vd), std::forward<GRAPH>(g));
+		}
+	};
+} // end namespace detail
+
+/**
+ * One is not able to pass in a std::ref of a visitor, so call this
+ * instead, to get the same behaviour. I tried to find this in the
+ * boost headers, but I couldn't. I don't have Internet access
+ * right now...
+ */
+template<typename VISITOR>
+auto make_ref_astar_visitor(VISITOR& vis) {
+	return detail::ref_visitor<VISITOR>(vis);
+}
+
 } // end namespace util
 
 #endif /* UTIL__ROUTING_UTILS_H */
