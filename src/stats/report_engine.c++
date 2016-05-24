@@ -61,14 +61,14 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 	TrackNetwork::Time totalTimeInSystem = 0;
 
 	os << "Passenger Route Statistics Report\n";
-	os << "passenger, arrive time, leave time, exit time\n";
+	os << "passenger, arrive time, departure time, arrival time\n";
 	os << "---------------------------------------------\n";
 
 	for (const auto& passenger : passengers) {
 		const auto& route = passenger_routes.getRoute(passenger);
 
 		TrackNetwork::Time start_time = passenger.getStartTime();
-		TrackNetwork::Time end_waiting_time = route.front().getTime();
+		TrackNetwork::Time end_waiting_time = std::next(route.begin())->getTime();
 		TrackNetwork::Time end_travel_time = route.back().getTime();
 		totalWaitingTime += end_waiting_time - start_time;
 		totalTimeInSystem += end_travel_time - end_waiting_time;
@@ -81,7 +81,7 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 
 	os << "---------------------------------------------\n";
 	os << "total waiting time   = " << totalWaitingTime << '\n';
-	os << "total time in system = " << totalTimeInSystem << '\n';
+	os << "total time on trains = " << totalTimeInSystem << '\n';
 	os << "\n\n\n";
 }
 
@@ -93,7 +93,7 @@ void ReportEngine::reportSimulationPassengerStats(const ReportConfig& config, st
 	::sim::SimTime totalTimeInSystem = 0;
 
 	os << "Simulation Passenger Statistics Report\n";
-	os << "passenger, arrive time, leave time, exit time\n";
+	os << "passenger, arrive time, departure time, arrival time\n";
 	os << "---------------------------------------------\n";
 
 	for (const auto& passenger : passengers) {
@@ -105,7 +105,7 @@ void ReportEngine::reportSimulationPassengerStats(const ReportConfig& config, st
 		);
 
 		::sim::SimTime start_time = passenger.getStartTime();
-		::sim::SimTime end_waiting_time = route.front().getTime();
+		::sim::SimTime end_waiting_time = std::next(route.begin())->getTime();
 		totalWaitingTime += end_waiting_time - start_time;
 
 		os << passenger.getName() << ", " << start_time << ", " << end_waiting_time << ", ";
@@ -122,7 +122,7 @@ void ReportEngine::reportSimulationPassengerStats(const ReportConfig& config, st
 
 	os << "---------------------------------------------\n";
 	os << "total waiting time   = " << totalWaitingTime << '\n';
-	os << "total time in system = " << totalTimeInSystem << '\n';
+	os << "total time on trains = " << totalTimeInSystem << '\n';
 	os << "\n\n\n";
 }
 
