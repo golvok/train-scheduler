@@ -16,12 +16,6 @@ namespace graphics {
 
 using namespace geom;
 
-namespace {
-
-const uint INVALID_TIME = -1;
-
-} // end anonymous namespace
-
 TrainsArea::TrainsArea(TrainsAreaData& data)
 	: data(data)
 	, animation_connection()

@@ -23,6 +23,8 @@ public:
 	using Time = int;
 	using TimeInterval = std::pair<Time,Time>;
 
+	static const Time INVALID_TIME;
+
 	using Weight = float;
 	using EdgeIndex = uint;
 	struct EdgeProperties {
@@ -47,7 +49,7 @@ public:
 
 	using EdgeWeightMap = std::vector<Weight>;
 
-	static const NodeID INVALID_ID;
+	static const NodeID INVALID_NODE_ID;
 private:
 	BackingGraphType backing_graph;
 	std::unordered_map<std::string,NodeID> name2id;
@@ -121,11 +123,11 @@ using StationMap = decltype(TrackNetwork().makeStationMap<MAPPED_TYPE>());
 template<typename ITER, typename SPEED_FUNC>
 TrackNetwork::Time TrackNetwork::sumTimeTakenWithCustomSpeed(::boost::iterator_range<ITER> range, SPEED_FUNC sf) const {
 	TrackNetwork::Time result = 0;
-	auto current_edge = std::make_pair(TrackNetwork::INVALID_ID,TrackNetwork::INVALID_ID);
+	auto current_edge = std::make_pair(TrackNetwork::INVALID_NODE_ID,TrackNetwork::INVALID_NODE_ID);
 	for (const auto& vid : range) {
 		current_edge.first = current_edge.second;
 		current_edge.second = vid;
-		if (current_edge.first != TrackNetwork::INVALID_ID) {
+		if (current_edge.first != TrackNetwork::INVALID_NODE_ID) {
 			result += this->getDistanceBetween(
 				current_edge
 			) / (

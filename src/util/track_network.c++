@@ -1,6 +1,7 @@
 #include "track_network.h++"
 
-const TrackNetwork::NodeID TrackNetwork::INVALID_ID = -1;
+const TrackNetwork::NodeID TrackNetwork::INVALID_NODE_ID = -1;
+const TrackNetwork::Time TrackNetwork::INVALID_TIME = std::numeric_limits<TrackNetwork::Time>::min();
 
 TrackNetwork::NodeID TrackNetwork::createVertex(const std::string& name, geom::Point<float> xy) {
 	decltype(name2id)::iterator pos;
@@ -12,14 +13,14 @@ TrackNetwork::NodeID TrackNetwork::createVertex(const std::string& name, geom::P
 		pos->second = id;
 		return id;
 	} else {
-		return INVALID_ID;
+		return INVALID_NODE_ID;
 	}
 }
 
 TrackNetwork::NodeID TrackNetwork::getVertex(const std::string& name) const {
 	auto find_results = name2id.find(name);
 	if (find_results == name2id.end()) {
-		return INVALID_ID;
+		return INVALID_NODE_ID;
 	} else {
 		return find_results->second;
 	}
