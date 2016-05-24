@@ -54,12 +54,8 @@ inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::NodeID>> 
 	std::unordered_map<Passenger,typename std::vector<TrackNetwork::NodeID>> passenger2route;
 
 	for (auto passenger : passengers) {
-		dout(DL::INFO) << "shortest path for " << passenger.getName() << " (enters at time " << passenger.getStartTime() << "):\n";
-
 		auto route = get_shortest_route(passenger.getEntryID(),passenger.getExitID(),network);
-
 		passenger2route.emplace(passenger,std::move(route));
-
 	}
 	return passenger2route;
 }
@@ -102,6 +98,22 @@ void print_route(
 ) {
 	print_route(route, os, [&](auto&& str, auto&& v) {
 		str << network.getVertexName(v);
+	});
+}
+
+template<typename CONTAINER, typename OSTREAM>
+void print_route_of_route_elements(
+	const CONTAINER& route,
+	const TrackNetwork& network,
+	OSTREAM&& os
+) {
+	print_route(route, os, [&](auto&& str, auto&& elem) {
+		if (elem.getLocation().isStation()) {
+			str << '{' << network.getVertexName(network.getVertexIDByStationID(elem.getLocation().asStationID()));
+		} else {
+			str << "{l=" << elem.getLocation();
+		}
+		str << "@t=" << elem.getTime() << '}';
 	});
 }
 

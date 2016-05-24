@@ -206,14 +206,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 
 	std::reverse(path.begin(),path.end()); // was backwards
 
-	::util::print_route(path, dout(DL::PR_D1), [&](auto&& str, auto&& elem) {
-		if (elem.getLocation().isStation()) {
-			str << '{' << tn.getVertexName(tn.getVertexIDByStationID(elem.getLocation().asStationID()));
-		} else {
-			str << "{l=" << elem.getLocation();
-		}
-		str << "@t=" << elem.getTime() << '}';
-	});
+	::util::print_route_of_route_elements(path, tn, dout(DL::PR_D1));
 	dout(DL::PR_D1) << '\n';
 
 	return path;
