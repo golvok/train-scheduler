@@ -2,6 +2,7 @@
 #include "report_engine_internal.h++"
 
 #include <sim/simulator_internal.h++>
+#include <util/routing_utils.h++>
 
 #include <ostream>
 #include <stdexcept>
@@ -72,7 +73,10 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 		totalWaitingTime += end_waiting_time - start_time;
 		totalTimeInSystem += end_travel_time - end_waiting_time;
 
-		os << passenger.getName() << ", " << start_time << ", " << end_waiting_time << ", " << end_travel_time << '\n';
+		os << passenger.getName() << ", " << start_time << ", " << end_waiting_time << ", " << end_travel_time;
+		os << " : Path = ";
+		::util::print_route_of_route_elements(route, track_network, os);
+		os << '\n';
 	}
 
 	os << "---------------------------------------------\n";
