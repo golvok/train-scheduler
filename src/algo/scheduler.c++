@@ -261,6 +261,7 @@ Scheduler2::EdgeWantedCapacities Scheduler2::compute_edge_wanted_capacities() {
 				weight_map
 			);
 			::util::print_route(route_for_p,network,dout(DL::WC_D2));
+			dout(DL::WC_D2) << '\n';
 			{
 				auto prev_vertex = route_for_p[0];
 				bool first = true;
@@ -432,6 +433,7 @@ void Scheduler2::dump_trains_to_dout(
 	for (auto& route : trains) {
 		auto route_indent = dout(level).indentWithTitle([&](auto&&out){ out << "train " << i; });
 		::util::print_route(route,network,dout(level));
+		dout(level) << '\n';
 		++i;
 	}
 }
@@ -830,6 +832,7 @@ void Scheduler3::dump_trains_to_dout(
 	for (const auto& datum : train_data) {
 		auto route_indent = dout(level).indentWithTitle([&](auto&&out){ out << "train " << i; });
 		::util::print_route(datum.get_train(),network,dout(level));
+		dout(level) << '\n';
 		auto source_indent = dout(level).indentWithTitle("Sources & Destinations");
 		for (const auto& src : datum.get_srces()) {
 			dout(level) << src << " -> {";

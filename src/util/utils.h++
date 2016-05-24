@@ -235,6 +235,14 @@ ForwardIt remove_by_index(ForwardIt first, ForwardIt last, UnaryPredicate p) {
 	return first;
 }
 
+namespace detail {
+	struct printer {
+	template<typename STREAM, typename T>
+		void operator()(STREAM& os, const T& t) const {
+			os << t;
+		}
+	};
+}
 
 } // end namespace util
 

@@ -3,6 +3,7 @@
 #define UTIL__ROUTING_UTILS_H
 
 #include <util/graph_utils.h++>
+#include <util/passenger.h++>
 #include <util/track_network.h++>
 
 #include <algorithm>
@@ -68,22 +69,24 @@ inline std::unordered_map<Passenger,typename std::vector<TrackNetwork::NodeID>> 
  * a const char[x] to os, in the format
  * vSTART -> V2 -> V3 -> V4 -> vEND
  */
-template<typename CONTAINER, typename FUNC, typename OSTREAM>
+template<typename CONTAINER, typename OSTREAM, typename FUNC = ::util::detail::printer>
 void print_route(
 	const CONTAINER& route,
 	OSTREAM&& os,
-	FUNC func
+	FUNC func = FUNC{}
 ) {
-	auto begin = std::begin(route);
-	auto end = std::end(route);
-	if (begin != end) {
-		func(os,*begin);
-		std::for_each(begin + 1, end, [&](auto& v){
+	auto beg = begin(route);
+	auto en = end(route);
+
+	os << "{ ";
+	if (beg != en) {
+		func(os,*beg);
+		std::for_each(beg + 1, en, [&](auto& v){
 			os << " -> ";
 			func(os,v);
 		});
 	}
-	os << '\n';
+	os << " }";
 }
 
 /**

@@ -214,6 +214,7 @@ PassengerRoutes::InternalRouteType extract_coalesced_path(
 		}
 		str << "@t=" << elem.getTime() << '}';
 	});
+	dout(DL::PR_D1) << '\n';
 
 	return path;
 }
