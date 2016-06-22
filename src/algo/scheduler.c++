@@ -617,23 +617,45 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_redundant_trains(TrainDataL
 }
 
 Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& train_data) const {
-	std::vector<std::vector<size_t>> trains_that_could_combine_list;
+	struct CombineData { // means combine with itrain starting at my index where_in_me_to_start_combining
+		size_t itrain;
+		ptrdiff_t where_in_me_to_start_combining;
+	};
+
+	std::vector<std::vector<CombineData>> trains_that_could_combine_list;
 
 	auto train_index_range = ::util::xrange_forward_pe<size_t>(0,train_data.size());
 
 	for (const auto& itrain : train_index_range) {
 		trains_that_could_combine_list.emplace_back();
+		const auto& this_train_rotue = train_data[itrain].get_train();
 
-		std::copy_if(
-			train_index_range.begin(), train_index_range.end(),
-			std::back_inserter(trains_that_could_combine_list.back()),
-			[&](const auto& iother_train) {
-				return
-					   iother_train != itrain
-					&& train_data[itrain].get_train().back() == train_data[iother_train].get_train().front()
-				;
+		for (const auto& iother_train : train_index_range) {
+			if (iother_train == itrain) {
+				continue;
 			}
-		);
+
+			const auto& other_train_route = train_data[iother_train].get_train();
+
+			// check if the other train overlaps with the end of this one
+			// we only want forward overlaps. If we want backward ones, they
+			// can be more efficiently derived from these, than computed directly
+			for (auto& it : iterate_as_iterators(this_train_rotue)) {
+				auto mismatch_results = std::mismatch(
+					other_train_route.begin(), other_train_route.end(),
+					it, this_train_rotue.end()
+				);
+
+				if (mismatch_results.second == this_train_rotue.end()) {
+					using std::distance;
+					using std::begin;
+					using std::end;
+					trains_that_could_combine_list.back().emplace_back(
+						CombineData{ iother_train, distance(begin(this_train_rotue), it) }
+					);
+				}
+			}
+		}
 	}
 
 	if (trains_that_could_combine_list.size() != train_data.size()) {
@@ -642,7 +664,7 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 		});
 	}
 
-	std::unordered_map<size_t, size_t> train_extension_choice;
+	std::unordered_map<size_t, size_t> train_extension_choices;
 
 	{
 		std::vector<bool> train_is_used(train_data.size(), false);
@@ -653,23 +675,23 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 			auto max_length_train_iter = std::max_element(
 				trains_that_could_combine.begin(), trains_that_could_combine.end(),
 				[&](auto& ilhs, auto& irhs) {
-					// rank it low if it is used
-					return train_is_used[ilhs] == false || train_data[ilhs].get_train().size() < train_data[irhs].get_train().size();
+					// rank it low if it is used, remember this is supposed to be operator<
+					return train_is_used[ilhs.itrain] == false || train_data[ilhs.itrain].get_train().size() < train_data[irhs.itrain].get_train().size();
 				}
 			);
 
-			if (max_length_train_iter == trains_that_could_combine.end() || train_is_used[*max_length_train_iter]) {
+			if (max_length_train_iter == trains_that_could_combine.end() || train_is_used[max_length_train_iter->itrain]) {
 				// case of nothing in the list for this train
 				continue;
 			}
 
-			train_extension_choice[itrain] = *max_length_train_iter;
-			train_is_used[*max_length_train_iter] = true;
+			train_extension_choices[itrain] = std::distance(begin(trains_that_could_combine), max_length_train_iter);
+			train_is_used[max_length_train_iter->itrain] = true;
 		}
 	}
 
+	// follow the chosen combine pairs, to create lists of what to combine
 	std::vector<std::vector<size_t>> list_of_new_train_components;
-	// std::vector<size_t> train_is_rudundant_with(train_data.size(), NO_TRAIN);
 
 	{
 		std::vector<bool> train_is_used(train_data.size(), false);
@@ -685,12 +707,18 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 				list_of_new_train_components.back().push_back(jtrain);
 				train_is_used[jtrain] = true;
 
-				const auto& find_results = train_extension_choice.find(jtrain);
-				if (find_results == train_extension_choice.end()) {
+				const auto& find_results = train_extension_choices.find(jtrain);
+				if (find_results == train_extension_choices.end()) {
 					break;
 				}
 
-				jtrain = find_results->second;
+				auto iproposed_train = trains_that_could_combine_list[jtrain][find_results->second].itrain;
+
+				if (train_is_used[iproposed_train]) { // break cycles
+					break;
+				}
+
+				jtrain = iproposed_train;
 			}
 		}
 
@@ -702,11 +730,22 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 		dout(DL::TR_D3) << "combining: ";
 		VertexList new_path;
 
-		new_path.push_back(train_data[new_train_components.front()].get_train().front());
 		for (const auto& itrain : new_train_components) {
 			dout(DL::TR_D3) << itrain << ", ";
+
+			const auto& itrain_path = train_data[itrain].get_train();
+			const auto& trains_that_could_combine = trains_that_could_combine_list[itrain];
+			const auto& train_extension_choice = train_extension_choices[itrain];
+			const auto& stop_copying_here = [&]()  {
+				if (trains_that_could_combine.size() > train_extension_choice) {
+					return begin(itrain_path) + trains_that_could_combine[train_extension_choice].where_in_me_to_start_combining;
+				} else {
+					return end(itrain_path);
+				}
+			}();
+
 			std::copy(
-				std::next(train_data[itrain].get_train().begin()), train_data[itrain].get_train().end(),
+				begin(itrain_path), stop_copying_here,
 				std::back_inserter(new_path)
 			);
 		}
