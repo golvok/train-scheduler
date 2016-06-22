@@ -241,4 +241,40 @@ auto iterate_all(CONTAINER& c_first, REST&... c_rest) {
 	return container_concat_adapter<CONTAINER, sizeof...(REST)>({&c_first, (&c_rest)...});
 }
 
+/*******************
+ * Begin definition of iterator_iterator_adapter
+ *******************/
+
+template<typename ITER>
+class iterator_iterator_adapter {
+public:
+
+	class iterator_iterator_adapter_iterator { // : public ITER {
+	public:
+		ITER wrapped_iter;
+		ITER& operator*() { return wrapped_iter; }
+		const ITER& operator*() const { return wrapped_iter; }
+		bool operator!=(const iterator_iterator_adapter_iterator& rhs) const { return this->wrapped_iter != rhs.wrapped_iter; }
+		bool operator==(const iterator_iterator_adapter_iterator& rhs) const { return !(*this != rhs); }
+		iterator_iterator_adapter_iterator& operator++() { ++wrapped_iter; return *this; }
+		iterator_iterator_adapter_iterator operator++(int) { using std::next; return next(*this); }
+	};
+
+	iterator_iterator_adapter_iterator begin_iter;
+	iterator_iterator_adapter_iterator end_iter;
+
+	iterator_iterator_adapter(ITER b, ITER e)
+		: begin_iter{b}, end_iter{e}
+	{ }
+
+	iterator_iterator_adapter_iterator begin() { return begin_iter; }
+	iterator_iterator_adapter_iterator end() { return end_iter; }
+
+};
+
+template<typename CONTAINER>
+auto iterate_as_iterators(CONTAINER& c) {
+	return iterator_iterator_adapter<decltype(c.begin())>(c.begin(), c.end());
+}
+
 #endif /* UTIL__ITERATION_UTILS_H */
