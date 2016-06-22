@@ -89,7 +89,7 @@ public:
  * Defines operator< using the first argumen's operator<
  *
  * Example:
- * 	  enum class MyEnum {
+ *    enum class MyEnum {
  *        A,B,
  *    };
  *
@@ -125,8 +125,14 @@ struct StaticCaster {
 
 namespace util {
 
+class IDBase {
+public:
+	int getValue() const;
+	void print(std::ostream& os);
+};
+
 template<typename id_type, typename TAG>
-class ID {
+class ID : public IDBase {
 	id_type value;
 protected:
 	explicit ID(const id_type& value) : value(value) { }
@@ -267,19 +273,35 @@ void print_container(
 	os << suffix_str;
 }
 
+// template<class T, class E>
+// using first = T;
+
+template<class T, typename = void>
+struct IDHasher;
+
+template<class T>
+struct IDHasher<T, std::enable_if_t<std::is_base_of<IDBase, T>::value>> {
+	size_t operator()(const T& id) const {
+		return std::hash<decltype(id.getValue())>()(id.getValue());
+	}
+};
+
+template<class T, typename = void>
+struct MyHash {
+	using type = std::hash<T>;
+};
+
+template<class T>
+struct MyHash<T, std::enable_if_t<std::is_base_of<IDBase, T>::value>> {
+	using type = IDHasher<T>;
+};
+
+template<class T>
+using MyHash_t = typename MyHash<T>::type;
+
+template<template <typename... ARGS> class CONTAINER, typename KEY, typename... REST>
+using with_my_hash_t = CONTAINER<KEY, REST..., MyHash_t<KEY>>;
+
 } // end namespace util
 
-namespace std {
-	template<
-		typename ID_TYPE
-	>
-	struct hash : std::enable_if_t<
-		std::is_base_of<typename ID_TYPE::ThisIDType,ID_TYPE>::value,
-		ID_TYPE
-	> {
-		size_t operator()(const ID_TYPE& id) const {
-			return std::hash<decltype(id.getValue())>()(id.getValue());
-		}
-	};
-}
 #endif /* UTIL_H */

@@ -42,7 +42,7 @@ public:
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeTrainMap(ARGS&&... args) const {
-		return std::unordered_map<TrainID,MAPPED_TYPE>(std::forward<ARGS>(args)...);
+		return ::util::with_my_hash_t<std::unordered_map,TrainID,MAPPED_TYPE>(std::forward<ARGS>(args)...);
 	}
 private:
 	std::string name;
