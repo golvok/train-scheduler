@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <boost/iostreams/filtering_stream.hpp>
 
