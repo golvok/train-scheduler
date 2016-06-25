@@ -19,12 +19,15 @@ using StationID = ::util::ID<uint, StationIDTag>;
 
 class TrackNetwork {
 public:
+	using CoordType = double;
+	using PointType = geom::Point<CoordType>;
+
 	using Time = int;
 	using TimeInterval = std::pair<Time,Time>;
 
 	static const Time INVALID_TIME;
 
-	using Weight = float;
+	using Weight = double;
 	using EdgeIndex = uint;
 	struct EdgeProperties {
 		Weight weight;
@@ -52,7 +55,7 @@ public:
 private:
 	BackingGraphType backing_graph;
 	std::unordered_map<std::string,NodeID> name2id;
-	std::unordered_map<NodeID,std::pair<std::string,geom::Point<float>>> id2data;
+	std::unordered_map<NodeID,std::pair<std::string,PointType>> id2data;
 	NodeID train_spawn_location;
 
 public:
@@ -71,10 +74,10 @@ public:
 	BackingGraphType& g() { return backing_graph; }
 	const BackingGraphType& g() const { return backing_graph; }
 
-	NodeID createVertex(const std::string& name, geom::Point<float> pos);
+	NodeID createVertex(const std::string& name, PointType pos);
 	NodeID getVertex(const std::string& name) const;
 	const std::string& getVertexName(NodeID id) const;
-	geom::Point<float> getVertexPosition(NodeID id) const;
+	PointType getVertexPosition(NodeID id) const;
 
 	NodeID getTrainSpawnLocation() const { return train_spawn_location; }
 	void setTrainSpawnLocation(NodeID id) { train_spawn_location = id; }
