@@ -735,12 +735,12 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 
 			const auto& itrain_path = train_data[itrain].get_train();
 			const auto& trains_that_could_combine = trains_that_could_combine_list[itrain];
-			const auto& train_extension_choice = train_extension_choices[itrain];
 			const auto& stop_copying_here = [&]()  {
-				if (trains_that_could_combine.size() > train_extension_choice) {
-					return begin(itrain_path) + trains_that_could_combine[train_extension_choice].where_in_me_to_start_combining;
-				} else {
+				if (trains_that_could_combine.empty()) {
 					return end(itrain_path);
+				} else {
+					const auto& train_extension_choice = train_extension_choices[itrain];
+					return begin(itrain_path) + trains_that_could_combine[train_extension_choice].where_in_me_to_start_combining;
 				}
 			}();
 
