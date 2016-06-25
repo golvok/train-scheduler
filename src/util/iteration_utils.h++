@@ -61,7 +61,7 @@ public:
 
 	index_associative_iteratior_value& operator=(const index_associative_iteratior_value&) = delete;
 
-	auto& operator*() { return v(); }
+	auto& operator*() const { return v(); }
 };
 
 template<typename ITERATOR, typename INDEX>
@@ -109,8 +109,8 @@ public:
 
 	index_associative_iteratior_adapter& operator=(const index_associative_iteratior_adapter&) = delete;
 
-	iterator_type begin() { return iterator_type(std::begin(c)); }
-	iterator_type end() { return iterator_type(std::end(c)); }
+	iterator_type begin() { using std::begin; return iterator_type(begin(c)); }
+	iterator_type end() { using std::end; return iterator_type(end(c)); }
 };
 
 /**
