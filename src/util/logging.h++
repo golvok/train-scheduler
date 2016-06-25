@@ -40,6 +40,8 @@ namespace DebugLevel {
 		SIM_D2, // Simulator debug level 2
 		SIM_D3, // Simulator lowest level debug
 
+		DATA_READ1, // reading of data
+
 		LEVEL_COUNT, // please make sure this is at the end
 	};
 

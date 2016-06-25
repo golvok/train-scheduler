@@ -1,19 +1,22 @@
 #include "track_network.h++"
 
+#include <util/utils.h++>
+
 const TrackNetwork::NodeID TrackNetwork::INVALID_NODE_ID = -1;
 const TrackNetwork::Time TrackNetwork::INVALID_TIME = std::numeric_limits<TrackNetwork::Time>::min();
 
-TrackNetwork::NodeID TrackNetwork::createVertex(const std::string& name, TrackNetwork::PointType xy) {
-	decltype(name2id)::iterator pos;
-	bool inserted;
-	std::tie(pos,inserted) = name2id.insert( std::make_pair(name, NodeID()) );
-	if (inserted) {
-		TrackNetwork::NodeID id( boost::add_vertex(g()) );
-		id2data[id] = {name,xy};
-		pos->second = id;
-		return id;
-	} else {
-		return INVALID_NODE_ID;
+TrackNetwork::TrackNetwork(
+	BackingGraphType&& network,
+	OffNodeDataPropertyMap&& offNodeData
+)
+	: backing_graph(std::move(network))
+	, name2id()
+	, id2data(offNodeData)
+	, train_spawn_location()
+{
+	for (const auto& vdesc : make_iterable(vertices(backing_graph))) {
+		const auto& off_node_data = get(id2data, vdesc);
+		name2id.emplace(off_node_data.name, vdesc);
 	}
 }
 
@@ -31,21 +34,11 @@ namespace {
 }
 
 const std::string& TrackNetwork::getVertexName(TrackNetwork::NodeID id) const {
-	auto find_results = id2data.find(id);
-	if (find_results == id2data.end()) {
-		return empty;
-	} else {
-		return find_results->second.first;
-	}
+	return get(id2data, id).name;
 }
 
 TrackNetwork::PointType TrackNetwork::getVertexPosition(TrackNetwork::NodeID id) const {
-	auto find_results = id2data.find(id);
-	if (find_results == id2data.end()) {
-		return TrackNetwork::PointType();
-	} else {
-		return find_results->second.second;
-	}
+	return get(id2data, id).location;
 }
 
 TrackNetwork::EdgeIndex TrackNetwork::getEdgeIndex(EdgeID eid) const {

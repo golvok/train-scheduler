@@ -37,6 +37,7 @@ endif
 
 LIBRARY_LINK_FLAGS += \
 	$(shell pkg-config --libs gtkmm-3.0) \
+	-lboost_graph \
 	-lpthread
 
 INCLUDE_FLAGS += \

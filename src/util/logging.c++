@@ -18,6 +18,7 @@ namespace DebugLevel {
 			TR_D1, TR_D2, TR_D3,
 			PR_D1, PR_D2, PR_D3, PR_D4,
 			SIM_D1, SIM_D2, SIM_D3,
+			DATA_READ1,
 		};
 	}
 
@@ -32,6 +33,7 @@ namespace DebugLevel {
 		{ TR_D3, TR_D2, TR_D1, },
 		{ PR_D4, PR_D3, PR_D2, PR_D1, },
 		{ SIM_D3, SIM_D2, SIM_D1, },
+		{ DATA_READ1, },
 	};
 
 	std::vector<Level> getAllShouldBeEnabled(Level l) {
@@ -64,6 +66,7 @@ namespace DebugLevel {
 		{ SIM_D1, "SIM_D1" },
 		{ SIM_D2, "SIM_D2" },
 		{ SIM_D3, "SIM_D3" },
+		{ DATA_READ1, "DATA_READ1" },
 	};
 
 	std::pair<Level,bool> getFromString(std::string str) {

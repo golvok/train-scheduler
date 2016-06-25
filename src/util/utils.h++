@@ -254,10 +254,10 @@ template<typename CONTAINER, typename OSTREAM, typename FUNC = ::util::detail::p
 void print_container(
 	const CONTAINER& c,
 	OSTREAM&& os,
-	FUNC func = FUNC{},
+	const std::string& sep = ", ",
 	const std::string& prefix_str = "{ ",
 	const std::string& suffix_str = " }",
-	const std::string& sep = ", "
+	FUNC func = FUNC{}
 ) {
 	auto beg = begin(c);
 	auto en = end(c);

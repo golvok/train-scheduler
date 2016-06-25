@@ -27,6 +27,14 @@ public:
 
 	static const Time INVALID_TIME;
 
+	struct OffNodeData {
+		std::string name;
+		PointType location;
+		OffNodeData() : name(), location(0,0) { }
+	};
+
+	using OffNodeDataPropertyMap = boost::vector_property_map<OffNodeData>;
+
 	using Weight = double;
 	using EdgeIndex = uint;
 	struct EdgeProperties {
@@ -54,17 +62,22 @@ public:
 	static const NodeID INVALID_NODE_ID;
 private:
 	BackingGraphType backing_graph;
-	std::unordered_map<std::string,NodeID> name2id;
-	std::unordered_map<NodeID,std::pair<std::string,PointType>> id2data;
+	std::unordered_map<std::string, NodeID> name2id;
+	OffNodeDataPropertyMap id2data;
 	NodeID train_spawn_location;
 
 public:
+	TrackNetwork(
+		BackingGraphType&& network,
+		OffNodeDataPropertyMap&& offNodeData
+	);
+
 	TrackNetwork()
 		: backing_graph()
 		, name2id()
 		, id2data()
 		, train_spawn_location()
-	{}
+	{ }
 
 	TrackNetwork& operator=(const TrackNetwork&) = delete;
 	TrackNetwork(const TrackNetwork&) = delete;
@@ -74,7 +87,6 @@ public:
 	BackingGraphType& g() { return backing_graph; }
 	const BackingGraphType& g() const { return backing_graph; }
 
-	NodeID createVertex(const std::string& name, PointType pos);
 	NodeID getVertex(const std::string& name) const;
 	const std::string& getVertexName(NodeID id) const;
 	PointType getVertexPosition(NodeID id) const;
@@ -118,7 +130,7 @@ public:
 };
 
 template<typename MAPPED_TYPE>
-using StationMap = decltype(TrackNetwork().makeStationMap<MAPPED_TYPE>());
+using StationMap = decltype(std::declval<TrackNetwork>().makeStationMap<MAPPED_TYPE>());
 
 //// BEGIN ILINE & TEMPLATE FUNCTIONS ////
 
