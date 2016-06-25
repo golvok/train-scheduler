@@ -64,7 +64,7 @@ int program_main(const std::string& data_file_name) {
 
 	// then display the passengers too
 	graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
-	// graphics::get().waitForPress();
+	graphics::get().waitForPress();
 
 	// do scheduling
 	std::shared_ptr<algo::Schedule> schedule = std::make_shared<algo::Schedule>();
@@ -72,7 +72,7 @@ int program_main(const std::string& data_file_name) {
 
 	// display schedule
 	graphics::get().trainsArea().presentResults(tn,passengers,schedule);
-	// graphics::get().waitForPress();
+	graphics::get().waitForPress();
 
 	// route passengers
 	auto p_routes = std::make_shared<::algo::PassengerRoutes>();
