@@ -8,7 +8,7 @@ namespace cmdargs {
 ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 	: graphics_enabled(false)
 	, levels_to_enable(DebugLevel::getDefaultSet())
-	, singular_input_number(-1)
+	, data_file_name()
  {
 	uint arg_count = argc_int;
 	std::vector<std::string> args;
@@ -41,15 +41,14 @@ ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 	}
 
 	{
-		auto data_flag_it = std::find(begin(args),end(args),"--data-num");
+		auto data_flag_it = std::find(begin(args),end(args),"--data-file");
 		if (data_flag_it != end(args)) {
-			auto input_number_it = std::next(data_flag_it);
-			if (input_number_it != end(args)) {
-				singular_input_number = std::stoul(*input_number_it);
+			auto data_file_it = std::next(data_flag_it);
+			if (data_file_it != end(args)) {
+				data_file_name = *data_file_it;
 			}
 		}
 	}
-
 
 }
 

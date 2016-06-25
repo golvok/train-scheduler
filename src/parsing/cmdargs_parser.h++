@@ -4,6 +4,8 @@
 
 #include <util/logging.h++>
 
+#include <string>
+
 namespace parsing {
 
 namespace cmdargs {
@@ -22,7 +24,7 @@ public:
 	 * Should the current invocation of the program display graphics?
 	 */
 	bool shouldEnableGraphics() const  { return graphics_enabled; }
-	int getSignglarInputNumber() const { return singular_input_number; }
+	const std::string& getDataFileName() const { return data_file_name; }
 
 private:
 	friend ParsedArguments parse(int arc_int, char const** argv);
@@ -32,7 +34,7 @@ private:
 	/// The printing levels that should be enabled. Duplicate entries are possible & allowed
 	std::vector<DebugLevel::Level> levels_to_enable;
 
-	uint singular_input_number;
+	std::string data_file_name;
 
 	ParsedArguments(int arc_int, char const** argv);
 };
