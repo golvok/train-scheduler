@@ -246,6 +246,7 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 
 		const auto identifier = qi::as_string[+chars::alnum];
 		const auto get_corrisponding_vertex = [&](const std::string& id_str) { return tn.getVertex(id_str); };
+		const auto get_next_passenger_id = [&]() { return ::util::make_id<PassengerId>(passengers.size()); };
 
 		auto it = begin(passenger_string);
 		const bool is_match = qi::phrase_parse( it, end(passenger_string),
@@ -254,12 +255,12 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 			) [
 				phoenix::push_back( phoenix::ref(passengers), phoenix::construct<Passenger>(
 					qi::_1,
-					::util::make_id<PassengerId>(passengers.size()),
+					phoenix::bind(get_next_passenger_id),
 					phoenix::bind(get_corrisponding_vertex, qi::_2),
 					phoenix::bind(get_corrisponding_vertex, qi::_3),
 					qi::_4
 				))
-			],
+			] % ',',
 			chars::space
 		);
 
