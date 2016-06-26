@@ -1,0 +1,47 @@
+digraph g {
+
+	// verticals
+	E2 -> D2 -> C2 -> B2 -> A2 [ distance = 1 ]
+	A4 -> B4 -> C4 -> D4 -> E4 [ distance = 1 ]
+
+	// horizontals
+	B1 -> B2 -> B3 -> B4 -> B5 [ distance = 1 ]
+	D5 -> D4 -> D3 -> D2 -> D1 [ distance = 1 ]
+
+	// positions
+	A1 [ x =  50, y =  50 ]
+	B1 [ x =  50, y = 100 ]
+	C1 [ x =  50, y = 150 ]
+	D1 [ x =  50, y = 200 ]
+	E1 [ x =  50, y = 250 ]
+
+	A2 [ x = 100, y =  50 ]
+	B2 [ x = 100, y = 100 ]
+	C2 [ x = 100, y = 150 ]
+	D2 [ x = 100, y = 200 ]
+	E2 [ x = 100, y = 250 ]
+
+	A3 [ x = 150, y =  50 ]
+	B3 [ x = 150, y = 100 ]
+	C3 [ x = 150, y = 150 ]
+	D3 [ x = 150, y = 200 ]
+	E3 [ x = 150, y = 250 ]
+
+	A4 [ x = 200, y =  50 ]
+	B4 [ x = 200, y = 100 ]
+	C4 [ x = 200, y = 150 ]
+	D4 [ x = 200, y = 200 ]
+	E4 [ x = 200, y = 250 ]
+
+	A5 [ x = 250, y =  50 ]
+	B5 [ x = 250, y = 100 ]
+	C5 [ x = 250, y = 150 ]
+	D5 [ x = 250, y = 200 ]
+	E5 [ x = 250, y = 250 ]
+
+
+	// passengers
+	A4 [ passenger = "pA:A4->A2@t=1" ]
+	E2 [ passenger = "pB:E2->B5@t=1" ]
+	// B1 [ passenger = "pB1_E2_0:B1->E2@t=1,pB1_E2_1:B1->E2@t=1" ]
+}
