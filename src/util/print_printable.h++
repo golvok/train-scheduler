@@ -13,6 +13,23 @@ auto operator<<(STREAM& os, const T& t) -> decltype(static_cast<const print_prin
 	return os;
 }
 
+template<typename T>
+struct print_with_printable{
+	using print_with_type = T;
+};
+
+template<typename T, typename U, typename STREAM>
+auto operator<<(STREAM& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<U>*>(&std::get<0>(pair)),os) {
+	std::get<0>(pair).print(os, std::get<1>(pair));
+	return os;
+}
+
+template<typename T, typename U, typename STREAM>
+auto operator<<(STREAM& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<T>*>(&std::get<1>(pair)),os) {
+	std::get<1>(pair).print(os, std::get<0>(pair));
+	return os;
+}
+
 } // end namespace util
 
 #endif /* UTIL__PRINT_PRINTABLE_HPP */
