@@ -1,0 +1,11 @@
+digraph g {
+	A -> B -> C -> D -> E -> F -> Z [ distance = 1 ]
+
+	A [ x =   0, y =   0, passenger = "p1:A->D@t=1" ]
+	B [ x =  20, y =   0, passenger = "p2:B->F@t=1" ]
+	C [ x =  40, y =   0, passenger = "p3:C->D@t=1,p4:C->F@t=1" ]
+	D [ x =  60, y =   0, passenger = "p5:D->F@t=1" ]
+	E [ x =  80, y =   0, passenger = "p6:E->Z@t=1" ]
+	F [ x = 100, y =   0 ]
+	Z [ x = 120, y =   0 ]
+}

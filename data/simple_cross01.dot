@@ -1,0 +1,20 @@
+digraph g {
+	// path 1
+	A1 -> B1 -> C -> D1 -> E1 [ distance = 1 ]
+
+	// path 2  - goes through C as well
+	A2 -> B2 -> C -> D2 -> E2 [ distance = 1 ]
+
+	// shunt
+	A1 -> A2 [ distance = 1 ]
+
+	C  [ x =   0, y =   0 ]
+	A1 [ x = -80, y =   0, passenger = "pA1_E1_0:A1->E1@t=1,pA1_E1_1:A1->E1@t=1" ]
+	A2 [ x =   0, y = -80, passenger = "pA2_E2  :A2->E2@t=1" ]
+	B1 [ x = -40, y =   0, passenger = "pB1_E2_0:B1->E2@t=1,pB1_E2_1:B1->E2@t=1" ]
+	D1 [ x =  40, y =   0 ]
+	E1 [ x =  80, y =   0 ]
+	B2 [ x =   0, y = -40 ]
+	D2 [ x =   0, y =  40 ]
+	E2 [ x =   0, y =  80 ]
+}

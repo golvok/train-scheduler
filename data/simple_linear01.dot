@@ -7,5 +7,5 @@ digraph g {
 	D [ x =  60, y =   0, passenger = "pD:D->E@t=4" ]
 	E [ x =  80, y =   0, passenger = "pE:E->F@t=5" ]
 	F [ x = 100, y =   0, passenger = "pF:F->Z@t=6" ]
-	Z [ x = 120, y =   0]
+	Z [ x = 120, y =   0 ]
 }
