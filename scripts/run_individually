@@ -1,22 +1,32 @@
-#!/usr/bin/env bash
-if [ -z "$TRAIN_SCH_ROOTDIR" ]; then
-	echo "environment not set up"
-	exit 1;
-fi;
+#!/usr/bin/env python
 
-EXE="${TRAIN_SCH_EXEDIR}train-sch"
+import sys;
+import os;
+import subprocess
+import time
 
-START_DATASET=$1
-STOP_DATASET=$2
+if not os.environ.get("TRAIN_SCH_ROOTDIR"):
+	print("environment not set up")
+	sys.exit(-1);
 
-if [ -z "$START_DATASET" ]; then
-	echo "please select a data set"
-	exit 2;
-fi
+exe_name = os.environ["TRAIN_SCH_EXEDIR"] + "/train-sch"
+datadir = os.environ["TRAIN_SCH_DATADIR"]
 
-for i in $(seq $START_DATASET $STOP_DATASET); do
-	DIR="dataset-$i";
-	(mkdir -p "$DIR" && cd "$DIR" && ( time "$EXE" --data-num "$i" $TRAIN_SCH_ARGS ) > output.txt 2>&1 ) &
-done
+if (len(sys.argv) > 1):
+	specific_dataset = sys.argv[1];
 
-wait
+pids = set()
+
+for ifile in os.listdir(datadir):
+	if (ifile.endswith(".dot")):
+		experiment_dir = "dataset-" + ifile;
+		os.makedirs(experiment_dir, exist_ok=True)
+
+		args = [ exe_name, "--data-file", datadir + "/" + ifile ]
+		print(args)
+		ouput_file = open(experiment_dir + "/stdout.txt", "w")
+		subprocess.Popen(args, cwd=experiment_dir, stdout=ouput_file, stderr=subprocess.STDOUT);
+
+while pids:
+	pid, retval = os.wait()
+	pids.remove(pid)

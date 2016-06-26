@@ -18,6 +18,7 @@ fi
 export TRAIN_SCH_ROOTDIR="$(readlink --canonicalize "$PWD")/";
 export TRAIN_SCH_EXEDIR="$TRAIN_SCH_ROOTDIR/build/EXE/";
 export TRAIN_SCH_SCRIPTSDIR="$TRAIN_SCH_ROOTDIR/scripts/";
+export TRAIN_SCH_DATADIR="$TRAIN_SCH_ROOTDIR/data/";
 
 export PATH="$PATH:$TRAIN_SCH_EXEDIR:$TRAIN_SCH_SCRIPTSDIR"
 
