@@ -133,7 +133,7 @@ void ReportEngine::reportTrains(const ReportConfig& config, std::ostream& os) {
 	os << "---------------------------------------------\n";
 
 	for (const auto& route : schedule.getTrainRoutes()) {
-		os << route << '\n';
+		os << std::tie(route, track_network) << '\n';
 	}
 
 	os << "---------------------------------------------\n";

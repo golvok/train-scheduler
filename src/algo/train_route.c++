@@ -179,11 +179,13 @@ Train TrainRoute::makeTrainFromIndex(TrainIndex index) const {
 	);
 }
 
-void TrainRoute::print(std::ostream& os) const {
+void TrainRoute::print(std::ostream& os, const TrackNetwork& tn) const {
 	os << "{ Train " << route_id << " : Path=";
-	::util::print_route(route, os);
+	::util::print_route(route, tn, os);
 	os << ", Start Offsets=";
-	::util::print_container(start_offsets, os);
+	::util::print_container(start_offsets, os, " -> ", "{ ", " }", [&](auto& os, auto& elem) {
+		os << tn.getVertexName(elem);
+	});
 	os << ", Speed=" << speed << ", Repeat Time=" << repeat_time << " }";
 }
 
