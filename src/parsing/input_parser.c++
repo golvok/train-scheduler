@@ -244,7 +244,7 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 		namespace chars = boost::spirit::ascii;
 		namespace phoenix = boost::phoenix;
 
-		const auto identifier = qi::as_string[+chars::alnum];
+		const auto identifier = qi::as_string[ +( chars::alnum || qi::lit('_') ) ];
 		const auto get_corrisponding_vertex = [&](const std::string& id_str) { return tn.getVertex(id_str); };
 		const auto get_next_passenger_id = [&]() { return ::util::make_id<PassengerId>(passengers.size()); };
 
@@ -269,7 +269,6 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 		const bool match_is_good = matches_full && passengers.back().getEntryID() == vdesc;
 
 		if (!match_is_good) {
-			passengers.pop_back();
 			dout(DL::WARN) << "bad passenger spec: " << passenger_string << '\n';
 		}
 	}
