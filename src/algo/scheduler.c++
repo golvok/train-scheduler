@@ -814,6 +814,7 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataLi
 				std::tie(route_found, rts_cache_handle) = ::algo::route_through_schedule(
 					network,
 					make_a_schedule__all_start_zero("no-need schedule", train_data, network),
+					0, // need to specify some kind of start time
 					src, dest,
 					std::move(rts_cache_handle)
 				);

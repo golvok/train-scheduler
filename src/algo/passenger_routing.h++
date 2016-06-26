@@ -86,6 +86,7 @@ std::pair<
 > route_through_schedule(
 	const TrackNetwork& tn,
 	const Schedule& sch,
+	const TrackNetwork::Time start_time,
 	const TrackNetwork::NodeID start_vertex,
 	const TrackNetwork::NodeID goal_vertex,
 	RouteTroughScheduleCacheHandle&& cache_handle = RouteTroughScheduleCacheHandle()

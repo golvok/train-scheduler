@@ -92,7 +92,7 @@ PassengerRoutes route_passengers(
 		auto pass_indent = dout(DL::PR_D1).indentWithTitle([&](auto&& s){ s << "Passenger " << passenger.getName(); });
 
 		PassengerRoutes::RouteType route;
-		std::tie(route, cache_handle) = route_through_schedule(tn, sch, passenger.getEntryID(), passenger.getExitID(), std::move(cache_handle));
+		std::tie(route, cache_handle) = route_through_schedule(tn, sch, passenger.getStartTime(), passenger.getEntryID(), passenger.getExitID(), std::move(cache_handle));
 		results.addRoute(passenger, std::move(route));
 	}
 
@@ -117,6 +117,7 @@ std::pair<
 > route_through_schedule(
 	const TrackNetwork& tn,
 	const Schedule& sch,
+	const TrackNetwork::Time start_time,
 	const TrackNetwork::NodeID start_vertex,
 	const TrackNetwork::NodeID goal_vertex,
 	RouteTroughScheduleCacheHandle&& cache_handle
@@ -125,8 +126,7 @@ std::pair<
 	// if null, create a cache
 	if (!cache_handle) { cache_handle = std::make_unique<::algo::RouteTroughScheduleCache>(); }
 
-	// TODO: change next line to use actual leave time when TR and WC understand time...
-	auto start_vertex_and_time = STGA::vertex_descriptor(start_vertex,0,tn);
+	auto start_vertex_and_time = STGA::vertex_descriptor(start_vertex,start_time,tn);
 
 	auto my_visitor = astar_goal_visitor(start_vertex_and_time.getTime(), goal_vertex, tn);
 
