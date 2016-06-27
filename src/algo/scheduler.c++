@@ -471,7 +471,6 @@ Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() const {
 			),
 			TrainData::add_endpoint_src_and_dest()
 		);
-		train_data.back().add_src_dest_pair(p.getEntryID(), p.getExitID());
 	}
 	return std::move(train_data);
 }
