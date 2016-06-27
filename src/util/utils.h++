@@ -265,7 +265,7 @@ void print_container(
 	os << prefix_str;
 	if (beg != en) {
 		func(os,*beg);
-		std::for_each(std::next(beg), en, [&](auto& v){
+		std::for_each(std::next(beg), en, [&](const auto& v){
 			os << sep;
 			func(os,v);
 		});

@@ -874,11 +874,8 @@ void Scheduler3::dump_trains_to_dout(
 		dout(level) << '\n';
 		auto source_indent = dout(level).indentWithTitle("Sources & Destinations");
 		for (const auto& src : datum.get_srces()) {
-			dout(level) << src << " -> {";
-			for (const auto& dest : datum.get_dests_of(src)) {
-				dout(level) << dest << ' ';
-			}
-			dout(level) << "}\n";
+			dout(level) << src << " ->";
+			::util::print_container(datum.get_dests_of(src), dout(level), " ");
 		}
 		++i;
 	}
