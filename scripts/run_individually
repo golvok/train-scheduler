@@ -9,22 +9,24 @@ if not os.environ.get("TRAIN_SCH_ROOTDIR"):
 	print("environment not set up")
 	sys.exit(-1);
 
-exe_name = os.environ["TRAIN_SCH_EXEDIR"] + "/train-sch"
+exe_name = os.environ["TRAIN_SCH_EXEDIR"] + "train-sch"
 datadir = os.environ["TRAIN_SCH_DATADIR"]
 
 if (len(sys.argv) > 1):
-	specific_dataset = sys.argv[1];
+	files = [ sys.argv[1] ]
+else:
+	files = os.listdir(datadir)
 
 pids = set()
 
-for ifile in os.listdir(datadir):
+for ifile in files:
 	if (ifile.endswith(".dot")):
-		experiment_dir = "dataset-" + ifile;
+		experiment_dir = "dataset-" + ifile + "/";
 		os.makedirs(experiment_dir, exist_ok=True)
 
-		args = [ exe_name, "--data-file", datadir + "/" + ifile ]
+		args = [ exe_name, "--data-file", datadir + ifile ] + sys.argv[2:]
 		print(args)
-		ouput_file = open(experiment_dir + "/stdout.txt", "w")
+		ouput_file = open(experiment_dir + "stdout.txt", "w")
 		subprocess.Popen(args, cwd=experiment_dir, stdout=ouput_file, stderr=subprocess.STDOUT);
 
 while pids:
