@@ -95,7 +95,7 @@ int program_main(const std::string& data_file_name) {
 		auto l_sim_handle
 	) noexcept {
 
-		l_sim_handle.runForTime(20, 0.3);
+		l_sim_handle.runForTime(100, 0.3);
 
 		auto report_engine_ptr = ::stats::make_report_engine(
 			*l_tn, *l_passengers, *l_schedule, *l_p_routes, l_sim_handle
