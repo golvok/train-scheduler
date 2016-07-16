@@ -639,16 +639,13 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 			// check if the other train overlaps with the end of this one
 			// we only want forward overlaps. If we want backward ones, they
 			// can be more efficiently derived from these, than computed directly
-			for (auto& it : iterate_as_iterators(this_train_rotue)) {
-				auto mismatch_results = std::mismatch(
+			for (const auto& it : iterate_as_iterators(this_train_rotue)) {
+				const auto mismatch_results = std::mismatch(
 					other_train_route.begin(), other_train_route.end(),
 					it, this_train_rotue.end()
 				);
 
 				if (mismatch_results.second == this_train_rotue.end()) {
-					using std::distance;
-					using std::begin;
-					using std::end;
 					trains_that_could_combine_list.back().emplace_back(
 						CombineData{ iother_train, distance(begin(this_train_rotue), it) }
 					);
@@ -827,6 +824,7 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataLi
 		if (needs_this_train.size() == 0) {
 			train_is_rudundant_with[itrain] = -2; // anything but NO_TRAIN...
 			dout(DL::TR_D1) << "no one NEEDS train " << itrain << '\n';
+			break; // only one train can be safely removed at a time
 		} else {
 			dout(DL::TR_D1) << "someone needs train " << itrain << '\n';
 		}
