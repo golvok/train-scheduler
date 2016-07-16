@@ -66,20 +66,22 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 	dout(DL::DATA_READ1) << "file parse successful: " << std::boolalpha << status << '\n';
 
 	{ auto vindent = dout(DL::DATA_READ1).indentWithTitle("Vertex Info");
-		for (size_t i = 0; i < 7; ++i) {
+		dout(DL::DATA_READ1) << "name x y passenger_desc\n";
+		for (const auto& v : make_iterable(vertices(network))) {
 			dout(DL::DATA_READ1)
-				<< get(vertex_names, i) << ' '
-				<< get(passenger_desc, i) << ' '
-				<< get(x_values, i) << ' '
-				<< get(y_values, i) << '\n'
+				<< get(vertex_names, v) << ' '
+				<< get(x_values, v) << ' '
+				<< get(y_values, v) << ' '
+				<< get(passenger_desc, v) << '\n'
 			;
 		}
 	}
 
 	{ auto eindent = dout(DL::DATA_READ1).indentWithTitle("Edge Info");
+		dout(DL::DATA_READ1) << "src -> dest distance edge_id\n";
 		for (const auto& e : make_iterable(edges(network))) {
 			dout(DL::DATA_READ1)
-				<< source(e, network) << "->" << target(e, network) << ' '
+				<< source(e, network) << " -> " << target(e, network) << ' '
 				<< get(distances, e) << ' '
 				<< get(&TrackNetwork::EdgeProperties::index, network, e) << '\n'
 			;
