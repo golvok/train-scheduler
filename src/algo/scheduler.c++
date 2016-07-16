@@ -876,6 +876,7 @@ void Scheduler3::dump_trains_to_dout(
 		for (const auto& src : datum.get_srces()) {
 			dout(level) << src << " ->";
 			::util::print_container(datum.get_dests_of(src), dout(level), " ");
+			dout(level) << '\n';
 		}
 		++i;
 	}
