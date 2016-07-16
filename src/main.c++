@@ -121,6 +121,9 @@ int program_main(const std::string& data_file_name) {
 
 	graphics::get().waitForPress();
 
+	// now, let the simulation(s) finish
+	graphics::get().trainsArea().clear();
+
 	for (auto& thread : sim_threads) {
 		thread.join();
 	}
