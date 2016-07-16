@@ -12,11 +12,11 @@ namespace DebugLevel {
 		};
 	}
 
-	std::vector<Level> getAllDebug() {
+	std::vector<Level> getStandardDebug() {
 		return {
 			WC_D1, WC_D2, WC_D3,
 			TR_D1, TR_D2, TR_D3,
-			PR_D1, PR_D2, PR_D3, PR_D4,
+			PR_D1, PR_D2, PR_D3,
 			SIM_D1, SIM_D2, SIM_D3,
 			DATA_READ1,
 		};

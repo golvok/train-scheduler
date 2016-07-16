@@ -54,7 +54,7 @@ namespace DebugLevel {
 	/**
 	 * Get all the levels that you might ever want if debugging was your goal
 	 */
-	std::vector<Level> getAllDebug();
+	std::vector<Level> getStandardDebug();
 
 	/**
 	 * If you feel like enabling a particular level, then

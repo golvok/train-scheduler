@@ -23,7 +23,7 @@ ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 	}
 
 	if (std::find(begin(args),end(args),"--debug") != end(args)) {
-		auto debug_levels = DebugLevel::getAllDebug();
+		auto debug_levels = DebugLevel::getStandardDebug();
 		levels_to_enable.insert(end(levels_to_enable),begin(debug_levels),end(debug_levels));
 	} else {
 		std::string prefix("--DL::");
