@@ -127,38 +127,21 @@ $(EXE_DIR)%: | build_info $(EXE_DIR)
 $(DIRS):
 	mkdir -p $@
 
-.PHONY: $(patsubst %, delete_%*.o_file/, $(ALL_OBJ_DIRS) )
-.PHONY: $(patsubst %, delete_%*.d_file/, $(ALL_DEPS_DIRS) )
+clean: $(BUILD_DIR:%=delete_%_dir)
+
+$(patsubst %, delete_%_dir, $(BUILD_DIR)    ): $$(patsubst %, delete_%_dir, $(BUILD_SUBDIRS))
+$(patsubst %, delete_%_dir, $(OBJ_DIR)      ): $$(patsubst %, delete_%_dir, $$(ALL_OBJ_DIRS))
+$(patsubst %, delete_%_dir, $(DEPS_DIR)     ): $$(patsubst %, delete_%_dir, $$(ALL_DEPS_DIRS))
+$(patsubst %, delete_%_dir, $(EXE_DIR)      ): $$(patsubst %, delete_%_file/, $$(EXES))
+$(patsubst %, delete_%_dir, $(ALL_OBJ_DIRS) ): $$(patsubst delete_%_dir, delete_%*.o_file/, $$(@))
+$(patsubst %, delete_%_dir, $(ALL_DEPS_DIRS)): $$(patsubst delete_%_dir, delete_%*.d_file/, $$(@))
 
 delete_%_file/:
-	@if [ -e "$*" ]; then echo rm -f "$*"; fi
-	@if [ -e "$*" ]; then      rm -f "$*"; fi
+	@$(eval DELFILE = $(@:delete_%_file/=%))
+	@for f in $(DELFILE); do if [ $$f ]; then echo rm -f $$f; fi; done;
+	@for f in $(DELFILE); do if [ $$f ]; then      rm -f $$f; fi; done;
 
-delete_%_dir/:
-	@for f in "$*"*.o; do \
-		if [ -e "$$f" ]; then echo rm -f "$$f"; fi; \
-		if [ -e "$$f" ]; then      rm -f "$$f"; fi; \
-	done
-
-	@for f in "$*"*.d; do \
-		if [ -e "$$f" ]; then echo rm -f "$$f"; fi; \
-		if [ -e "$$f" ]; then      rm -f "$$f"; fi; \
-	done
-
-	@if [ -e "$*" ]; then echo rmdir "$*"; fi;
-	@if [ -e "$*" ]; then      rmdir --ignore-fail-on-non-empty "$$(readlink --canonicalize "$*")"; fi
-
-
-delete_$(BUILD_DIR)_dir/: $(patsubst %, delete_%_dir/, $(BUILD_SUBDIRS))
-
-delete_$(OBJ_DIR)_dir/: $(patsubst %, delete_%_dir/, $(ALL_OBJ_DIRS) )
-delete_$(OBJ_DIR)%_dir/: delete_$(OBJ_DIR)%*.o_file/
-# rm -f $(OBJ_DIR)$**.o
-
-delete_$(DEPS_DIR)_dir/: $(patsubst %, delete_%_dir/, $(ALL_DEPS_DIRS))
-delete_$(DEPS_DIR)%_dir/: delete_$(DEPS_DIR)%*.d_file/
-# rm -f $(DEPS_DIR)$**.d
-
-delete_$(EXE_DIR)_dir/:  $(patsubst %, delete_%_file/, $(EXES))
-
-clean: delete_$(BUILD_DIR)_dir/
+$(DIRS:%=delete_%_dir):
+	@$(eval DELDIR = $(@:delete_%_dir=%))
+	@if [ -d "$(DELDIR)" ]; then echo rmdir "$(DELDIR)"; fi
+	@if [ -e "$(DELDIR)" ]; then      rmdir --ignore-fail-on-non-empty "$$(readlink --canonicalize "$(DELDIR)")"; fi
