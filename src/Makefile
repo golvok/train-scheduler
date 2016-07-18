@@ -4,7 +4,8 @@
 MAKEFLAGS+=" -r "
 
 # add parallelism equal to number of cores
-MAKEFLAGS+=" -j$(grep -c "vendor_id" /proc/cpuinfo) "
+NUM_CORES = $(shell grep -c "vendor_id" /proc/cpuinfo)
+MAKEFLAGS +=" -j$(NUM_CORES) -l$(NUM_CORES) "
 
 BUILD_MODE ?= debug
 
