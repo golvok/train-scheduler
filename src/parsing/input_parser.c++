@@ -6,11 +6,23 @@
 #include <string>
 #include <vector>
 
+#include <boost/fusion/adapted/std_tuple.hpp>
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/fusion/tuple.hpp>
 #include <boost/graph/graphviz.hpp>
-#include <boost/phoenix/bind/bind_function_object.hpp>
-#include <boost/phoenix/object/construct.hpp>
-#include <boost/phoenix/stl/container.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
+
+namespace {
+    template <typename T>
+    struct as_type {
+        template <typename Expr>
+            auto operator[](Expr&& expr) const {
+                return boost::spirit::x3::rule<struct _, T>{"as"} = boost::spirit::x3::as_parser(std::forward<Expr>(expr));
+            }
+    };
+
+    template <typename T> static const as_type<T> as = {};
+}
 
 namespace parsing {
 namespace input {
@@ -97,29 +109,35 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 			continue; // skip empties
 		}
 
-		namespace qi = boost::spirit::qi;
-		namespace chars = boost::spirit::ascii;
-		namespace phoenix = boost::phoenix;
+		namespace x3 = boost::spirit::x3;
+		namespace chars = boost::spirit::x3::ascii;
 
-		const auto identifier = qi::as_string[ +( chars::alnum || qi::lit('_') ) ];
-		const auto get_corrisponding_vertex = [&](const std::string& id_str) { return tn.getVertex(id_str); };
-		const auto get_next_passenger_id = [&]() { return ::util::make_id<PassengerId>(passengers.size()); };
+		const auto identifier = as<std::string>[
+			x3::raw[ x3::lexeme[ +( chars::alpha | x3::lit('_') ) >> *( chars::alnum | x3::lit('_') ) ] ]
+		];
+
+		std::vector< std::tuple<
+			std::string, std::string, std::string, double
+		> > parse_results;
 
 		auto it = begin(passenger_string);
-		const bool is_match = qi::phrase_parse( it, end(passenger_string),
+		const bool is_match = x3::phrase_parse( it, end(passenger_string),
 			(
-				identifier >> ':' >> identifier >> "->" >> identifier >> "@t=" >> qi::double_
-			) [
-				phoenix::push_back( phoenix::ref(passengers), phoenix::construct<Passenger>(
-					qi::_1,
-					phoenix::bind(get_next_passenger_id),
-					phoenix::bind(get_corrisponding_vertex, qi::_2),
-					phoenix::bind(get_corrisponding_vertex, qi::_3),
-					qi::_4
-				))
-			] % ',',
-			chars::space
+				identifier >> ':' >> identifier >> "->" >> identifier >> "@t=" >> x3::double_
+			) % ',',
+			chars::space,
+			parse_results
 		);
+
+		std::transform(begin(parse_results), end(parse_results), std::back_inserter(passengers), [&](auto&& elem) {
+			return Passenger(
+				std::get<0>(elem),
+				::util::make_id<PassengerId>(passengers.size()),
+				tn.getVertex(std::get<1>(elem)),
+				tn.getVertex(std::get<2>(elem)),
+				std::get<3>(elem)
+			);
+		});
 
 		const bool matches_full = is_match && it == end(passenger_string);
 
