@@ -1,0 +1,34 @@
+digraph g {
+
+	// positios (note: using defaul values seems to require
+	// that the vertices are declared before the edges)
+	node [ y =  50 ]; A1 [ x =  50 ]; A2 [ x = 100 ]; A3 [ x = 150 ]; A4 [ x = 200 ]; A5 [ x = 250 ];
+	node [ y = 100 ]; B1 [ x =  50 ]; B2 [ x = 100 ]; B3 [ x = 150 ]; B4 [ x = 200 ]; B5 [ x = 250 ];
+	node [ y = 150 ]; C1 [ x =  50 ]; C2 [ x = 100 ]; C3 [ x = 150 ]; C4 [ x = 200 ]; C5 [ x = 250 ];
+	node [ y = 200 ]; D1 [ x =  50 ]; D2 [ x = 100 ]; D3 [ x = 150 ]; D4 [ x = 200 ]; D5 [ x = 250 ];
+	node [ y = 250 ]; E1 [ x =  50 ]; E2 [ x = 100 ]; E3 [ x = 150 ]; E4 [ x = 200 ]; E5 [ x = 250 ];
+
+	// verticals
+	E2 -> D2 -> C2 -> B2 -> A2 [ distance = 1 ]
+	A4 -> B4 -> C4 -> D4 -> E4 [ distance = 1 ]
+
+	// horizontals
+	B1 -> B2 -> B3 -> B4 -> B5 [ distance = 1 ]
+	D5 -> D4 -> D3 -> D2 -> D1 [ distance = 1 ]
+
+	// this is the actual layout
+	// A1  A2  A3  A4  A5
+	//     /\      \/
+	// B1->B2->B3->B4->B5
+	//     /\      \/
+	// C1  C2  C3  C4  C5
+	//     /\      \/
+	// D1<-D2<-D3<-D4<-D5
+	//     /\      \/
+	// E1  E2  E3  E4  E5
+
+	// passengers
+	B1 [ passenger = "pA:B1->D4@t=1,pC:B1->D4@t=1" ]
+	E2 [ passenger = "pB:E2->D4@t=1,pD:E2->D4@t=1" ]
+
+}

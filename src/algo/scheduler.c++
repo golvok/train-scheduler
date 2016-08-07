@@ -177,6 +177,7 @@ private:
 	TrainDataList schstep_remove_redundant_trains(TrainDataList&& train_data) const;
 	TrainDataList schstep_combine_trains(TrainDataList&& train_data) const;
 	TrainDataList schstep_remove_unneeded_trains(TrainDataList&& train_data) const;
+	TrainDataList schstep_spurify(TrainDataList&& train_data) const;
 
 	void dump_trains_to_dout(
 		const TrainDataList& train_data,
@@ -490,6 +491,8 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 
 		train_data = schstep_remove_unneeded_trains(std::move(train_data));
 
+		train_data = schstep_spurify(std::move(train_data));
+
 		if (train_data.size() <= max_trains_at_a_time || train_data.size() == old_size || iter_num == 10) {
 			break;
 		}
@@ -627,7 +630,7 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 
 	for (const auto& itrain : train_index_range) {
 		trains_that_could_combine_list.emplace_back();
-		const auto& this_train_rotue = train_data[itrain].get_train();
+		const auto& this_train_route = train_data[itrain].get_train();
 
 		for (const auto& iother_train : train_index_range) {
 			if (iother_train == itrain) {
@@ -639,15 +642,15 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 			// check if the other train overlaps with the end of this one
 			// we only want forward overlaps. If we want backward ones, they
 			// can be more efficiently derived from these, than computed directly
-			for (const auto& it : iterate_as_iterators(this_train_rotue)) {
+			for (const auto& it : iterate_as_iterators(this_train_route)) {
 				const auto mismatch_results = std::mismatch(
 					other_train_route.begin(), other_train_route.end(),
-					it, this_train_rotue.end()
+					it, this_train_route.end()
 				);
 
-				if (mismatch_results.second == this_train_rotue.end()) {
+				if (mismatch_results.second == this_train_route.end()) {
 					trains_that_could_combine_list.back().emplace_back(
-						CombineData{ iother_train, distance(begin(this_train_rotue), it) }
+						CombineData{ iother_train, distance(begin(this_train_route), it) }
 					);
 				}
 			}
@@ -839,6 +842,103 @@ Scheduler3::TrainDataList Scheduler3::schstep_remove_unneeded_trains(TrainDataLi
 
 	return train_data;
 }
+
+Scheduler3::TrainDataList Scheduler3::schstep_spurify(TrainDataList&& train_data) const {
+	// decide which trains & how to make into suprs off other trains.
+	// what about when a main line overlaps with the middle of a route?
+	struct IntersectionData {
+		size_t iothertrain;
+		ptrdiff_t where_in_other_train_to_supr_off_of;
+		ptrdiff_t my_intersection_with_iothertrain_start;
+		ptrdiff_t my_intersection_with_iothertrain_end;
+	};
+
+	std::vector<std::vector<IntersectionData>> intersection_data_list;
+
+	auto index_range = [](auto& c) { return ::util::xrange_forward_pe<size_t>(0,c.size()); };
+
+	for (const auto& itrain : index_range(train_data)) {
+		intersection_data_list.emplace_back();
+		const auto& this_train_route = train_data[itrain].get_train();
+
+		for (const auto& iothertrain : index_range(train_data)) {
+			if (iothertrain == itrain) {
+				continue;
+			}
+
+			const auto& other_train_route = train_data[iothertrain].get_train();
+
+			for (const auto& it : iterate_as_iterators(this_train_route)) {
+				for (const auto& iother_it : iterate_as_iterators(other_train_route)) {
+					const auto mismatch_results = std::mismatch(
+						iother_it, other_train_route.end(),
+						it, this_train_route.end()
+					);
+
+					// if there was any sort of match
+					if (mismatch_results.second != it) {
+						intersection_data_list.back().emplace_back(
+							IntersectionData{
+								iothertrain,
+								distance(begin(other_train_route), mismatch_results.first),
+								distance(begin(this_train_route), it),
+								distance(begin(this_train_route), mismatch_results.second)
+							}
+						);
+					}
+				}
+			}
+		}
+	}
+
+	{ auto eindent = dout(DL::TR_D1).indentWithTitle([&](auto&& s){ s << "Examining Intersecton Data"; });
+	for (const auto& itrain : index_range(train_data)) {
+		auto tindent = dout(DL::TR_D1).indentWithTitle([&](auto&& s){ s << "Train #" << itrain; });
+		for (const auto& int_data : intersection_data_list[itrain]) {
+			const auto& suprify_overlap_threshold = 0.5;
+
+			auto& iroute = train_data[itrain].get_train();
+			const auto& itrain_length = iroute.size();
+			const auto& iothertrain_length = train_data[int_data.iothertrain].get_train().size();
+			const auto& overlap_length = int_data.my_intersection_with_iothertrain_end - int_data.my_intersection_with_iothertrain_start;
+			
+			// we want to result in the shortest spur
+			if ((itrain_length - overlap_length) > (iothertrain_length - overlap_length)) {
+				dout(DL::TR_D3) << "reject due to overlap length comparison\n";
+				continue;
+			}
+
+			// only want significant overlap
+			const auto& overlap_fraction = overlap_length/(double)itrain_length;
+			if (overlap_fraction < suprify_overlap_threshold) {
+				dout(DL::TR_D3) << "reject due to overlap fraction threshold of " << overlap_fraction << '\n';
+				continue;
+			}
+
+			// ignore partial overlap & overlap at the beginning, for now
+			if ((size_t)int_data.my_intersection_with_iothertrain_end != iroute.size()) {
+				dout(DL::TR_D3) << "reject due to unsupported topology\n";
+				continue;
+			}
+
+			dout(DL::TR_D1) << "removing end and relying on train #" << int_data.iothertrain << '\n';
+			// truncate & replace
+			// VertexList inew_route;
+			iroute.erase(
+				begin(iroute) + int_data.my_intersection_with_iothertrain_start + 1,
+				end(iroute)
+			);
+
+			intersection_data_list[int_data.iothertrain].clear();
+			break; // uh... take first good one for now.
+		}
+	}}
+
+	dump_trains_to_dout(train_data, "Trains After Spurification", DL::TR_D2);
+
+	return std::move(train_data);
+}
+
 
 Scheduler3::TrainDataList remove_redundant_trains(
 	Scheduler3::TrainDataList&& train_data,
