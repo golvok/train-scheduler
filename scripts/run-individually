@@ -12,7 +12,7 @@ if not os.environ.get("TRAIN_SCH_ROOTDIR"):
 exe_name = os.environ["TRAIN_SCH_EXEDIR"] + "train-sch"
 datadir = os.environ["TRAIN_SCH_DATADIR"]
 
-if (len(sys.argv) > 1):
+if (len(sys.argv) > 1 and sys.argv[1] != "--"):
 	files = [ sys.argv[1] ]
 else:
 	files = os.listdir(datadir)
@@ -25,7 +25,7 @@ for ifile in files:
 		os.makedirs(experiment_dir, exist_ok=True)
 
 		args = [ exe_name, "--data-file", datadir + ifile ] + sys.argv[2:]
-		print(args)
+		print('"', end=''); print(*args, sep='" "', end='"\n');
 		ouput_file = open(experiment_dir + "stdout.txt", "w")
 		subprocess.Popen(args, cwd=experiment_dir, stdout=ouput_file, stderr=subprocess.STDOUT);
 
