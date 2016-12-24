@@ -144,7 +144,9 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 		const bool match_is_good = matches_full && passengers.back().getEntryID() == vdesc;
 
 		if (!match_is_good) {
-			dout(DL::WARN) << "bad passenger spec: " << passenger_string << '\n';
+			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
+				str << "bad passenger spec: " << passenger_string << '\n';
+			});
 		}
 	}
 
