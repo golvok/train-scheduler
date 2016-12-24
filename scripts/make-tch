@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-make -C $TRAIN_SCH_ROOTDIR
+make -C $TRAIN_SCH_ROOTDIR "$@"
