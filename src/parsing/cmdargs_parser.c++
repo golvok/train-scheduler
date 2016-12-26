@@ -25,18 +25,18 @@ ParsedArguments::ParsedArguments(int argc_int, char const** argv)
 	if (std::find(begin(args),end(args),"--debug") != end(args)) {
 		auto debug_levels = DebugLevel::getStandardDebug();
 		levels_to_enable.insert(end(levels_to_enable),begin(debug_levels),end(debug_levels));
-	} else {
-		std::string prefix("--DL::");
-		for (auto& arg : args) {
-			if (std::mismatch(begin(prefix),end(prefix),begin(arg),end(arg)).first != end(prefix)) {
-				continue;
-			}
+	}
 
-			auto result = DebugLevel::getFromString(arg.substr(prefix.size(),std::string::npos));
-			if (result.second) {
-				auto levels_in_chain = DebugLevel::getAllShouldBeEnabled(result.first);
-				levels_to_enable.insert(end(levels_to_enable),begin(levels_in_chain),end(levels_in_chain));
-			}
+	std::string prefix("--DL::");
+	for (auto& arg : args) {
+		if (std::mismatch(begin(prefix),end(prefix),begin(arg),end(arg)).first != end(prefix)) {
+			continue;
+		}
+
+		auto result = DebugLevel::getFromString(arg.substr(prefix.size(),std::string::npos));
+		if (result.second) {
+			auto levels_in_chain = DebugLevel::getAllShouldBeEnabled(result.first);
+			levels_to_enable.insert(end(levels_to_enable),begin(levels_in_chain),end(levels_in_chain));
 		}
 	}
 
