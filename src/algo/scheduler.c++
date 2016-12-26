@@ -624,6 +624,8 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 		ptrdiff_t where_in_me_to_start_combining;
 	};
 
+	auto indent = dout(DL::TR_D2).indentWithTitle("Basic Combining");
+
 	std::vector<std::vector<CombineData>> trains_that_could_combine_list;
 
 	auto train_index_range = ::util::xrange_forward_pe<size_t>(0,train_data.size());
@@ -652,6 +654,7 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 					trains_that_could_combine_list.back().emplace_back(
 						CombineData{ iother_train, distance(begin(this_train_route), it) }
 					);
+					dout(DL::TR_D3) << itrain << " can combine with " << iother_train << " starting at " << trains_that_could_combine_list.back().back().where_in_me_to_start_combining << '\n';
 				}
 			}
 		}
@@ -734,17 +737,25 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 
 			const auto& itrain_path = train_data[itrain].get_train();
 			const auto& trains_that_could_combine = trains_that_could_combine_list[itrain];
+			const auto& start_copying_here = [&]() {
+				if (new_path.empty() == false && itrain_path.front() == new_path.back()) {
+					// make sure we don't insert duplicates
+					return next(begin(itrain_path));
+				} else {
+					return begin(itrain_path);
+				}
+			}();
 			const auto& stop_copying_here = [&]()  {
 				if (trains_that_could_combine.empty()) {
 					return end(itrain_path);
 				} else {
 					const auto& train_extension_choice = train_extension_choices[itrain];
-					return begin(itrain_path) + trains_that_could_combine[train_extension_choice].where_in_me_to_start_combining;
+					return begin(itrain_path) + (1+trains_that_could_combine[train_extension_choice].where_in_me_to_start_combining);
 				}
 			}();
 
 			std::copy(
-				begin(itrain_path), stop_copying_here,
+				start_copying_here, stop_copying_here,
 				std::back_inserter(new_path)
 			);
 		}
