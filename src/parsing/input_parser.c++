@@ -117,31 +117,55 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 		];
 
 		std::vector< std::tuple<
-			std::string, std::string, std::string, double
+			std::string, std::vector<std::string>, std::vector<std::string>, double
 		> > parse_results;
 
 		auto it = begin(passenger_string);
 		const bool is_match = x3::phrase_parse( it, end(passenger_string),
 			(
-				identifier >> ':' >> identifier >> "->" >> identifier >> "@t=" >> x3::double_
+				identifier >> ':' >> (identifier % ',') >> "->" >> (identifier % ',') >> "@t=" >> x3::double_
 			) % ',',
 			chars::space,
 			parse_results
 		);
 
-		std::transform(begin(parse_results), end(parse_results), std::back_inserter(passengers), [&](auto&& elem) {
+		struct PassengerData {
+			const std::string& basename;
+			TrackNetwork::NodeID entrance;
+			TrackNetwork::NodeID exit;
+			TrackNetwork::Time start_time;
+		};
+
+		std::vector<PassengerData> pdata;
+
+		// make a list of all data for all the passengers
+		for (const auto& elem : parse_results) {
+			for(const auto& entrance_str : std::get<1>(elem)) {
+				for (const auto& exit_str : std::get<2>(elem)) {
+					pdata.emplace_back(PassengerData{
+						std::get<0>(elem),
+						tn.getVertex(entrance_str),
+						tn.getVertex(exit_str),
+						(TrackNetwork::Time)std::get<3>(elem)
+					});
+				}
+			}
+		};
+
+		// actually make the passengers
+		std::transform(begin(pdata), end(pdata), std::back_inserter(passengers), [&](auto&& elem) {
 			return Passenger(
-				std::get<0>(elem),
+				elem.basename + tn.getVertexName(elem.entrance) + '_' + tn.getVertexName(elem.exit),
 				::util::make_id<PassengerId>(passengers.size()),
-				tn.getVertex(std::get<1>(elem)),
-				tn.getVertex(std::get<2>(elem)),
-				std::get<3>(elem)
+				elem.entrance,
+				elem.exit,
+				elem.start_time
 			);
 		});
 
 		const bool matches_full = is_match && it == end(passenger_string);
 
-		const bool match_is_good = matches_full && passengers.back().getEntryID() == vdesc;
+		const bool match_is_good = matches_full; // && passengers.back().getEntryID() == vdesc;
 
 		if (!match_is_good) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
