@@ -473,7 +473,7 @@ Scheduler3::TrainDataList Scheduler3::make_one_train_per_passenger() const {
 			TrainData::add_endpoint_src_and_dest()
 		);
 	}
-	return std::move(train_data);
+	return train_data;
 }
 
 Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data) const {
