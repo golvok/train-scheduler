@@ -162,10 +162,14 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 	// add new trains
 	for (const auto& route : schedule->getTrainRoutes()) {
 		// find trains starting in t_interval, add them
-		for (const auto& train : route.getTrainsLeavingInInterval({current_time, sim_until_time + 1}, *tn)) {
-			dout(DL::SIM_D3) << "adding train " << train << ", departs at t=" << train.getDepartureTime() << '\n';
-			train_locations.emplace(train.getTrainID(), TrainLocation());
-			passengers_on_trains.emplace(train.getTrainID(), PassengerConstRefList());
+		for (const auto& train_and_arrival : route.getTrainsLeavingInInterval({current_time, sim_until_time + 1}, *tn)) {
+			if (train_and_arrival.train.getDepartureTime() < current_time || train_and_arrival.train.getDepartureTime() >= sim_until_time) {
+				dout(DL::SIM_D3) << "skipping adding train " << train_and_arrival.train << ", departs at t=" << train_and_arrival.train.getDepartureTime() << ", arrival t=" << train_and_arrival.arrival << '\n';
+				continue;
+			}
+			dout(DL::SIM_D3) << "adding train " << train_and_arrival.train << ", departs at t=" << train_and_arrival.train.getDepartureTime() << '\n';
+			train_locations.emplace(train_and_arrival.train.getTrainID(), TrainLocation());
+			passengers_on_trains.emplace(train_and_arrival.train.getTrainID(), PassengerConstRefList());
 		}
 	}
 
@@ -271,13 +275,14 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 
 			const auto fraction_left_to_travel = 1 - position_info.fraction_through_edge;
 
+			using std::next;
 			// calculate the time it would take to get to the next vertex
 			const auto additional_time_to_next_vertex = (
 				(
 					fraction_left_to_travel
 				) * (
 					train.getExpectedTravelTime(
-						std::make_pair(*prev_vertex_it, *next_vertex_it), *tn
+						{prev_vertex_it, next(next_vertex_it)}, *tn
 					)
 				)
 			);

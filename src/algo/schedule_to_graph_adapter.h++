@@ -223,13 +223,10 @@ public:
 		});
 	}
 
-	TrackNetwork::NodeID get_vertex_index(const vertex_descriptor& vd) const {
-		(void)vd;
-		return vd.getVertex() + num_vertices(tn.g())*vd.getTime();
-	}
+	size_t get_vertex_index(const vertex_descriptor& vd) const;
 
 	auto get_vertex_index_map() const {
-		return boost::make_function_property_map<vertex_descriptor>([&](const vertex_descriptor& vd){
+		return boost::make_function_property_map<vertex_descriptor>([=](const vertex_descriptor& vd){
 			return this->get_vertex_index(vd);
 		});
 	}
@@ -274,6 +271,7 @@ public:
 
 	auto& getTrackNetwork() const { return tn; }
 	auto& getSchedule() const { return sch; }
+
 private:
 	vertex_descriptor getConnectingVertex(
 		vertex_descriptor src,

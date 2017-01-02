@@ -65,13 +65,6 @@ TrainRoute::TrainRoute(
 
 
 TrackNetwork::Time Train::getExpectedTravelTime(
-	std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
-	const TrackNetwork& tn
-) const {
-	return train_route->getExpectedTravelTime(getDepartureTime(), first_and_last, tn);
-}
-
-TrackNetwork::Time Train::getExpectedTravelTime(
 	::boost::iterator_range<RouteType::const_iterator> range,
 	const TrackNetwork& tn
 ) const {
@@ -79,13 +72,46 @@ TrackNetwork::Time Train::getExpectedTravelTime(
 }
 
 TrackNetwork::Time Train::getExpectedArrivalTime(
-	TrackNetwork::NodeID to_here,
+	RouteType::const_iterator to_here,
 	const TrackNetwork& tn
 ) const {
+	return getDepartureTime() + train_route->getExpectedTravelTime(getDepartureTime(), to_here, tn);
+}
+
+TrackNetwork::Time Train::getExpectedArrivalTime(
+	TrackNetwork::NodeID to_here,
+	size_t matches_to_skip,
+	const TrackNetwork& tn
+) const {
+	const auto there_iter = ::util::skip_find(getRoute().getPath(), matches_to_skip, to_here);
+
+	if (there_iter == end(getRoute().getPath())) {
+		::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
+			str << "stop VID is not in route";
+		});
+	}
+
 	return getDepartureTime() + getExpectedTravelTime(
-		std::make_pair(getRoute().getPath().front(), to_here),
+		{
+			begin(getRoute().getPath()),
+			next(there_iter)
+		},
 		tn
 	);
+}
+
+RouteType::const_iterator Train::getNextPathIterAfterTime(
+	TrackNetwork::Time t,
+	const TrackNetwork& tn
+) const {
+	using std::end;
+	for (const auto& it : util::iterate_with_iterators(getRoute().getPath())) {
+		const auto arrival_time = getExpectedArrivalTime(it, tn);
+		if (arrival_time > t) {
+			return it;
+		}
+	}
+	return end(getRoute().getPath());
 }
 
 void Train::print(std::ostream& os) const {
@@ -127,9 +153,19 @@ TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 	);
 }
 
+TrackNetwork::Time TrainRoute::getExpectedTravelTime(
+	TrackNetwork::Time start_time,
+	RouteType::const_iterator to_here,
+	const TrackNetwork& tn
+) const {
+	using std::begin; using std::next;
+	return getExpectedTravelTime(start_time, {begin(getPath()), to_here}, tn);
+}
+
 std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
 	TrackNetwork::NodeID vid,
 	TrackNetwork::TimeInterval interval,
+	size_t matches_to_skip,
 	const TrackNetwork& tn
 ) const {
 	if (interval.first > interval.second) {
@@ -145,11 +181,10 @@ std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
 		interval.first / repeat_time, interval.second / repeat_time
 	);
 
-	const auto vid_in_route = std::find(getPath().begin(), getPath().end(), vid);
+	const auto vid_in_route = ::util::skip_find(getPath(), matches_to_skip, vid);
+
 	if (vid_in_route == getPath().end()) {
-		::util::print_and_throw<std::invalid_argument>([&](auto& msg) {
-			msg << vid << " isn't in route";
-		});
+		return {-1, -1}; // return an empty range
 	}
 
 	const auto time_in_route_to_vid = getExpectedTravelTime(

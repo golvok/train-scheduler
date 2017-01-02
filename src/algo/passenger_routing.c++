@@ -153,7 +153,11 @@ std::pair<
 	auto backing_colour_map = baseGraph.make_backing_colour_map();
 
 	try {
-		astar_search_no_init(
+		// use the tree one, because we don't have a way to generate unique indexes for
+		// vertexes that are on-train ones. Note: this is less efficient, because nothing
+		// keeps track of the "closed" vertexes - if we arrive at the a station at a part-
+		// icular time more than one way, then we will re-explore from there every time.
+		astar_search_no_init_tree(
 			baseGraph,
 			start_vertex_and_time,
 			heuristic

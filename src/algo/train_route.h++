@@ -80,17 +80,23 @@ public:
 	Train& operator=(Train&&) = default;
 
 	TrackNetwork::Time getExpectedTravelTime(
-		std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
-		const TrackNetwork& tn
-	) const;
-
-	TrackNetwork::Time getExpectedTravelTime(
 		::boost::iterator_range<RouteType::const_iterator> range,
 		const TrackNetwork& tn
 	) const;
 
 	TrackNetwork::Time getExpectedArrivalTime(
+		RouteType::const_iterator to_here,
+		const TrackNetwork& tn
+	) const;
+
+	TrackNetwork::Time getExpectedArrivalTime(
 		TrackNetwork::NodeID to_here,
+		size_t matches_to_skip,
+		const TrackNetwork& tn
+	) const;
+
+	RouteType::const_iterator getNextPathIterAfterTime(
+		TrackNetwork::Time t,
 		const TrackNetwork& tn
 	) const;
 
@@ -133,26 +139,33 @@ public:
 	TrainRoute& operator=(const TrainRoute&) = delete;
 	TrainRoute& operator=(TrainRoute&&) = default;
 
+	struct TrainAndArrivalData {
+		Train train; TrackNetwork::Time arrival;
+	};
+
 	auto getTrainsAtVertexInInterval( // TODO rename to indicate generator return value
 		TrackNetwork::NodeID vid,
 		TrackNetwork::TimeInterval interval,
+		size_t matches_to_skip,
 		const TrackNetwork& tn
 	) const {
-		auto data = getTrainsAtVertexInInterval_impl(vid, interval, tn);
+		const auto data = getTrainsAtVertexInInterval_impl(vid, interval, matches_to_skip, tn);
 		return ::util::xrange_forward_pe<TrainIndex>(
 			data.first,
 			data.second,
-			[&](const auto& index) {
-				return this->makeTrainFromIndex(index);
+			[&tn,this,vid,matches_to_skip](const auto& index) {
+				using std::next;
+				auto the_train = this->makeTrainFromIndex(index);
+				return TrainAndArrivalData{
+					the_train,
+					the_train.getExpectedArrivalTime(
+						::util::skip_find(this->getPath(), matches_to_skip, vid),
+						tn
+					)
+				};
 			}
 		);
 	}
-
-	TrackNetwork::Time getExpectedTravelTime(
-		TrackNetwork::Time start_time,
-		std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
-		const TrackNetwork& tn
-	) const;
 
 	TrackNetwork::Time getExpectedTravelTime(
 		TrackNetwork::Time start_time,
@@ -160,15 +173,21 @@ public:
 		const TrackNetwork& tn
 	) const;
 
+	TrackNetwork::Time getExpectedTravelTime(
+		TrackNetwork::Time start_time,
+		RouteType::const_iterator to_here,
+		const TrackNetwork& tn
+	) const;
+
 	RouteID getID() const { return route_id; }
-	const auto& getPath() const { return route; }
+	const RouteType& getPath() const { return route; }
 	Train::Speed getSpeed() const { return speed; }
 
 	auto getTrainsLeavingInInterval( // TODO rename to indicate generator return value
 		TrackNetwork::TimeInterval interval,
 		const TrackNetwork& tn
 	) const {
-		return getTrainsAtVertexInInterval(getPath().front(), interval, tn);
+		return getTrainsAtVertexInInterval(getPath().front(), interval, 0, tn);
 	}
 
 	Train makeTrainFromIndex(TrainIndex index) const;
@@ -179,6 +198,7 @@ private:
 	std::pair<TrainIndex,TrainIndex> getTrainsAtVertexInInterval_impl(
 		TrackNetwork::NodeID vid,
 		TrackNetwork::TimeInterval interval,
+		size_t matches_to_skip,
 		const TrackNetwork& tn
 	) const;
 

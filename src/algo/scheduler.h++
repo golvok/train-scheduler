@@ -34,6 +34,7 @@ public:
 	TrainRoute& getTrainRoute(RouteID id) { return train_routes.at(id.getValue()); }
 	const TrainRoute& getTrainRoute(RouteID id) const { return train_routes.at(id.getValue()); }
 	const auto& getTrainRoutes() const { return train_routes; }
+	auto getNumTrainRoutes() const { return train_routes.size(); }
 
 	template<typename MAPPED_TYPE, typename... ARGS>
 	auto makeRouteMap(ARGS&&... args) const {

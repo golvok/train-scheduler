@@ -65,19 +65,15 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 		} else if (out_edge_index == STGA::out_edge_iterator::BEGIN_VAL + 1) {
 			// return the next place the train is going (or not if it isn't)
 			const auto& train_route = sch.getTrainRoute(src.getLocation().asTrainID().getRouteID());
-			auto current_it = std::find(train_route.getPath().begin(), train_route.getPath().end(), src.getVertex());
-			if (current_it == train_route.getPath().end()) {
-				::util::print_and_throw<std::invalid_argument>([&](auto&& err) {
-					err << "vertex " << std::tie(src,tn) << " is invalid. It's train doesn't go to it's vertex!\n";
-				});
-			}
-			if (current_it + 1 != train_route.getPath().end()) {
-				auto next = *(current_it + 1);
-				STGA::vertex_descriptor next_vd (
-					next,
-					src.getTime() + train_route.getExpectedTravelTime(
-						src.getTime(),
-						::boost::make_iterator_range(current_it, current_it + 2),
+			const auto& train = train_route.makeTrainFromIndex(src.getLocation().asTrainID().getTrainIndex());
+			const auto& next_it = train.getNextPathIterAfterTime(src.getTime(), tn);
+
+			if (next_it != train_route.getPath().end()) {
+				using std::next;
+				STGA::vertex_descriptor next_vd(
+					*next_it,
+					train.getExpectedArrivalTime(
+						next_it,
 						tn
 					),
 					src.getLocation().asTrainID()
@@ -92,29 +88,38 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 		for (const auto& train_route : sch.getTrainRoutes()) {
 			dout(DL::PR_D4) << "checking route " << train_route.getID() << "\n";
 
-			auto here_route_iter = std::find(train_route.getPath().begin(), train_route.getPath().end(), src.getVertex());
+			// now find each train that does,
+			// and return the out_edge_index'th one
 
-			// does this route goes through here?
-			if (here_route_iter != train_route.getPath().end()) {
-
-				// now find each train that does,
-				// and return the out_edge_index'th one
+			for (size_t number_of_matches_to_skip = 0;; ++number_of_matches_to_skip) {
+				// support for routes that go through stations more than once
+				dout(DL::PR_D4) << "skipping " << number_of_matches_to_skip << " matches\n";
 
 				auto trains_in_interval = train_route.getTrainsAtVertexInInterval(
 					src.getVertex(),
 					std::make_pair(src.getTime(), src.getTime() + station_lookahead_quantum),
+					number_of_matches_to_skip,
 					tn
 				);
 
-				for (const auto& train : trains_in_interval) {
+				// if nothing was returned, then there will be no more arrivals
+				// of this train in the time interval
+				if (begin(trains_in_interval) == end(trains_in_interval)) {
+					break;
+				}
+
+				for (const auto& train_and_arrival : trains_in_interval) {
+					if (train_and_arrival.arrival < 0) {
+						::util::print_and_throw<std::runtime_error>([&](auto&& err) {
+							err << "time went backwards!: " << std::tie(src,tn) << " -> t=" << train_and_arrival.arrival;
+						});
+					}
+
 					if (out_edge_index == current_out_edge_index) {
 						STGA::vertex_descriptor train_vd (
 							src.getVertex(),
-							train.getExpectedArrivalTime(
-								src.getVertex(),
-								tn
-							),
-							train.getTrainID()
+							train_and_arrival.arrival,
+							train_and_arrival.train.getTrainID()
 						);
 						return print_edge_first(train_vd);
 					} else {
@@ -143,6 +148,17 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 
 	dout(DL::PR_D4) << "\twas end edge\n";
 	return STGA::vertex_descriptor(); // return end node if nothing found.
+}
+
+size_t STGA::get_vertex_index(const vertex_descriptor& vd) const {
+	// const auto vii = calcVertexIndexInfo(vd, tn);
+	// const auto index = vii.index_in_timeslot + vii.num_per_timeslot*vd.getTime();
+	// std::cout << "mapping " << std::tie(vd,tn) << " to " << index << '\n';
+	(void)vd;
+	// TODO?: modify edge generation to produce edges to stations reachable by trains
+	// only - and store route/train info *on the edges instead*
+	throw "unsupported - no way to provide index for vertexes that are on trains";
+	return -1;
 }
 
 STGA::backing_colour_map STGA::make_backing_colour_map() const {
