@@ -224,7 +224,7 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 		auto next_vertex_it = prev_vertex_it + 1;
 
 		while (true) {
-			dout(DL::SIM_D3) << "current position: en=" << position_info.edge_number << ", fte=" << position_info.fraction_through_edge << '\n';
+			dout(DL::SIM_D3) << "current position: e#=" << position_info.edge_number << ", fte=" << position_info.fraction_through_edge << '\n';
 
 			const auto current_time_in_simulation_of_this_train =
 				current_time + time_until_prev_vertex - departing_subtraction
@@ -240,12 +240,12 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 
 				// pickup passengers
 				for (const auto& p : old_passengers_at_the_station) {
-					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID(), current_time_in_simulation_of_this_train);
+					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID(), current_time + time_until_prev_vertex);
 				}
 
 				// and drop off passengers
 				for (const auto& p : old_passengers_on_this_train) {
-					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id, current_time_in_simulation_of_this_train);
+					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id, current_time + time_until_prev_vertex);
 				}
 			}
 
@@ -334,7 +334,7 @@ void Simulator::movePassengerFromHereGoingTo(
 
 	// find the next route element
 	const auto next_route_element_it = std::find_if(route.begin(), route.end(), [&](const auto& re) {
-		return re.getLocation() == to_location;
+		return re.getTime() >= (time_of_move-0.0001);
 	});
 
 	const auto& current_route_element = *std::prev(next_route_element_it); // note: route can't be empty
@@ -368,11 +368,18 @@ void Simulator::movePassengerFromHereGoingTo(
 
 	if (current_location != from_location) {
 		::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-			str << "passenger " << passenger.getName() << " not at location expected!\n";
+			str << "passenger " << passenger.getName() << " (at " << from_location << ") not at location expected (" << current_location << ")!\n";
 		});
 		return; // do nothing
 	}
 
+	(void)to_location;
+	// if (next_location != to_location) {
+		// ::util::print_and_throw<std::runtime_error>([&](auto&& str) {
+		// 	str << "passenger " << passenger.getName() << " (at " << from_location << ") not going to location expected (" << to_location << ")!\n";
+		// });
+		// return; // do nothing
+	// }
 	dout(DL::SIM_D3) << "passenger " << passenger.getName() << " : " << current_location << " -> " << next_location << '\n';
 
 	if (current_location.isStation()) {
