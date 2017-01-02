@@ -35,6 +35,15 @@ namespace util {
 			f();
 		}
 	}
+
+	template<typename FUNC, typename VALUE>
+	auto repeat_extra_times(size_t num_extra_times, VALUE&& v, const FUNC& f) {
+		auto result = f(v);
+		for (size_t i = 0; i < num_extra_times; ++i) {
+			result = f(result);
+		}
+		return result;
+	}
 	template<typename T>
 	auto make_shared(T&& t) {
 		return std::make_shared<
