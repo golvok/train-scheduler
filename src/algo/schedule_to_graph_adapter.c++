@@ -135,6 +135,10 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 
 			STGA::vertex_descriptor here_again_vd (
 				src.getVertex(),
+				// TODO?: round this so we are at station vertexes that are the same
+				// more often, so graph search algorithms won't re-explore (because the
+				// vertex would have already been visited) Need to use the non-tree astar
+				// again (and therefore fix the index map problem) however.
 				src.getTime() + station_lookahead_quantum,
 				src.getLocation()
 			);
