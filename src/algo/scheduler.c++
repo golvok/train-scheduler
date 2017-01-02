@@ -500,6 +500,8 @@ Scheduler3::TrainDataList Scheduler3::coalesce_trains(TrainDataList&& train_data
 		iter_num += 1;
 	}
 
+	dump_trains_to_dout(train_data, "Final Trains", DL::TR_D1);
+
 	return std::move(train_data);
 }
 
