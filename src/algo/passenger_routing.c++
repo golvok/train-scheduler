@@ -56,7 +56,7 @@ namespace {
 
 			if (vd.getVertex() == goal_vertex && vd.getLocation().isStation()) {
 				throw found_goal{vd};
-			} else if (vd.getTime() > (start_time + 1000)) {
+			} else if (vd.getTime() > (start_time + 100)) {
 				throw no_route();
 			}
 		}
