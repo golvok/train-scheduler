@@ -44,6 +44,24 @@ namespace util {
 		}
 		return result;
 	}
+
+	template<typename COLLECTION, typename VALUE>
+	auto skip_find(const COLLECTION& c, size_t num_to_skip, const VALUE& v) {
+		using std::begin; using std::end;
+		return repeat_extra_times(
+			num_to_skip,
+			begin(c),
+			[&](auto& curr) {
+				const auto result = std::find(curr, end(c), v);
+				if (result == end(c)) {
+					return result;
+				} else {
+					return std::next(result);
+				}
+			}
+		);
+	}
+
 	template<typename T>
 	auto make_shared(T&& t) {
 		return std::make_shared<
