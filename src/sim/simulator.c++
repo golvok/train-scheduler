@@ -257,7 +257,9 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 				// ie. if the "prev" vertex is the last one.
 				if (passengers_on_trains[trainID].empty() == false) {
 					::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-						str << " train " << train << " had passengers when it exited!\n";
+						str << " train " << train << " had the passengers ";
+						util::print_container(passengers_on_trains[trainID], str);
+						str << " when it exited!\n";
 					});
 				}
 				dout(DL::SIM_D3) << "destination reached\n";
