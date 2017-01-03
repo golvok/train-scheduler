@@ -4,6 +4,7 @@
 
 #include <algo/train_route.h++>
 #include <util/track_network.h++>
+#include <util/print_printable.h++>
 
 struct LocationIDTag { static const uint DEFAULT_VALUE = -1; };
 class LocationID : public ::util::ID<
@@ -12,7 +13,7 @@ class LocationID : public ::util::ID<
 		StationID::IDType
 	>,
 	LocationIDTag
-> {
+>, public util::print_with_printable<const TrackNetwork> {
 private:
 	LocationID(IDType val) : ID(val) { }
 public:
@@ -41,6 +42,16 @@ public:
 			asTrainID().print(os);
 		} else if (isStation()) {
 			os << 's' << asStationID().getValue();
+		}
+	}
+
+	void print(std::ostream& os, const TrackNetwork& tn) const {
+		if (getValue() == DEFAULT_VALUE) {
+			os << "<DEFAULT_LOCATION>";
+		} else if (isTrain()) {
+			asTrainID().print(os);
+		} else if (isStation()) {
+			os << 's' << tn.getVertexName(tn.getVertexIDByStationID(asStationID()));
 		}
 	}
 
