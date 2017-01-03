@@ -331,6 +331,10 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 	return sim_until_time - current_time;
 }
 
+/**
+ * If passenger wants to be moved from from_location to to_location, then do so.
+ * If that is not it's next move, then don't do anything.
+ */
 void Simulator::movePassengerFromHereGoingTo(
 	const Passenger& passenger,
 	const LocationID& from_location,
@@ -340,35 +344,45 @@ void Simulator::movePassengerFromHereGoingTo(
 	const auto& route = passenger_rotues.getRoute(passenger);
 
 	// find the next route element
-	const auto next_route_element_it = std::find_if(route.begin(), route.end(), [&](const auto& re) {
-		return re.getTime() >= (time_of_move-0.0001);
-	});
-
-	const auto& current_route_element = *std::prev(next_route_element_it); // note: route can't be empty
-	const auto& current_location = current_route_element.getLocation();
+	const auto next_route_element_it = [&]() {
+		auto prev = begin(route);
+		if (prev == end(route)) { return prev; }
+		auto curr = next(prev);
+		while (curr != end(route)) {
+			if (prev->getLocation() == from_location && curr->getLocation() == to_location) {
+				return curr;
+			}
+			prev = curr;
+			curr = next(prev);
+		}
+		return curr;
+	}();
 
 	if (next_route_element_it == route.begin()) {
-		if (current_location != from_location) {
-			// ignore
-			return;
-		} else {
+		// if (current_location != from_location) {
+		// 	// ignore
+		// 	return;
+		// } else {
 			// this passenger hasn't started yet
 			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
 				str << "passenger " << passenger.getName() << " hasn't entered the system (or has empty route)!\n";
 			});
-		}
+		// }
 	}
+
+	const auto& current_route_element = *std::prev(next_route_element_it); // note: route can't be empty
+	const auto& current_location = current_route_element.getLocation();
 
 	if (next_route_element_it == route.end()) {
 		// this passenger has exited the system
-		if (current_location.isTrain()) {
-			::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-				str << "passenger " << passenger.getName() << " doesn't want to (ever) get off!\n";
-			});
-		} else {
+		// if (from_location.isTrain()) {
+		// 	::util::print_and_throw<std::runtime_error>([&](auto&& str) {
+		// 		str << "passenger " << passenger.getName() << " doesn't want to (ever) get off!\n";
+		// 	});
+		// } else {
 			// ignore
 			return;
-		}
+		// }
 	}
 
 	const auto& next_location = next_route_element_it->getLocation(); // note: next is not end()
