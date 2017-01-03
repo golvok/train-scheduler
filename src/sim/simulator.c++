@@ -307,7 +307,7 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 			}
 
 			// if we get here, the train will be just about to arrive at the "next" station
-			dout(DL::SIM_D2) << "train " << train << " just about to arrive at " << tn->getStationIDByVertexID(*next_vertex_it) << '\n';
+			dout(DL::SIM_D2) << "train " << train << " just about to arrive at " << tn->getVertexName(*next_vertex_it) << '\n';
 
 			// "just arrive" at station, by making previous what the next was
 			prev_vertex_it = next_vertex_it;
@@ -373,7 +373,7 @@ void Simulator::movePassengerFromHereGoingTo(
 
 	if (current_location != from_location) {
 		::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-			str << "passenger " << passenger.getName() << " (at " << from_location << ") not at location expected (" << current_location << ")!\n";
+			str << "passenger " << passenger.getName() << " (at " << std::tie(from_location,*tn) << ") not at location expected (" << std::tie(current_location,*tn) << ")!\n";
 		});
 		return; // do nothing
 	}
@@ -381,7 +381,7 @@ void Simulator::movePassengerFromHereGoingTo(
 	(void)to_location;
 	// if (next_location != to_location) {
 		// ::util::print_and_throw<std::runtime_error>([&](auto&& str) {
-		// 	str << "passenger " << passenger.getName() << " (at " << from_location << ") not going to location expected (" << to_location << ")!\n";
+		// 	str << "passenger " << passenger.getName() << " (at " << std::tie(from_location,*tn) << ") not going to location expected (" << std::tie(to_location,*tn) << ")!\n";
 		// });
 		// return; // do nothing
 	// }
