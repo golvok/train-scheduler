@@ -2,6 +2,8 @@
 #ifndef UTIL__PRINT_PRINTABLE_HPP
 #define UTIL__PRINT_PRINTABLE_HPP
 
+#include <iosfwd>
+
 namespace util {
 
 // TODO: maybe provide some sort of default? maybe one that gives a warning when compiled?
@@ -18,14 +20,14 @@ struct print_with_printable{
 	using print_with_type = T;
 };
 
-template<typename T, typename U, typename STREAM>
-auto operator<<(STREAM& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<U>*>(&std::get<0>(pair)),os) {
+template<typename T, typename U>
+auto operator<<(std::ostream& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<U>*>(&std::get<0>(pair)),os) {
 	std::get<0>(pair).print(os, std::get<1>(pair));
 	return os;
 }
 
-template<typename T, typename U, typename STREAM>
-auto operator<<(STREAM& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<T>*>(&std::get<1>(pair)),os) {
+template<typename T, typename U>
+auto operator<<(std::ostream& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<T>*>(&std::get<1>(pair)),os) {
 	std::get<1>(pair).print(os, std::get<0>(pair));
 	return os;
 }

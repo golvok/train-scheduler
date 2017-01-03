@@ -11,13 +11,6 @@ namespace detail {
 			return os;
 		}
 
-		std::ostream& operator<<(std::ostream& os, const std::tuple<const vertex_descriptor&, const TrackNetwork&>& pair) {
-			const auto& tn = std::get<1>(pair);
-			const auto& vd = std::get<0>(pair);
-			os << '{' << tn.getVertexName(vd.getVertex()) << "@t=" << vd.getTime() << ",l=" << vd.getLocation() << '}';
-			return os;
-		}
-
 		void out_edge_iterator::update_sink_vd() {
 			sink_vd = stga->getConnectingVertex(src_vd,out_edge_index);
 			if (sink_vd == vertex_descriptor()) {
@@ -28,6 +21,14 @@ namespace detail {
 }
 
 using STGA = ScheduleToGraphAdapter;
+
+namespace detail{ namespace STGA {
+
+void vertex_descriptor::print(std::ostream& os, const TrackNetwork& tn) const {
+	pretty_print(os, *this, tn);
+}
+
+}}
 
 STGA::vertex_descriptor STGA::getConnectingVertex(
 	STGA::vertex_descriptor src,

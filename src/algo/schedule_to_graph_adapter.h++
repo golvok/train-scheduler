@@ -3,8 +3,9 @@
 #define ALGO__SCHEDULE_TO_GRAPH_ADAPTER_HPP
 
 #include <algo/scheduler.h++>
-#include <util/location_id.h++>
 #include <util/graph_utils.h++>
+#include <util/location_id.h++>
+#include <util/print_printable.h++>
 #include <util/track_network.h++>
 
 #include <boost/graph/graph_traits.hpp>
@@ -20,7 +21,7 @@ class ScheduleToGraphAdapter;
 namespace detail {
 namespace STGA {
 
-class vertex_descriptor {
+class vertex_descriptor : public ::util::print_with_printable<const TrackNetwork> {
 	friend class ::algo::ScheduleToGraphAdapter;
 
 	TrackNetwork::NodeID vertex;
@@ -59,10 +60,10 @@ public:
 
 	bool operator!=(const vertex_descriptor& rhs) const { return !(*this == rhs); }
 
+	void print(std::ostream& os, const TrackNetwork& tn) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const vertex_descriptor& vd);
-std::ostream& operator<<(std::ostream& os, const std::tuple<const vertex_descriptor&, const TrackNetwork&>& pair);
 
 using degree_size_type = size_t;
 
