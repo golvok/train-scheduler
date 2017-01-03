@@ -47,19 +47,15 @@ namespace util {
 
 	template<typename COLLECTION, typename VALUE>
 	auto skip_find(const COLLECTION& c, size_t num_to_skip, const VALUE& v) {
-		using std::begin; using std::end;
-		return repeat_extra_times(
-			num_to_skip,
-			begin(c),
-			[&](auto& curr) {
-				const auto result = std::find(curr, end(c), v);
-				if (result == end(c)) {
-					return result;
-				} else {
-					return std::next(result);
-				}
+		using std::begin; using std::end; using std::next;
+		auto curr = std::find(begin(c), end(c), v);
+		for (size_t match_num = 2; (match_num-1) <= num_to_skip; ++match_num) {
+			curr = std::find(next(curr), end(c), v);
+			if (curr == end(c)) {
+				break;
 			}
-		);
+		}
+		return curr;
 	}
 
 	template<typename T>
