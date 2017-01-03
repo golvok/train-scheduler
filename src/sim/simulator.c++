@@ -381,13 +381,14 @@ void Simulator::movePassengerFromHereGoingTo(
 	}
 
 	(void)to_location;
-	// if (next_location != to_location) {
+	if (next_location != to_location) {
 		// ::util::print_and_throw<std::runtime_error>([&](auto&& str) {
 		// 	str << "passenger " << passenger.getName() << " (at " << std::tie(from_location,*tn) << ") not going to location expected (" << std::tie(to_location,*tn) << ")!\n";
 		// });
-		// return; // do nothing
-	// }
-	dout(DL::SIM_D3) << "passenger " << passenger.getName() << " : " << current_location << " -> " << next_location << '\n';
+		dout(DL::SIM_D3) << "passenger " << passenger.getName() << " (at " << std::tie(from_location,*tn) << ") doesn't want to go to " << std::tie(to_location,*tn) << "\n"; 
+		return; // ignore
+	}
+	dout(DL::SIM_D3) << "passenger " << passenger.getName() << " : " << std::tie(current_location,*tn) << " -> " << std::tie(next_location,*tn) << '\n';
 
 	if (current_location.isStation()) {
 		if (next_location.isTrain()) {
