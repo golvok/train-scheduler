@@ -118,25 +118,6 @@ void Train::print(std::ostream& os) const {
 	getTrainID().print(os);
 }
 
-TrackNetwork::Time TrainRoute::getExpectedTravelTime(
-	TrackNetwork::Time start_time,
-	std::pair<TrackNetwork::NodeID, TrackNetwork::NodeID> first_and_last,
-	const TrackNetwork& tn
-) const {
-	auto first_iter = std::find(route.begin(), route.end(), first_and_last.first);
-	auto second_iter = std::find(first_iter, route.end(), first_and_last.second);
-	if (first_iter == route.end()) { ::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-		str << "first vid not in route\n";
-	});}
-	if (second_iter == route.end()) { ::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
-		str << "second vid not in route\n";
-	});}
-	return getExpectedTravelTime(
-		start_time,
-		{first_iter, second_iter + 1},
-		tn
-	);
-}
 
 TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 	TrackNetwork::Time start_time,
