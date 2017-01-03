@@ -240,16 +240,16 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 				// make copies, so that if the loops modify (which they do) then nothing confusing happens
 				// this isn't very efficient, but it's the most straightforward...
 				const auto old_passengers_at_the_station = passengers_at_stations[arriving_station_id.getValue()];
-				const auto old_passengers_on_this_train = passengers_on_trains[train.getTrainID()];
+				const auto old_passengers_on_this_train = passengers_on_trains[trainID];
 
 				// pickup passengers
 				for (const auto& p : old_passengers_at_the_station) {
-					movePassengerFromHereGoingTo(p, arriving_station_id, train.getTrainID(), current_time + time_until_prev_vertex);
+					movePassengerFromHereGoingTo(p, arriving_station_id, trainID, current_time + time_until_prev_vertex);
 				}
 
 				// and drop off passengers
 				for (const auto& p : old_passengers_on_this_train) {
-					movePassengerFromHereGoingTo(p, train.getTrainID(), arriving_station_id, current_time + time_until_prev_vertex);
+					movePassengerFromHereGoingTo(p, trainID, arriving_station_id, current_time + time_until_prev_vertex);
 				}
 			}
 
@@ -261,7 +261,7 @@ SimTime Simulator::advanceUntilEvent(const SimTime& sim_until_time) {
 					});
 				}
 				dout(DL::SIM_D3) << "destination reached\n";
-				trains_to_remove.push_back(train.getTrainID());
+				trains_to_remove.push_back(trainID);
 				break;
 			}
 
