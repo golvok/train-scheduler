@@ -159,7 +159,7 @@ TrackNetwork::Time TrainRoute::getExpectedTravelTime(
 	const TrackNetwork& tn
 ) const {
 	using std::begin; using std::next;
-	return getExpectedTravelTime(start_time, {begin(getPath()), to_here}, tn);
+	return getExpectedTravelTime(start_time, {begin(getPath()), next(to_here)}, tn);
 }
 
 std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
@@ -189,7 +189,7 @@ std::pair<TrainIndex,TrainIndex> TrainRoute::getTrainsAtVertexInInterval_impl(
 
 	const auto time_in_route_to_vid = getExpectedTravelTime(
 		*start_offsets.begin(),
-		{getPath().begin(), vid_in_route},
+		vid_in_route,
 		tn
 	);
 

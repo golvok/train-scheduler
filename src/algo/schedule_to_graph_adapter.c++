@@ -69,6 +69,14 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 			const auto& train = train_route.makeTrainFromIndex(src.getLocation().asTrainID().getTrainIndex());
 			const auto& next_it = train.getNextPathIterAfterTime(src.getTime(), tn);
 
+			if (next_it != begin(train_route.getPath())) {
+				if (src.getVertex() != *prev(next_it)) {
+					util::print_and_throw<std::runtime_error>([](auto&& err) {
+						err << "skipped something!";
+					});
+				}
+			}
+
 			if (next_it != train_route.getPath().end()) {
 				using std::next;
 				STGA::vertex_descriptor next_vd(
