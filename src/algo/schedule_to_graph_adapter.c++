@@ -163,15 +163,55 @@ STGA::vertex_descriptor STGA::getConnectingVertex(
 	return STGA::vertex_descriptor(); // return end node if nothing found.
 }
 
+namespace {
+	struct VertexIndexInfo {
+		size_t num_per_timeslot;
+		size_t index_in_timeslot;
+
+		VertexIndexInfo()
+			: num_per_timeslot(-1)
+			, index_in_timeslot(-1)
+		{}
+
+		VertexIndexInfo(
+			size_t num_per_timeslot,
+			size_t index_in_timeslot
+		)
+		: num_per_timeslot(num_per_timeslot)
+		, index_in_timeslot(index_in_timeslot)
+		{}
+	};
+
+	VertexIndexInfo calcVertexIndexInfo(
+		const STGA::vertex_descriptor& vd,
+		const TrackNetwork& tn,
+		const STGA& stga
+	) {
+		(void)stga;
+		if (vd.getLocation().isTrain()) {
+			// not sure what to do here...
+			throw "unsupported - no way to provide index for vertexes that are on trains";
+			return {};
+		} else if (vd.getLocation().isStation()) {
+			return VertexIndexInfo(
+				vd.getVertex(),
+				num_vertices(tn.g())
+			);
+		} else {
+			::util::print_and_throw<std::invalid_argument>([&](auto&& err) {
+				err << "unexpected location type in " << vd;
+			}); return {};
+		}
+	}
+}
+
 size_t STGA::get_vertex_index(const vertex_descriptor& vd) const {
-	// const auto vii = calcVertexIndexInfo(vd, tn);
-	// const auto index = vii.index_in_timeslot + vii.num_per_timeslot*vd.getTime();
+	const auto vii = calcVertexIndexInfo(vd, tn, *this);
+	const auto index = vii.index_in_timeslot + vii.num_per_timeslot*vd.getTime();
 	// std::cout << "mapping " << std::tie(vd,tn) << " to " << index << '\n';
-	(void)vd;
 	// TODO?: modify edge generation to produce edges to stations reachable by trains
 	// only - and store route/train info *on the edges instead*
-	throw "unsupported - no way to provide index for vertexes that are on trains";
-	return -1;
+	return index;
 }
 
 STGA::backing_colour_map STGA::make_backing_colour_map() const {
