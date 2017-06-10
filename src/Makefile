@@ -1,11 +1,27 @@
+
+# add parallelism equal to number of cores every time.
+# it seems that adding -jX to MAKEFLAGS directly doesn't work any more.
+# included some "random" strings to ensure uniqueness
+ifneq ($(PARALELL_WRAPPER_ABXCOEOEKCOEBMQJKHTOEUB),done)
+
+NUM_CORES ?= $(shell grep -c "vendor_id" /proc/cpuinfo)
+MAKEFLAGS +=" -j$(NUM_CORES) -l$(NUM_CORES) "
+
+# for the default target case
+parallel_wrapper_default_target_anthsqjkshbeohcbmeuthnoethoaeou:
+	$(MAKE) PARALELL_WRAPPER_ABXCOEOEKCOEBMQJKHTOEUB=done
+
+# catches everything else
+% :
+	$(MAKE) $@ PARALELL_WRAPPER_ABXCOEOEKCOEBMQJKHTOEUB=done
+
+# the match for this else is at the end of the file
+else
+
 .PHONY: all clean build_info
 
 # remove ALL implicit rules & all suffixes
 MAKEFLAGS+=" -r "
-
-# add parallelism equal to number of cores
-NUM_CORES = $(shell grep -c "vendor_id" /proc/cpuinfo)
-MAKEFLAGS +=" -j$(NUM_CORES) -l$(NUM_CORES) "
 
 BUILD_MODE ?= debug
 
@@ -146,3 +162,5 @@ $(DIRS:%=delete_%_dir):
 	@$(eval DELDIR = $(@:delete_%_dir=%))
 	@if [ -d "$(DELDIR)" ]; then echo rmdir "$(DELDIR)"; fi
 	@if [ -e "$(DELDIR)" ]; then      rmdir --ignore-fail-on-non-empty "$$(readlink --canonicalize "$(DELDIR)")"; fi
+
+endif
