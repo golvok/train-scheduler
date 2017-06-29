@@ -44,7 +44,7 @@ int program_main(const std::string& data_file_name) {
 
 	// these will be shared with the graphics
 	std::shared_ptr<TrackNetwork> tn = std::make_shared<TrackNetwork>();
-	std::shared_ptr<PassengerList> passengers = std::make_shared<PassengerList>();
+	std::shared_ptr<PassengerGenerator> passengers = std::make_shared<PassengerGenerator>();
 
 	bool data_is_good;
 
