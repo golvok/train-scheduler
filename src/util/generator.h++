@@ -41,7 +41,7 @@ public:
 	{ }
 
 	generator_iterator& operator++() {
-		current = next(current);
+		current = next(std::move(current));
 		return *this;
 	}
 
