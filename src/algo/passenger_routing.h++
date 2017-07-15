@@ -35,7 +35,7 @@ public:
 	using InternalRouteType = std::vector<RouteElement>;
 	using RouteType = InternalRouteType; // for now...
 private:
-	std::unordered_map<PassengerId,InternalRouteType> routes;
+	std::unordered_map<PassengerID,InternalRouteType> routes;
 public:
 
 	PassengerRoutes() : routes() { }

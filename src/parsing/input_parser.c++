@@ -156,7 +156,7 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 		std::transform(begin(pdata), end(pdata), std::back_inserter(passengers), [&](auto&& elem) {
 			return Passenger(
 				elem.basename + tn.getVertexName(elem.entrance) + '_' + tn.getVertexName(elem.exit),
-				::util::make_id<PassengerId>(passengers.size()),
+				::util::make_id<PassengerID>(passengers.size()),
 				elem.entrance,
 				elem.exit,
 				elem.start_time

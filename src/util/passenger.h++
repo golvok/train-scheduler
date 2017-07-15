@@ -8,13 +8,13 @@
 #include <functional>
 #include <iosfwd>
 
-struct PassengerIdTag { const static uint DEFAULT_VALUE = -1; };
-using PassengerId = ::util::ID<uint,PassengerIdTag>;
+struct PassengerIDTag { const static uint DEFAULT_VALUE = -1; };
+using PassengerID = ::util::ID<uint,PassengerIDTag>;
 
 class Passenger {
 private:
 	std::string name;
-	PassengerId id;
+	PassengerID id;
 	TrackNetwork::NodeID entry_id;
 	TrackNetwork::NodeID exit_id;
 	TrackNetwork::Time start_time;
@@ -22,7 +22,7 @@ private:
 public:
 	Passenger(
 		const std::string& name,
-		PassengerId id,
+		PassengerID id,
 		TrackNetwork::NodeID entry_id,
 		TrackNetwork::NodeID exit_id,
 		TrackNetwork::Time start_time
@@ -34,7 +34,7 @@ public:
 		, start_time(start_time)
 	{}
 
-	PassengerId getID() const { return id; }
+	PassengerID getID() const { return id; }
 	const std::string& getName() const { return name; }
 	TrackNetwork::NodeID getEntryID() const { return entry_id; }
 	TrackNetwork::NodeID getExitID() const { return exit_id; }
@@ -45,9 +45,9 @@ public:
 	}
 };
 
-using PassengerIDList = std::vector<PassengerId>;
 using PassengerList = std::vector<Passenger>;
 using PassengerConstRefList = std::vector<std::reference_wrapper<const Passenger>>;
+using PassengerIDList = std::vector<PassengerID>;
 
 inline void passengerRefListAdd(PassengerConstRefList& list, const Passenger& p) {
 	list.push_back(p);
@@ -68,9 +68,9 @@ std::ostream& operator<<(std::ostream& os, const std::tuple<const Passenger&,con
 
 namespace std {
 	template<>
-	struct hash<PassengerId> {
-		size_t operator()(const PassengerId& pid) const {
-			return std::hash<PassengerId::IDType>()(pid.getValue());
+	struct hash<PassengerID> {
+		size_t operator()(const PassengerID& pid) const {
+			return std::hash<PassengerID::IDType>()(pid.getValue());
 		}
 	};
 }
@@ -79,7 +79,7 @@ namespace std {
 	template<>
 	struct hash<Passenger> {
 		size_t operator()(const Passenger& p) const {
-			return std::hash<PassengerId>()(p.getID());
+			return std::hash<PassengerID>()(p.getID());
 		}
 	};
 }
