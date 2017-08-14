@@ -103,7 +103,7 @@ auto end(const generator<INDEX_TYPE,NEXT,DONE,TRANSFORM>& gen) {
 }
 
 template<typename INDEX_TYPE, typename PTYPE1, typename NEXT, typename DONE, typename TRANSFORM = detail::identity>
-auto make_generator(PTYPE1 initial, DONE done, NEXT next, TRANSFORM transform = TRANSFORM(), decltype(transform(initial),done(initial),next(initial))* = nullptr) {
+auto make_generator(PTYPE1 initial, DONE done, NEXT next, TRANSFORM transform = TRANSFORM(), decltype(transform(initial),done(initial),next(std::move(initial)))* = nullptr) {
 	return generator<INDEX_TYPE,NEXT,DONE,TRANSFORM>(
 		initial,
 		done,
@@ -118,7 +118,7 @@ template<
 		std::is_convertible<PTYPE1,INDEX_TYPE>::value && std::is_convertible<PTYPE2,INDEX_TYPE>::value
 	>
 >
-auto make_generator(PTYPE1 initial, PTYPE2 past_end, NEXT next, TRANSFORM transform = TRANSFORM(), decltype(transform(initial),next(initial))* = nullptr) {
+auto make_generator(PTYPE1 initial, PTYPE2 past_end, NEXT next, TRANSFORM transform = TRANSFORM(), decltype(transform(initial),next(std::move(initial)))* = nullptr) {
 	auto done = [=](const INDEX_TYPE& current ) { return current == (INDEX_TYPE)past_end; };
 	return generator<INDEX_TYPE, NEXT, decltype(done), TRANSFORM>(
 		initial,
