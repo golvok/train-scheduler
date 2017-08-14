@@ -26,12 +26,6 @@ auto operator<<(std::ostream& os, const std::tuple<T&,U&>& pair) -> decltype(sta
 	return os;
 }
 
-template<typename T, typename U>
-auto operator<<(std::ostream& os, const std::tuple<T&,U&>& pair) -> decltype(static_cast<const print_with_printable<T>*>(&std::get<1>(pair)),os) {
-	std::get<1>(pair).print(os, std::get<0>(pair));
-	return os;
-}
-
 } // end namespace util
 
 #endif /* UTIL__PRINT_PRINTABLE_HPP */
