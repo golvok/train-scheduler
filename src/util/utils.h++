@@ -73,6 +73,17 @@ namespace util {
 	auto make_copy(const T& t) {
 		return T(t);
 	}
+
+	template<typename CONTAINER, typename PRED>
+	void remove_if_assoc(CONTAINER& c, PRED&& p) {
+		for(auto it = begin(c); it != end(c); ) {
+			if (p(*it)) {
+				it = c.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
 }
 
 /*******
