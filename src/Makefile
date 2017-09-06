@@ -39,7 +39,7 @@ BUILD_SUBDIRS = $(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR)
 WARNING_FLAGS += -Wall -Wextra -pedantic -Weffc++ -Werror
 
 # put other flags for both the compiler & linker here
-EXTRA_FLAGS = -std=c++17
+EXTRA_FLAGS = -std=c++1z
 
 # add flags for debugging
 ifeq ($(BUILD_MODE),debug)
