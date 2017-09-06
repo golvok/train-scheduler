@@ -12,20 +12,23 @@ namespace sim {
 class Simulator {
 public:
 	Simulator(
-		std::shared_ptr<const PassengerList> passengers,
+		const PassengerGeneratorFactory::PassengerGeneratorCollection* passenger_generators,
 		std::shared_ptr<const ::algo::Schedule> schedule,
 		std::shared_ptr<const TrackNetwork> tn
 	)
-	: passengers(passengers)
+	: passenger_generators(*passenger_generators)
 	, schedule(schedule)
 	, tn(tn)
 	, observers_and_periods()
 	, current_time()
-	, passenger_rotues(::algo::route_passengers(*tn, *schedule, *passengers))
-	, passengers_on_trains(schedule->makeTrainMap<PassengerConstRefList>())
-	, passengers_at_stations(tn->makeStationMap<PassengerConstRefList>())
+	, passenger_routes()
+	, passenger_list()
+	, passengers_on_trains()
+	, passengers_at_stations(tn->makeStationMap<PassengerIDSet>())
 	, train_locations()
-	, passenger_exits()
+	, passenger_paths()
+	, passenger_histories()
+	, passenger_id_generator(0)
 	, is_paused(true)
 	, is_paused_mutex()
 	, sim_task_controller()
@@ -38,19 +41,19 @@ public:
 
 	~Simulator();
 
-	// std::vector<std::reference_wrapper<Passenger>> getActivePassengers() const;
-
-	const TrainLocation& getTrainLocation(const ::algo::TrainID& train) const;
 	const Train2PositionInfoMap& getTrainLocations() const;
-	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
-	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
+	const TrainLocation& getTrainLocation(const ::algo::TrainID& train) const;
+
+	const PassengerList& getPassengerList() const;
+	const PassengerIDSet& getPassengerIDsAt(const ::algo::TrainID& train) const;
+	const PassengerIDSet& getPassengerIDsAt(const StationID& station) const;
 
 	void runForTime(const SimTime& time_to_run, const SimTime& max_step_size);
 	SimTime advanceUntilEvent(const SimTime& sim_until_time);
 	SimTime getCurrentTime() { return current_time; }
 
 	void movePassengerFromHereGoingTo(
-		const Passenger& passenger,
+		const PassengerID& passenger,
 		const LocationID& from_location,
 		const LocationID& to_location,
 		const SimTime& time_of_move
@@ -65,9 +68,14 @@ public:
 
 	// internal methods
 
-	const auto& getPassengerExits() const { return passenger_exits; }
+	const auto& getPassengerHistories() const { return passenger_histories; }
+
+	// to be move to a CachingPassengerRouter (or something)
+	const algo::PassengerRoutes::RouteType& getRouteFor(PassengerID pid);
+	const algo::PassengerRoutes::RouteType& getRouteFor(const Passenger& p);
+
 private:
-	std::shared_ptr<const PassengerList> passengers;
+	const PassengerGeneratorFactory::PassengerGeneratorCollection& passenger_generators;
 	std::shared_ptr<const ::algo::Schedule> schedule;
 	std::shared_ptr<const TrackNetwork> tn;
 
@@ -75,19 +83,24 @@ private:
 
 	SimTime current_time;
 
-	::algo::PassengerRoutes passenger_rotues;
+	::algo::PassengerRoutes passenger_routes; // to ba part of CachingPassengerRouter
 
-	::algo::TrainMap<PassengerConstRefList> passengers_on_trains;
-	StationMap<PassengerConstRefList> passengers_at_stations;
+	PassengerList passenger_list;
+	::algo::TrainMap<PassengerIDSet> passengers_on_trains;
+	StationMap<PassengerIDSet> passengers_at_stations;
 
 	Train2PositionInfoMap train_locations;
 
+	std::unordered_map<PassengerID, algo::PassengerRoutes::RouteType> passenger_paths;
 	struct PassengerExitInfo {
-		std::reference_wrapper<const Passenger> passenger;
 		SimTime time_of_exit;
-	};
-	std::vector<PassengerExitInfo> passenger_exits;
+		algo::PassengerRoutes::RouteType route;
 
+		auto& getRoute() const { return route; }
+		auto& getRoute()       { return route; }
+	};
+	std::unordered_map<PassengerID, PassengerExitInfo> passenger_histories;
+	util::IDGenerator<PassengerID> passenger_id_generator;
 
 	bool is_paused;
 	std::recursive_mutex is_paused_mutex;

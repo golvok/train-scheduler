@@ -3,70 +3,77 @@
 #define UTIL__PASSENGER_GENERATOR_H
 
 #include <util/generator.h++>
+#include <util/passenger.h++>
+
+#include <boost/operators.hpp>
 
 class PassengerGenerator;
 class StationPassengerGenerator;
 
-class PassengerGenerationFactory {
+class PassengerGeneratorFactory {
 public:
-	PassengerGenerationFactory(uint64_t seed);
+	using PassengerGeneratorCollection = std::vector<PassengerGenerator>;
 
-	PassengerGenerator sample() const;
+	PassengerGeneratorFactory(uint64_t seed, const std::vector<StatisticalPassenger>& statpsgrs)
+		: seed(seed)
+		, statpsgrs(statpsgrs)
+	{ }
+
+	PassengerGeneratorCollection sample() const;
 private:
 	uint64_t seed;
+	const std::vector<StatisticalPassenger>& statpsgrs;
 };
 
 class PassengerGenerator {
 public:
-	StationPassengerGenerator forStation(StationID sid) const;
+	template<typename TIME, typename PID_GENERATOR>
+	auto leavingDuringInterval(TIME begin_time, TIME end_time, PID_GENERATOR& pid_generator) const {
+		struct State : boost::equality_comparable<State> {
+			const PassengerGenerator* src;
+			TrackNetwork::Time next_departure;
+			TIME end_time;
 
-private:
-	friend class PassengerGenerationFactory;
-	PassengerGenerator(uint64_t seed);
+			State(const PassengerGenerator* src, TrackNetwork::Time next_departure, TIME end_time)
+				: src(src)
+				, next_departure(next_departure)
+				, end_time(end_time)
+			{ }
 
-	uint64_t seed;
-}
-
-class StationPassengerGenerator {
-public:
-	template<typename TIME>
-	auto leavingDuringInterval(TIME begin_time, TIME end_time) {
-		struct State {
-			TIME next;
-			int random;
+			bool operator==(const State& rhs) const {
+				return std::tie(src, next_departure)
+					== std::tie(rhs.src, rhs.next_departure);
+			}
 		};
 
-		return util::make_generator(
+		return util::make_generator<State>(
 			// initial
-			state{begin_time, 1},
+			State(this, nextPassengerAfter(begin_time), end_time),
 			// done
-			[&](const State& s) {
-				return s.next >= end_time;
+			[](const State& s) {
+				return s.next_departure >= s.end_time;
 			},
 			// next
-			[&](State&& s) {
-				s.next += s.random;
+			[](State&& s) {
+				s.next_departure = s.src->nextPassengerAfter(s.next_departure);
 				return s;
 			},
 			// transform
 			[&](const State& s) {
-				return s.next;
+				return instantiateAt(&s.src->statpsgr, pid_generator.gen_id(), s.next_departure);
 			}
 		);
 	}
 
 private:
-	friend class PassengerGenerator;
-	StationPassengerGenerator(const PassengerGenerator& src)
-		: src(src)
+	friend PassengerGeneratorFactory;
+	PassengerGenerator(const StatisticalPassenger& statpsgr)
+		: statpsgr(statpsgr)
 	{ }
 
-	const PassengerGenerator& src;
-}
+	TrackNetwork::Time nextPassengerAfter(TrackNetwork::Time t) const;
+
+	const StatisticalPassenger statpsgr;
+};
 
 #endif /* UTIL__PASSENGER_GENERATOR_H */
-
-/*
- * likely input will be station -> {(dest with frequency info)+}
- * consumer: what leaves in this interval (and from where)
-*/

@@ -38,7 +38,8 @@ protected:
 	void drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& cc);
 
 	/// draw all of passengers at that point
-	void drawPassengersAt(const geom::Point<float> point, const PassengerConstRefList& passengers, const Cairo::RefPtr<Cairo::Context>& cc);
+	template<typename COLLECTION>
+	void drawPassengersAt(const geom::Point<float> point, const COLLECTION& passengers, const Cairo::RefPtr<Cairo::Context>& cc);
 
 	/// step time forward and force a redraw
 	bool causeAnimationFrame();

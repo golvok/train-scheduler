@@ -26,12 +26,12 @@ class Scheduler2 {
 
 	const TrackNetwork& network;
 	const TrackNetwork::BackingGraphType& g;
-	const PassengerList& passengers;
+	const std::vector<StatisticalPassenger>& passengers;
 
 public:
 	Scheduler2(
 		const TrackNetwork& network,
-		const PassengerList& passengers
+		const std::vector<StatisticalPassenger>& passengers
 	)
 	: network(network)
 	, g(network.g())
@@ -96,13 +96,13 @@ class Scheduler3 {
 	using VertexListList = std::vector<VertexList>;
 
 	const TrackNetwork& network;
-	const PassengerList& passengers;
+	const std::vector<StatisticalPassenger>& passengers;
 	const uint max_trains_at_a_time;
 
 public:
 	Scheduler3(
 		const TrackNetwork& network,
-		const PassengerList& passengers,
+		const std::vector<StatisticalPassenger>& passengers,
 		uint max_trains_at_a_time
 	)
 	: network(network)
@@ -198,7 +198,7 @@ Scheduler3::TrainDataList remove_redundant_trains(
  */
 Schedule schedule(
 	const TrackNetwork& network,
-	const PassengerList& passengers
+	const std::vector<StatisticalPassenger>& passengers
 ) {
 	return Scheduler3 (
 		network,
@@ -240,13 +240,8 @@ Scheduler2::EdgeWantedCapacities Scheduler2::compute_edge_wanted_capacities() {
 	auto edge_wanted_capacities = ::util::makeEdgeMap<float>(g,1);
 
 	auto ewc_indent = dout(DL::WC_D1).indentWithTitle("Computing Edge Wanted Capacities");
-	for (const Passenger& p : passengers) {
-		auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getName(); });
-		if (p.getStartTime() != 0) {
-			::util::print_and_throw<std::invalid_argument>([&](auto&& stream) {
-				stream << "don't support passengers with entry time != 0 (" << std::tie(p,network) << ')';
-			});
-		}
+	for (const auto& p : passengers) {
+		auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Passenger " << p.getBaseName(); });
 		auto next_iteration_weights = network.makeEdgeWeightMapCopy();
 		for (uint iteration_num = 1; true; ++iteration_num) {
 			auto p_indent = dout(DL::WC_D2).indentWithTitle([&](auto&& out){ out << "Iteration " << iteration_num; });
@@ -680,7 +675,8 @@ Scheduler3::TrainDataList Scheduler3::schstep_combine_trains(TrainDataList&& tra
 				trains_that_could_combine.begin(), trains_that_could_combine.end(),
 				[&](auto& ilhs, auto& irhs) {
 					// rank it low if it is used, remember this is supposed to be operator<
-					return train_is_used[ilhs.itrain] == false || train_data[ilhs.itrain].get_train().size() < train_data[irhs.itrain].get_train().size();
+					return std::forward_as_tuple(train_is_used[ilhs.itrain], train_data[ilhs.itrain].get_train().size())
+						< std::forward_as_tuple(train_is_used[ilhs.itrain], train_data[irhs.itrain].get_train().size());
 				}
 			);
 

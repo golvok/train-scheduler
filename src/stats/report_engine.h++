@@ -29,9 +29,7 @@ public:
 
 ReportEngineHandle make_report_engine(
 	const ::TrackNetwork& track_network,
-	const PassengerList& passengers,
 	const ::algo::Schedule&	schedule,
-	const ::algo::PassengerRoutes& passenger_routes,
 	const ::sim::SimulatorHandle& sim_handle
 );
 

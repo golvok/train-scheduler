@@ -9,10 +9,12 @@
 namespace parsing {
 namespace input {
 
+using StatPassCollection = std::vector<StatisticalPassenger>;
+
 /**
  * returns the input data for the program to work on
  */
-std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is);
+std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is);
 
 } // end namespace parsing
 } // end namespace input

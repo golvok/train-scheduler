@@ -23,16 +23,12 @@ const ReportEngine& ReportEngineHandle::operator*() const { return *ptr; }
 
 ReportEngineHandle make_report_engine(
 	const ::TrackNetwork& track_network,
-	const PassengerList& passengers,
 	const ::algo::Schedule&	schedule,
-	const ::algo::PassengerRoutes& passenger_routes,
 	const ::sim::SimulatorHandle& sim_handle
 ) {
 	return ReportEngineHandle(std::make_unique<ReportEngine>(
 		track_network,
-		passengers,
 		schedule,
-		passenger_routes,
 		sim_handle
 	));
 }
@@ -61,11 +57,19 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 	TrackNetwork::Time totalTimeInSystem = 0;
 
 	os << "Passenger Route Statistics Report\n";
-	os << "passenger, arrive time, departure time, arrival time\n";
+	os << "passenger, start time, departure time, arrival time, path...\n";
 	os << "---------------------------------------------\n";
 
-	for (const auto& passenger : passengers) {
-		const auto& route = passenger_routes.getRoute(passenger);
+	for (const auto& value_pair : getPassengers()) {
+		const auto& passenger = value_pair.second;
+		const auto& [route, ch] = algo::route_through_schedule(
+			track_network,
+			schedule,
+			passenger.getStartTime(),
+			passenger.getEntryID(),
+			passenger.getExitID()
+		);
+		(void)ch;
 
 		TrackNetwork::Time start_time = passenger.getStartTime();
 		TrackNetwork::Time end_waiting_time = std::next(route.begin())->getTime();
@@ -87,35 +91,34 @@ void ReportEngine::reportPassengerRouteStats(const ReportConfig& config, std::os
 
 void ReportEngine::reportSimulationPassengerStats(const ReportConfig& config, std::ostream& os) {
 	(void)config;
-	const auto& passenger_exits = sim_handle.get()->getPassengerExits();
+	const auto& passenger_histories = sim_handle.get()->getPassengerHistories();
 
 	::sim::SimTime totalWaitingTime = 0;
 	::sim::SimTime totalTimeInSystem = 0;
 
 	os << "Simulation Passenger Statistics Report\n";
-	os << "passenger, arrive time, departure time, arrival time\n";
+	os << "passenger, start time, departure time, arrival time\n";
 	os << "---------------------------------------------\n";
 
-	for (const auto& passenger : passengers) {
-		const auto& route = passenger_routes.getRoute(passenger);
-		const auto exit_it = std::find_if(passenger_exits.begin(), passenger_exits.end(),
-			[&](const auto& elem) {
-				return elem.passenger.get() == passenger;
-			}
-		);
+	for (const auto& value_pair : getPassengers()) {
+		const auto& passenger = value_pair.second;
+		const auto& hist_find_result = passenger_histories.find(passenger);
+		if (hist_find_result == end(passenger_histories)) {
+			continue;
+		}
+		const auto& psgr_history = hist_find_result->second;
+		if (psgr_history.getRoute().empty()) {
+			continue;
+		}
 
 		::sim::SimTime start_time = passenger.getStartTime();
-		::sim::SimTime end_waiting_time = std::next(route.begin())->getTime();
+		::sim::SimTime end_waiting_time = std::next(psgr_history.getRoute().begin())->getTime();
 		totalWaitingTime += end_waiting_time - start_time;
 
 		os << passenger.getName() << ", " << start_time << ", " << end_waiting_time << ", ";
 
-		if (exit_it == passenger_exits.end()) {
-			os << "--";
-		} else {
-			totalTimeInSystem += exit_it->time_of_exit - end_waiting_time;
-			os << exit_it->time_of_exit;
-		}
+		totalTimeInSystem += psgr_history.time_of_exit - end_waiting_time;
+		os << psgr_history.time_of_exit;
 
 		os << '\n';
 	}

@@ -64,7 +64,7 @@ using TrainMap = decltype(Schedule().makeTrainMap<MAPPED_TYPE>());
  */
 Schedule schedule(
 	const TrackNetwork& network,
-	const PassengerList& passengers
+	const std::vector<StatisticalPassenger>& passengers
 );
 
 } // end namespace algo

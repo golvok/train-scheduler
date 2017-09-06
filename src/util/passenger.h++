@@ -2,6 +2,7 @@
 #ifndef UTIL__PASSENGER_H
 #define UTIL__PASSENGER_H
 
+#include <util/print_printable.h++>
 #include <util/track_network.h++>
 #include <util/utils.h++>
 
@@ -11,43 +12,84 @@
 struct PassengerIDTag { const static uint DEFAULT_VALUE = -1; };
 using PassengerID = ::util::ID<uint,PassengerIDTag>;
 
-class Passenger {
-private:
-	std::string name;
-	PassengerID id;
-	TrackNetwork::NodeID entry_id;
-	TrackNetwork::NodeID exit_id;
-	TrackNetwork::Time start_time;
+template<typename STREAM>
+STREAM& operator<<(STREAM&& os, const PassengerID& pid) {
+	os << "PID" << pid.getValue();
+	return os;
+}
 
+class StatisticalPassenger
+	: public util::print_printable
+	, public util::print_with_printable<const TrackNetwork> {
 public:
-	Passenger(
-		const std::string& name,
-		PassengerID id,
+	StatisticalPassenger(
+		const std::string& base_name,
 		TrackNetwork::NodeID entry_id,
-		TrackNetwork::NodeID exit_id,
-		TrackNetwork::Time start_time
+		TrackNetwork::NodeID exit_id
 	)
-		: name(name)
-		, id(id)
+		: base_name(base_name)
 		, entry_id(entry_id)
 		, exit_id(exit_id)
-		, start_time(start_time)
-	{}
+	{ }
 
-	PassengerID getID() const { return id; }
-	const std::string& getName() const { return name; }
+	const std::string& getBaseName() const { return base_name; }
 	TrackNetwork::NodeID getEntryID() const { return entry_id; }
 	TrackNetwork::NodeID getExitID() const { return exit_id; }
+
+	void print(std::ostream& os) const;
+	void print(std::ostream& os, const TrackNetwork& tn) const;
+
+private:
+	std::string base_name;
+	TrackNetwork::NodeID entry_id;
+	TrackNetwork::NodeID exit_id;
+};
+
+std::ostream& operator<<(std::ostream& os, const StatisticalPassenger& p);
+
+class Passenger
+	: public util::print_printable
+	, public util::print_with_printable<const TrackNetwork> {
+public:
+	Passenger(
+		const StatisticalPassenger* src,
+		PassengerID id,
+		TrackNetwork::Time start_time
+	)
+		: src(src)
+		, id(id)
+		, start_time(start_time)
+	{ }
+
+	const std::string& getName() const { return src->getBaseName(); }
+		// + tn.getVertexName(elem.entrance) + '_' + tn.getVertexName(elem.exit)
+	TrackNetwork::NodeID getEntryID() const { return src->getEntryID(); }
+	TrackNetwork::NodeID getExitID() const { return src->getExitID(); }
 	TrackNetwork::Time getStartTime() const { return start_time; }
+	PassengerID getID() const { return id; }
+
+	operator PassengerID() const { return getID(); }
 
 	bool operator==(const Passenger& rhs) const {
 		return id == rhs.id;
 	}
+
+	void print(std::ostream& os) const;
+	void print(std::ostream& os, const TrackNetwork& tn) const;
+
+private:
+	const StatisticalPassenger* src;
+	PassengerID id;
+	TrackNetwork::Time start_time;
 };
 
+inline Passenger instantiateAt(const StatisticalPassenger* sp, PassengerID id, TrackNetwork::Time t) {
+	return Passenger(sp, id, t);
+}
+
+using PassengerIDList = std::vector<PassengerID>;
 using PassengerList = std::vector<Passenger>;
 using PassengerConstRefList = std::vector<std::reference_wrapper<const Passenger>>;
-using PassengerIDList = std::vector<PassengerID>;
 
 inline void passengerRefListAdd(PassengerConstRefList& list, const Passenger& p) {
 	list.push_back(p);
@@ -62,9 +104,6 @@ inline void passengerRefListRemove(PassengerConstRefList& list, const Passenger&
 inline auto passengerRefListInserter(PassengerConstRefList& list) {
 	return std::back_inserter(list);
 }
-
-std::ostream& operator<<(std::ostream& os, const Passenger& p);
-std::ostream& operator<<(std::ostream& os, const std::tuple<const Passenger&,const TrackNetwork&>& pair);
 
 namespace std {
 	template<>

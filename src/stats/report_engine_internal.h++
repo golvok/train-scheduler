@@ -9,15 +9,11 @@ class ReportEngine {
 public:
 	ReportEngine(
 		const ::TrackNetwork& track_network,
-		const PassengerList& passengers,
 		const ::algo::Schedule&	schedule,
-		const ::algo::PassengerRoutes& passenger_routes,
 		const ::sim::SimulatorHandle& sim_handle
 	)
 		: track_network(track_network)
-		, passengers(passengers)
 		, schedule(schedule)
-		, passenger_routes(passenger_routes)
 		, sim_handle(sim_handle)
 	{ }
 
@@ -27,10 +23,10 @@ private:
 	void reportTrains(const ReportConfig& config, std::ostream& os);
 
 	const ::TrackNetwork& track_network;
-	const PassengerList& passengers;
 	const ::algo::Schedule&	schedule;
-	const ::algo::PassengerRoutes& passenger_routes;
 	const ::sim::SimulatorHandle& sim_handle;
+
+	const auto& getPassengers() { return sim_handle.getPassengerList(); }
 
 	friend void report_into(
 		ReportEngine& rengine,

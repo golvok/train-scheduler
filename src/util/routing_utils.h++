@@ -16,6 +16,20 @@ namespace util {
  */
 template<typename WEIGHT_MAP>
 std::vector<TrackNetwork::NodeID> get_shortest_route(
+	const StatisticalPassenger& p,
+	const TrackNetwork& tn,
+	const WEIGHT_MAP& weight_map
+) {
+	return get_shortest_route(
+		p.getEntryID(),
+		p.getExitID(),
+		tn.g(),
+		weight_map
+	);
+}
+
+template<typename WEIGHT_MAP>
+std::vector<TrackNetwork::NodeID> get_shortest_route(
 	const Passenger& p,
 	const TrackNetwork& tn,
 	const WEIGHT_MAP& weight_map

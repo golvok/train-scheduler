@@ -7,6 +7,7 @@
 #include <stats/report_config.h++>
 #include <stats/report_engine.h++>
 #include <util/logging.h++>
+#include <util/passenger_generator.h++>
 
 #include <memory>
 #include <iostream>
@@ -43,8 +44,8 @@ int program_main(const std::string& data_file_name) {
 	std::list<std::thread> sim_threads;
 
 	// these will be shared with the graphics
-	std::shared_ptr<TrackNetwork> tn = std::make_shared<TrackNetwork>();
-	std::shared_ptr<PassengerGenerator> passengers = std::make_shared<PassengerGenerator>();
+	auto tn = std::make_shared<TrackNetwork>();
+	auto passengers = std::make_shared<parsing::input::StatPassCollection>();
 
 	bool data_is_good;
 
@@ -58,12 +59,15 @@ int program_main(const std::string& data_file_name) {
 		return -1;
 	}
 
+	PassengerGeneratorFactory pgen_factory(1,*passengers);
+	auto pgen_sample = pgen_factory.sample();
+
 	// display the track network first
 	graphics::get().trainsArea().displayTrackNetwork(tn);
 	// graphics::get().waitForPress();
 
 	// then display the passengers too
-	graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
+	// graphics::get().trainsArea().displayTNAndPassengers(tn,passengers);
 	graphics::get().waitForPress();
 
 	// do scheduling
@@ -71,15 +75,11 @@ int program_main(const std::string& data_file_name) {
 	(*schedule) = algo::schedule(*tn, *passengers);
 
 	// display schedule
-	graphics::get().trainsArea().presentResults(tn,passengers,schedule);
+	graphics::get().trainsArea().presentResults(tn,{},schedule);
 	graphics::get().waitForPress();
 
-	// route passengers
-	auto p_routes = std::make_shared<::algo::PassengerRoutes>();
-	*p_routes = ::algo::route_passengers(*tn,*schedule,*passengers);
-
 	auto sim_handle = ::sim::instantiate_simulator(
-		passengers,
+		&pgen_sample,
 		schedule,
 		tn
 	);
@@ -89,16 +89,14 @@ int program_main(const std::string& data_file_name) {
 
 	sim_threads.emplace_back([](
 		auto l_tn,
-		auto l_passengers,
 		auto l_schedule,
-		auto l_p_routes,
 		auto l_sim_handle
 	) noexcept {
 
 		l_sim_handle.runForTime(100, 0.3);
 
 		auto report_engine_ptr = ::stats::make_report_engine(
-			*l_tn, *l_passengers, *l_schedule, *l_p_routes, l_sim_handle
+			*l_tn, *l_schedule, l_sim_handle
 		);
 
 		std::ofstream report_file("reports.txt");
@@ -113,9 +111,7 @@ int program_main(const std::string& data_file_name) {
 		::stats::report_into(*report_engine_ptr, conf_trains, report_file);
 	},
 		tn,
-		passengers,
 		schedule,
-		p_routes,
 		sim_handle
 	);
 

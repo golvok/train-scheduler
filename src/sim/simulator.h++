@@ -4,6 +4,7 @@
 
 #include <algo/scheduler.h++>
 #include <util/handles.h++>
+#include <util/passenger_generator.h++>
 #include <util/track_network.h++>
 
 #include <functional>
@@ -30,6 +31,8 @@ struct TrainLocation {
 };
 
 using Train2PositionInfoMap = ::algo::TrainMap<TrainLocation>;
+using PassengerIDSet = std::unordered_set<PassengerID>;
+using PassengerList = std::unordered_map<PassengerID, Passenger>;
 
 using ObserverType = std::function<bool()>;
 
@@ -37,6 +40,7 @@ class SimulatorHandle : public ::util::shared_handle<Simulator> {
 public:
 	using shared_handle::shared_handle;
 	using shared_handle::operator=;
+
 
 	auto getActiveTrains() const {
 		using map_iter = Train2PositionInfoMap::const_iterator;
@@ -52,11 +56,28 @@ public:
 			}
 		);
 	}
-	// std::vector<std::reference_wrapper<Passenger>> getActivePassengers() const;
 
 	const TrainLocation& getTrainLocation(const ::algo::TrainID& train) const;
-	const PassengerConstRefList& getPassengersAt(const ::algo::TrainID& train) const;
-	const PassengerConstRefList& getPassengersAt(const StationID& station) const;
+
+	template<typename IDType>
+	auto getPassengersAt(const IDType& id) const {
+		const auto& id_set = getPassengerIDsAt(id);
+		using id_set_iter = decltype(id_set.begin());
+		return ::util::make_generator<id_set_iter>(
+			id_set.begin(),
+			id_set.end(),
+			[](const auto& it) {
+				return std::next(it);
+			},
+			[this](const auto& it) {
+				return getPassengerList().at(*it);
+			}
+		);
+	}
+	
+	const PassengerList& getPassengerList() const;
+	const PassengerIDSet& getPassengerIDsAt(const ::algo::TrainID& train) const;
+	const PassengerIDSet& getPassengerIDsAt(const StationID& station) const;
 
 	void runForTime(const SimTime& time_to_run, const SimTime& step_size);
 	SimTime getCurrentTime();
@@ -71,7 +92,7 @@ private:
 	const Train2PositionInfoMap& getTrainLocations() const;
 
 	friend SimulatorHandle instantiate_simulator(
-		std::shared_ptr<const PassengerList> passengers,
+		const PassengerGeneratorFactory::PassengerGeneratorCollection* passenger_generators,
 		std::shared_ptr<const ::algo::Schedule> schedule,
 		std::shared_ptr<const TrackNetwork> tn
 	);
@@ -79,7 +100,7 @@ private:
 };
 
 SimulatorHandle instantiate_simulator(
-	std::shared_ptr<const PassengerList> passengers,
+	const PassengerGeneratorFactory::PassengerGeneratorCollection* passenger_generators,
 	std::shared_ptr<const ::algo::Schedule> schedule,
 	std::shared_ptr<const TrackNetwork> tn
 );

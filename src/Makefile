@@ -104,6 +104,7 @@ $(EXE_DIR)train-sch: \
 	$(OBJ_DIR)parsing/cmdargs_parser.o \
 	$(OBJ_DIR)util/logging.o \
 	$(OBJ_DIR)util/passenger.o \
+	$(OBJ_DIR)util/passenger_generator.o \
 	$(OBJ_DIR)util/track_network.o \
 	$(OBJ_DIR)util/thread_utils.o \
 	$(OBJ_DIR)sim/simulator.o \

@@ -27,12 +27,12 @@ namespace {
 namespace parsing {
 namespace input {
 
-std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
+std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is) {
 
 	auto indent = dout(DL::DATA_READ1).indentWithTitle("Reading Data");
 
 	TrackNetwork::BackingGraphType network;
-	PassengerList passengers;
+	StatPassCollection statpsgrs;
 
 	TrackNetwork::OffNodeDataPropertyMap off_node_data;
 
@@ -138,7 +138,7 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 
 		std::vector<PassengerData> pdata;
 
-		// make a list of all data for all the passengers
+		// make a list of all data for all the statpsgrs
 		for (const auto& elem : parse_results) {
 			for(const auto& entrance_str : std::get<1>(elem)) {
 				for (const auto& exit_str : std::get<2>(elem)) {
@@ -152,20 +152,18 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 			}
 		};
 
-		// actually make the passengers
-		std::transform(begin(pdata), end(pdata), std::back_inserter(passengers), [&](auto&& elem) {
-			return Passenger(
-				elem.basename + tn.getVertexName(elem.entrance) + '_' + tn.getVertexName(elem.exit),
-				::util::make_id<PassengerID>(passengers.size()),
+		// actually make the statpsgrs
+		std::transform(begin(pdata), end(pdata), std::back_inserter(statpsgrs), [&](auto&& elem) {
+			return StatisticalPassenger{
+				elem.basename,
 				elem.entrance,
 				elem.exit,
-				elem.start_time
-			);
+			};
 		});
 
 		const bool matches_full = is_match && it == end(passenger_string);
 
-		const bool match_is_good = matches_full; // && passengers.back().getEntryID() == vdesc;
+		const bool match_is_good = matches_full; // && statpsgrs.back().getEntryID() == vdesc;
 
 		if (!match_is_good) {
 			::util::print_and_throw<std::invalid_argument>([&](auto&& str) {
@@ -175,11 +173,11 @@ std::tuple<TrackNetwork,PassengerList, bool> parse_data(std::istream& is) {
 	}
 
 	{ auto pindent = dout(DL::DATA_READ1).indentWithTitle("Passenger Info");
-		::util::print_container(passengers, dout(DL::DATA_READ1), "\n", "", "");
+		::util::print_container(statpsgrs, dout(DL::DATA_READ1), "\n", "", "");
 		dout(DL::DATA_READ1) << '\n';
 	}
 
-	return std::make_tuple(std::move(tn), std::move(passengers), true);
+	return std::make_tuple(std::move(tn), std::move(statpsgrs), true);
 }
 
 } // end namepace input

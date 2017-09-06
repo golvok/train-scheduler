@@ -221,7 +221,8 @@ void TrainsArea::drawWantedEdgeCapacities(const Cairo::RefPtr<Cairo::Context>& c
 	}
 }
 
-void TrainsArea::drawPassengersAt(const geom::Point<float> point, const PassengerConstRefList& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
+template<typename COLLECTION>
+void TrainsArea::drawPassengersAt(const geom::Point<float> point, const COLLECTION& passengers, const Cairo::RefPtr<Cairo::Context>& cc) {
 	auto sdl = data.getScopedDataLock(); // may get multiple things from the data
 	auto is_animating = getIsAnimatingAndLock();
 	auto tn = data.getTN();
@@ -230,8 +231,9 @@ void TrainsArea::drawPassengersAt(const geom::Point<float> point, const Passenge
 	if (!tn) { return; }
 
 	// draw a dot for each passenger
-	for (const auto& pid_and_i : index_assoc_iterate(passengers)) {
-		const Passenger& p = pid_and_i.v();
+	int p_counter = 0;
+	for (const Passenger& p : passengers) {
+
 		if (!is_animating || !sim_handle || !sim_handle.isPaused() || sim_handle.getCurrentTime() == p.getStartTime()) {
 			cc->set_source_rgb(0.0,1.0,0.0); // green
 		} else if (sim_handle.getCurrentTime() > p.getStartTime()) {
@@ -241,7 +243,7 @@ void TrainsArea::drawPassengersAt(const geom::Point<float> point, const Passenge
 		}
 
 		// draw this one a bit farther away than the last
-		auto draw_point = point + (pid_and_i.i() + 1)* make_point(0,-2);
+		auto draw_point = point + (p_counter + 1)* make_point(0,-2);
 
 		cc->move_to(draw_point.x,draw_point.y);
 		cc->arc(draw_point.x,draw_point.y, 0.5, 0, 2 * M_PI);
