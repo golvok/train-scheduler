@@ -55,12 +55,16 @@ public:
 
 	const RouteType& getRoute(const Passenger& p) const {
 		auto find_results = routes.find(p.getID());
-		if (find_results == routes.end()) {
+		if (find_results == end(routes)) {
 			throw std::invalid_argument(
 				std::string(__PRETTY_FUNCTION__) + ": do not have route for passenger " + p.getName()
 			);
 		}
 		return find_results->second;
+	}
+
+	bool hasRoute(const Passenger& p) const {
+		return routes.find(p.getID()) != end(routes);
 	}
 };
 
