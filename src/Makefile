@@ -32,7 +32,7 @@ DEPS_DIR = $(BUILD_DIR)DEPS/
 
 BUILD_SUBDIRS = $(EXE_DIR) $(OBJ_DIR) $(DEPS_DIR)
 
-# CXX = clang++ -stdlib=libstdc++
+# CXX = clang++
 # CXX = g++
 
 # put warning flags here - go to compiler *and* linker.
@@ -43,7 +43,7 @@ EXTRA_FLAGS = -std=c++1z
 
 # add flags for debugging
 ifeq ($(BUILD_MODE),debug)
-	EXTRA_FLAGS += -ggdb -D DEBUG
+	EXTRA_FLAGS += -ggdb -D DEBUG # -D _GLIBCXX_DEBUG
 endif
 
 # add flags for release
