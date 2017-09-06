@@ -172,6 +172,12 @@ public:
 	const static size_t bit_size = sizeof(IDType)*CHAR_BIT;
 
 	ID() : value(TAG::DEFAULT_VALUE) { }
+	ID(const ID&) = default;
+	ID(ID&&) = default;
+
+	ID& operator=(const ID&) = default;
+	ID& operator=(ID&&) = default;
+
 	explicit operator id_type() const { return value; }
 	id_type getValue() const { return value; }
 	void print(std::ostream& os) { os << value; }
@@ -183,6 +189,28 @@ auto make_id(ARGS&&... args) -> std::enable_if_t<
 	ID_TYPE
 > {
 	return ID_TYPE(std::forward<ARGS>(args)...);
+}
+
+template<typename ID>
+class IDGenerator {
+	using IDType = typename ID::IDType;
+
+	IDType next_id_value;
+public:
+	IDGenerator(IDType first_value)
+		: next_id_value(first_value)
+	{ }
+
+	ID gen_id() {
+		ID id = make_id<ID>(next_id_value);
+		++next_id_value;
+		return id;
+	}
+};
+
+template<typename... ARGS>
+auto make_id_generator(ARGS&&... args) {
+	return IDGenerator<ARGS...>(std::forward<ARGS>(args)...);
 }
 
 template<typename id_type, typename TAG>
