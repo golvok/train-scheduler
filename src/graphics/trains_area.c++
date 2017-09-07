@@ -272,7 +272,7 @@ void TrainsArea::beginAnimating() {
 	if (!is_animating) {
 		animation_connection = Glib::signal_timeout().connect(
 			sigc::mem_fun(*this, &TrainsArea::causeAnimationFrame),
-			1000
+			50
 		);
 	}
 }

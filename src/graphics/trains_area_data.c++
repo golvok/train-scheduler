@@ -177,7 +177,7 @@ void TrainsAreaData::displaySimulator(
 	if (SimulateCheck()(*this)) {
 		data.simulator.registerObserver(
 			WaitForDrawCheck(*this),
-			1.1
+			0.09
 		);
 		trains_area->resetAnimationTime();
 		trains_area->beginAnimating();
