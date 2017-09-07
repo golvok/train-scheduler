@@ -22,19 +22,25 @@ class StatisticalPassenger
 	: public util::print_printable
 	, public util::print_with_printable<const TrackNetwork> {
 public:
+	using AverageRate = double;
+
 	StatisticalPassenger(
 		const std::string& base_name,
 		TrackNetwork::NodeID entry_id,
-		TrackNetwork::NodeID exit_id
+		TrackNetwork::NodeID exit_id,
+		AverageRate average_rate
 	)
 		: base_name(base_name)
 		, entry_id(entry_id)
 		, exit_id(exit_id)
+		, average_rate(average_rate)
 	{ }
 
 	const std::string& getBaseName() const { return base_name; }
 	TrackNetwork::NodeID getEntryID() const { return entry_id; }
 	TrackNetwork::NodeID getExitID() const { return exit_id; }
+
+	AverageRate getAverageRate() const { return average_rate; }
 
 	void print(std::ostream& os) const;
 	void print(std::ostream& os, const TrackNetwork& tn) const;
@@ -43,6 +49,7 @@ private:
 	std::string base_name;
 	TrackNetwork::NodeID entry_id;
 	TrackNetwork::NodeID exit_id;
+	AverageRate average_rate;
 };
 
 std::ostream& operator<<(std::ostream& os, const StatisticalPassenger& p);

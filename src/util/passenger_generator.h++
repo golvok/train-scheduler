@@ -5,6 +5,8 @@
 #include <util/generator.h++>
 #include <util/passenger.h++>
 
+#include <random>
+
 #include <boost/operators.hpp>
 
 class PassengerGenerator;
@@ -13,25 +15,30 @@ class StationPassengerGenerator;
 class PassengerGeneratorFactory {
 public:
 	using PassengerGeneratorCollection = std::vector<PassengerGenerator>;
+	using Seed = std::uint_fast64_t;
 
-	PassengerGeneratorFactory(uint64_t seed, const std::vector<StatisticalPassenger>& statpsgrs)
+	PassengerGeneratorFactory(Seed seed, const std::vector<StatisticalPassenger>& statpsgrs)
 		: seed(seed)
 		, statpsgrs(statpsgrs)
 	{ }
 
 	PassengerGeneratorCollection sample() const;
 private:
-	uint64_t seed;
+	Seed seed;
 	const std::vector<StatisticalPassenger>& statpsgrs;
 };
 
 class PassengerGenerator {
 public:
+	using Seed = PassengerGeneratorFactory::Seed;
+	using RandGen = std::mt19937_64;
+	using Time = TrackNetwork::Time;
+
 	template<typename TIME, typename PID_GENERATOR>
 	auto leavingDuringInterval(TIME begin_time, TIME end_time, PID_GENERATOR& pid_generator) const {
 		struct State : boost::equality_comparable<State> {
 			const PassengerGenerator* src;
-			TrackNetwork::Time next_departure;
+			Time next_departure;
 			TIME end_time;
 
 			State(const PassengerGenerator* src, TrackNetwork::Time next_departure, TIME end_time)
@@ -67,13 +74,14 @@ public:
 
 private:
 	friend PassengerGeneratorFactory;
-	PassengerGenerator(const StatisticalPassenger& statpsgr)
-		: statpsgr(statpsgr)
-	{ }
+	PassengerGenerator(const StatisticalPassenger& statpsgr, Seed seed);
 
-	TrackNetwork::Time nextPassengerAfter(TrackNetwork::Time t) const;
+	Time nextPassengerAfter(TrackNetwork::Time t) const;
 
 	const StatisticalPassenger statpsgr;
+	const Seed seed;
+	RandGen rand_gen;
+	// mutable std::unordered_set<???> interval_cache;
 };
 
 #endif /* UTIL__PASSENGER_GENERATOR_H */

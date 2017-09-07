@@ -158,6 +158,7 @@ std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is) {
 				elem.basename,
 				elem.entrance,
 				elem.exit,
+				0.05 // TODO define schema, and get from data
 			};
 		});
 
