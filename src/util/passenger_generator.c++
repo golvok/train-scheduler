@@ -19,8 +19,15 @@ PassengerGenerator::PassengerGenerator(const StatisticalPassenger& statpsgr, See
 { }
 
 auto PassengerGenerator::nextPassengerAfter(Time t) const -> Time {
+	const auto avg_rate = statpsgr.getAverageRate();
+	if (avg_rate == 0) {
+		return std::numeric_limits<decltype(t)>::max();
+	} else if (avg_rate == 1) {
+		return t + 1;
+	}
+
 	RandGen rand_gen_l(seed);
-	std::geometric_distribution<Time> geom_dist(statpsgr.getAverageRate());
+	std::geometric_distribution<Time> geom_dist(avg_rate);
 
 	Time prev = 0;
 
