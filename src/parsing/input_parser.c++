@@ -117,13 +117,13 @@ std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is) {
 		];
 
 		std::vector< std::tuple<
-			std::string, std::vector<std::string>, std::vector<std::string>, double
+			std::string, std::vector<std::string>, std::vector<std::string>, double, double
 		> > parse_results;
 
 		auto it = begin(passenger_string);
 		const bool is_match = x3::phrase_parse( it, end(passenger_string),
 			(
-				identifier >> ':' >> (identifier % ',') >> "->" >> (identifier % ',') >> "@t=" >> x3::double_
+				identifier >> ':' >> (identifier % ',') >> "->" >> (identifier % ',') >> "@rate=" >> x3::double_ >> '/' >> x3::double_
 			) % ',',
 			chars::space,
 			parse_results
@@ -133,7 +133,7 @@ std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is) {
 			const std::string& basename;
 			TrackNetwork::NodeID entrance;
 			TrackNetwork::NodeID exit;
-			TrackNetwork::Time start_time;
+			double rate;
 		};
 
 		std::vector<PassengerData> pdata;
@@ -146,7 +146,7 @@ std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is) {
 						std::get<0>(elem),
 						tn.getVertex(entrance_str),
 						tn.getVertex(exit_str),
-						(TrackNetwork::Time)std::get<3>(elem)
+						std::get<3>(elem)*100/std::get<4>(elem)
 					});
 				}
 			}
@@ -158,7 +158,7 @@ std::tuple<TrackNetwork,StatPassCollection, bool> parse_data(std::istream& is) {
 				elem.basename,
 				elem.entrance,
 				elem.exit,
-				0.05 // TODO define schema, and get from data
+				elem.rate
 			};
 		});
 

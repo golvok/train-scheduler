@@ -52,7 +52,7 @@ digraph g {
 
 
 	// passengers
-	A4 [ passenger = "pA:A4,A2->A2,A4@t=1" ]
-	E2 [ passenger = "pB:E2->B5@t=1" ]
-	// B1 [ passenger = "pB1_E2_0:B1->E2@t=1,pB1_E2_1:B1->E2@t=1" ]
+	A4 [ passenger = "pA:A4,A2->A2,A4@rate=1/1000" ]
+	E2 [ passenger = "pB:E2->B5@rate=1/1000" ]
+	B1 [ passenger = "pB1_E2_0:B1->E2@rate=1/1000,pB1_E2_1:B1->E2@rate=1/1000" ]
 }

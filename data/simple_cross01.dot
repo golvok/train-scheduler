@@ -9,9 +9,9 @@ digraph g {
 	A1 -> A2 [ distance = 1 ]
 
 	C  [ x =   0, y =   0 ]
-	A1 [ x = -80, y =   0, passenger = "pA1_E1_0:A1->E1@t=1,pA1_E1_1:A1->E1@t=1" ]
-	A2 [ x =   0, y = -80, passenger = "pA2_E2  :A2->E2@t=1" ]
-	B1 [ x = -40, y =   0, passenger = "pB1_E2_0:B1->E2@t=1,pB1_E2_1:B1->E2@t=1" ]
+	A1 [ x = -80, y =   0, passenger = "pA1_E1_0:A1->E1@rate=1/1000,pA1_E1_1:A1->E1@rate=1/1000" ]
+	A2 [ x =   0, y = -80, passenger = "pA2_E2  :A2->E2@rate=1/1000" ]
+	B1 [ x = -40, y =   0, passenger = "pB1_E2_0:B1->E2@rate=1/1000,pB1_E2_1:B1->E2@rate=1/1000" ]
 	D1 [ x =  40, y =   0 ]
 	E1 [ x =  80, y =   0 ]
 	B2 [ x =   0, y = -40 ]
